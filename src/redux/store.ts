@@ -29,7 +29,6 @@ export const store = configureStore({
 export const persistor = persistStore(store)
 
 export type RootState = {
-  auth: AuthState
   [api.reducerPath]: ReturnType<typeof api.reducer>
 }
 
