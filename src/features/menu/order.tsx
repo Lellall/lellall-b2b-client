@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { PenLine, Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import OrderCard from "./components/order-card";
 
 const Orders = () => {
@@ -15,13 +15,13 @@ const Orders = () => {
               className="px-4 py-2 border rounded-md"
             />
             <div className="flex gap-2">
-              <Button variant="default" className="bg-green-800 text-white">All</Button>
+              <Button variant="default" className="bg-primary text-white">All</Button>
               <Button variant="ghost">In Process</Button>
               <Button variant="ghost">Completed</Button>
               <Button variant="ghost">Cancelled</Button>
             </div>
           </div>
-          <Button className="gap-2">
+          <Button className="gap-2 text-white">
             <Plus className="h-4 w-4" />
             Add New Order
           </Button>

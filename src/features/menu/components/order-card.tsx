@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { PenLine, Trash2 } from "lucide-react"
+import { PenLine, Trash2, Banknote, CreditCard, Wallet2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Separator } from "@/components/ui/separator"
@@ -44,12 +44,10 @@ const OrderCard = ({ orderNumber, status, date, time, items, subtotal }: OrderCa
 
   return (
     <>
-      <div
-        className="bg-white rounded-lg shadow-sm border p-6 space-y-4 hover:shadow-md transition-shadow"
-      >
+      <div className="bg-white rounded-lg shadow-sm border p-6 space-y-4 hover:shadow-md transition-shadow">
         <div className="flex justify-between items-start">
           <div className="mt-2">
-            <span className="bg-green-800 text-white text-xl font-semibold text-center rounded-md p-3">
+            <span className="bg-primary text-white text-xl font-semibold text-center rounded-md p-3">
               {orderNumber}
             </span>
             <span className="text-sm text-gray-500 align-baseline ml-2 mt-4">Order #{orderNumber}</span>
@@ -121,7 +119,7 @@ const OrderCard = ({ orderNumber, status, date, time, items, subtotal }: OrderCa
               <Trash2 />
             </Button>
           </div>
-          <Button variant="default" className="bg-green-800 text-white w-full mx-4" onClick={() => setIsOpen(true)}>
+          <Button variant="default" className="text-white w-full mx-4" onClick={() => setIsOpen(true)}>
             Pay Bill
           </Button>
         </div>
@@ -137,7 +135,7 @@ const OrderCard = ({ orderNumber, status, date, time, items, subtotal }: OrderCa
             {/* Order Items */}
             <div className="space-y-4">
               {items.map((item, index) => (
-                <div key={index} className="flex items-center justify-between py-2">
+                <div key={index} className="flex items-center justify-between py-2 bg-gray-300 rounded-lg px-4">
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 bg-gray-100 rounded-full" />
                     <span>{item.name}</span>
@@ -146,48 +144,53 @@ const OrderCard = ({ orderNumber, status, date, time, items, subtotal }: OrderCa
                 </div>
               ))}
             </div>
-            {/* Calculations */}
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span>Subtotal</span>
-                <span>{subtotal}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Tax 5%</span>
-                <span>₦5.5</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Tip</span>
-                <span>₦20</span>
-              </div>
-              <Separator />
-              <div className="flex justify-between font-semibold">
-                <span>Total</span>
-                <span>₦17.5</span>
-              </div>
-            </div>
-            {/* Payment Section */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span>Received</span>
-                <span>₦17.5</span>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-500 mb-3">Payment Method</p>
-                <div className="grid grid-cols-3 gap-3">
-                  <Button variant="outline" className="flex flex-col gap-2 h-auto py-3">
-                    <span className="text-xs">Cash</span>
-                  </Button>
-                  <Button variant="outline" className="flex flex-col gap-2 h-auto py-3">
-                    <span className="text-xs">Debit Card</span>
-                  </Button>
-                  <Button variant="outline" className="flex flex-col gap-2 h-auto py-3">
-                    <span className="text-xs">E-Wallet</span>
-                  </Button>
+            <div className="bg-gray-300 p-4 rounded-lg">
+              {/* Calculations */}
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span>Subtotal</span>
+                  <span>{subtotal}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Tax 5%</span>
+                  <span>₦5.5</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Tip</span>
+                  <span>₦20</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between font-semibold">
+                  <span>Total</span>
+                  <span>₦17.5</span>
                 </div>
               </div>
-              <Button className="w-full text-white bg-green-800 mt-4">Order Completed</Button>
+              {/* Payment Section */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span>Received</span>
+                  <span>₦17.5</span>
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-500 mb-3">Payment Method</p>
+                  <div className="grid grid-cols-3 gap-3">
+                    <Button variant="outline" className="flex flex-col gap-2 h-auto py-3 border-primary">
+                        <Banknote color="green" />
+                      <span className="text-xs text-green-700">Cash</span>
+                    </Button>
+                    <Button variant="outline" className="flex flex-col gap-2 h-auto py-3 border-primary">
+                        <CreditCard color="green" />
+                      <span className="text-xs text-green-700">Debit Card</span>
+                    </Button>
+                    <Button variant="outline" className="flex flex-col gap-2 h-auto py-3 border-primary">
+                        <Wallet2 color="green" />
+                      <span className="text-xs text-green-700">E-wallet</span>
+                    </Button>
+                  </div>
+                </div>
+                <Button variant="default" className="w-full text-white mt-4">Order Completed</Button>
+              </div>
             </div>
           </div>
         </SheetContent>
