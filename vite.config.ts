@@ -12,8 +12,8 @@ export default defineConfig({
     react(),
     eslintPlugin(),
     svgr({
-      svgrOptions: {},
-    }),
+      include: "**/*.svg?react",
+    })
   ],
   test: {
     globals: true,
