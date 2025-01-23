@@ -139,6 +139,18 @@ const Layout = () => {
                             </Icon>
                             <Text isSidebarOpen={isSidebarOpen}>Settings</Text>
                         </NavItem>
+                        <NavItem to="/inventory">
+                            <Icon>
+                                <Setting size={16} />
+                            </Icon>
+                            <Text isSidebarOpen={isSidebarOpen}>Inventory</Text>
+                        </NavItem>
+                        <NavItem to="/menu">
+                            <Icon>
+                                <Setting size={16} />
+                            </Icon>
+                            <Text isSidebarOpen={isSidebarOpen}>Menu</Text>
+                        </NavItem>
                     </nav>
                 </Sidebar>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
