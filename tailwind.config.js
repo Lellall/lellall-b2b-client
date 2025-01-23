@@ -5,9 +5,13 @@ module.exports = {
       colors: {
         primary: "#05431E",
         accent: "#0E5D37",
-        secondary: "var(--color-secondary)",
+        secondary: "#FFFFFF",
         "accent-foreground": "#fff",
         "primary-foreground": "#FFFFFF",
+        "secondary-foreground": "#000",
+      },
+      fontFamily: {
+        sans: ["Lato", "sans-serif"],
       },
     },
   },
