@@ -6,6 +6,8 @@ module.exports = {
         primary: "#05431E",
         accent: "#0E5D37",
         secondary: "var(--color-secondary)",
+        "accent-foreground": "#fff",
+        "primary-foreground": "#FFFFFF",
       },
     },
   },

@@ -125,7 +125,7 @@ const OrderCard = ({ orderNumber, status, date, time, items, subtotal }: OrderCa
         </div>
       </div>
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetContent className="w-full bg-white sm:max-w-md overflow-y-auto">
+        <SheetContent className="bg-white sm:max-w-md overflow-y-auto">
           <SheetHeader>
             <SheetTitle>Table 01</SheetTitle>
             <span className="text-sm text-gray-500">Watson Joyce</span>
