@@ -44,16 +44,16 @@ const OrderCard = ({ orderNumber, status, date, time, items, subtotal }: OrderCa
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow-sm border p-6 space-y-4 hover:shadow-md transition-shadow">
+      <div className="bg-white shadow-none p-4 space-y-4 hover:shadow-md transition-shadow font-[Lato]">
         <div className="flex justify-between items-start">
           <div className="mt-2">
-            <span className="bg-primary text-white text-xl font-semibold text-center rounded-md p-3">
+            <span className="bg-primary text-white text-lg font-semibold text-center rounded-md p-3">
               {orderNumber}
             </span>
-            <span className="text-sm text-gray-500 align-baseline ml-2 mt-4">Order #{orderNumber}</span>
+            <span className="text-xs text-gray-500 align-baseline ml-2 mt-4">Order #{orderNumber}</span>
           </div>
           <div>
-            <Badge className={getStatusColor(status) + " w-[110px]"}>
+            <Badge className={getStatusColor(status) + " w-[110px] text-xs"}>
               {status === "Ready" ? "Ready to serve" : "completed"}
             </Badge>
             <FormProvider {...methods}>
@@ -89,13 +89,13 @@ const OrderCard = ({ orderNumber, status, date, time, items, subtotal }: OrderCa
         <Separator className="bg-gray-500" />
 
         <div className="space-y-3">
-          <div className="grid grid-cols-4 text-sm text-gray-500">
+          <div className="grid grid-cols-4 text-base text-gray-500">
             <div>Qty</div>
             <div className="col-span-2">Items</div>
             <div className="text-right">Price</div>
           </div>
           {items.map((item, index) => (
-            <div key={index} className="grid grid-cols-4 text-sm">
+            <div key={index} className="grid grid-cols-4 text-base">
               <div>{item.qty}</div>
               <div className="col-span-2">{item.name}</div>
               <div className="text-right">{item.price}</div>
@@ -104,7 +104,7 @@ const OrderCard = ({ orderNumber, status, date, time, items, subtotal }: OrderCa
         </div>
 
         <div className="border-t pt-3">
-          <div className="flex justify-between text-sm">
+          <div className="flex justify-between text-base">
             <div>SubTotal</div>
             <div className="font-semibold">{subtotal}</div>
           </div>
