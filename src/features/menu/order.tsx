@@ -21,7 +21,7 @@ const Orders = () => {
               <Button variant="ghost">Cancelled</Button>
             </div>
           </div>
-          <Button className="gap-2 text-white">
+          <Button variant="secondary" className="gap-2 text-xs">
             <Plus className="h-4 w-4" />
             Add New Order
           </Button>
