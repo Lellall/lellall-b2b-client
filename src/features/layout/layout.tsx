@@ -3,7 +3,7 @@ import styled, { ThemeProvider } from 'styled-components';
 import { useMediaQuery } from 'react-responsive';
 import { Outlet, NavLink } from 'react-router-dom';
 import { theme } from '../../theme/theme';
-import { ArrowForwardSquare, BackSquare, Home, Setting, User } from 'iconsax-react';
+import { Activity, Alarm, ArchiveBox, ArrowForwardSquare, BackSquare, Calendar2, ConvertCard, Element2, Home, Link, Setting, User, UserSearch } from 'iconsax-react';
 import Logo from '../../../assets/Logo.svg';
 import Menu from '../../../assets/menu-collapse.svg';
 
@@ -82,7 +82,8 @@ const NavItem = styled(NavLink)`
   gap: 10px;
   padding: 10px 20px;
   text-decoration: none;
-  color: ${(props) => props.theme.colors.primaryFont};
+  color: ${(props) => props.theme.colors.active};
+  font-weight: 300;
   &.active {
     background-color: ${(props) => props.theme.colors.active};
     color: ${(props) => props.theme.colors.secondary};
@@ -100,6 +101,7 @@ const Icon = styled.div`
 
 const Text = styled.span`
   font-size: 14px;
+  font-weigth: 100;
   display: ${(props) => (props.isSidebarOpen ? 'inline' : 'none')};
 `;
 
@@ -125,13 +127,49 @@ const Layout = () => {
                             <Icon>
                                 <Home size={16} />
                             </Icon>
-                            <Text isSidebarOpen={isSidebarOpen}>Home</Text>
+                            <Text isSidebarOpen={isSidebarOpen}>Dashboard</Text>
                         </NavItem>
-                        <NavItem to="/profile">
+                        <NavItem to="/menu">
                             <Icon>
-                                <User size={16} />
+                                <Element2 size={16} />
                             </Icon>
-                            <Text isSidebarOpen={isSidebarOpen}>Profile</Text>
+                            <Text isSidebarOpen={isSidebarOpen}>Menu</Text>
+                        </NavItem>
+                        <NavItem to="/inventory">
+                            <Icon>
+                                <ArchiveBox size={16} />
+                            </Icon>
+                            <Text isSidebarOpen={isSidebarOpen}>Inventory</Text>
+                        </NavItem>
+                        <NavItem to="/reservations">
+                            <Icon>
+                                <Calendar2 size={16} />
+                            </Icon>
+                            <Text isSidebarOpen={isSidebarOpen}>Reservations</Text>
+                        </NavItem>
+                        <NavItem to="/staffs">
+                            <Icon>
+                                <UserSearch size={16} />
+                            </Icon>
+                            <Text isSidebarOpen={isSidebarOpen}>Staffs</Text>
+                        </NavItem>
+                        <NavItem to="/supplier">
+                            <Icon>
+                                <ConvertCard size={16} />
+                            </Icon>
+                            <Text isSidebarOpen={isSidebarOpen}>Supplier</Text>
+                        </NavItem>
+                        <NavItem to="/reports">
+                            <Icon>
+                                <Activity size={16} />
+                            </Icon>
+                            <Text isSidebarOpen={isSidebarOpen}>Reports</Text>
+                        </NavItem>
+                        <NavItem to="/shops">
+                            <Icon>
+                                <Link size={16} />
+                            </Icon>
+                            <Text isSidebarOpen={isSidebarOpen}>Shops & Branchs</Text>
                         </NavItem>
                         <NavItem to="/settings">
                             <Icon>
@@ -144,12 +182,6 @@ const Layout = () => {
                                 <Setting size={16} />
                             </Icon>
                             <Text isSidebarOpen={isSidebarOpen}>Inventory</Text>
-                        </NavItem>
-                        <NavItem to="/menu">
-                            <Icon>
-                                <Setting size={16} />
-                            </Icon>
-                            <Text isSidebarOpen={isSidebarOpen}>Menu</Text>
                         </NavItem>
                     </nav>
                 </Sidebar>

@@ -44,16 +44,16 @@ const OrderCard = ({ orderNumber, status, date, time, items, subtotal }: OrderCa
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow-sm border p-6 space-y-4 hover:shadow-md transition-shadow">
+      <div className="bg-white shadow-none p-4 space-y-4 hover:shadow-md transition-shadow font-[Lato]">
         <div className="flex justify-between items-start">
           <div className="mt-2">
-            <span className="bg-primary text-white text-xl font-semibold text-center rounded-md p-3">
+            <span className="bg-primary text-white text-lg font-semibold text-center rounded-md p-3">
               {orderNumber}
             </span>
-            <span className="text-sm text-gray-500 align-baseline ml-2 mt-4">Order #{orderNumber}</span>
+            <span className="text-xs text-gray-500 align-baseline ml-2 mt-4">Order #{orderNumber}</span>
           </div>
           <div>
-            <Badge className={getStatusColor(status) + " w-[110px]"}>
+            <Badge className={getStatusColor(status) + " w-[110px] text-xs"}>
               {status === "Ready" ? "Ready to serve" : "completed"}
             </Badge>
             <FormProvider {...methods}>
@@ -89,13 +89,13 @@ const OrderCard = ({ orderNumber, status, date, time, items, subtotal }: OrderCa
         <Separator className="bg-gray-500" />
 
         <div className="space-y-3">
-          <div className="grid grid-cols-4 text-sm text-gray-500">
+          <div className="grid grid-cols-4 text-base text-gray-500">
             <div>Qty</div>
             <div className="col-span-2">Items</div>
             <div className="text-right">Price</div>
           </div>
           {items.map((item, index) => (
-            <div key={index} className="grid grid-cols-4 text-sm">
+            <div key={index} className="grid grid-cols-4 text-base">
               <div>{item.qty}</div>
               <div className="col-span-2">{item.name}</div>
               <div className="text-right">{item.price}</div>
@@ -104,7 +104,7 @@ const OrderCard = ({ orderNumber, status, date, time, items, subtotal }: OrderCa
         </div>
 
         <div className="border-t pt-3">
-          <div className="flex justify-between text-sm">
+          <div className="flex justify-between text-base">
             <div>SubTotal</div>
             <div className="font-semibold">{subtotal}</div>
           </div>
@@ -127,24 +127,24 @@ const OrderCard = ({ orderNumber, status, date, time, items, subtotal }: OrderCa
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetContent className="bg-white sm:max-w-md overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>Table 01</SheetTitle>
-            <span className="text-sm text-gray-500">Watson Joyce</span>
+            <SheetTitle className="text-2xl font-medium">Table 01</SheetTitle>
+            <span className="text-base text-gray-500">Watson Joyce</span>
           </SheetHeader>
 
           <div className="mt-8 space-y-6">
             {/* Order Items */}
-            <div className="space-y-4">
+            <div className="space-y-4 mb-16">
               {items.map((item, index) => (
-                <div key={index} className="flex items-center justify-between py-2 bg-gray-300 rounded-lg px-4">
+                <div key={index} className="flex items-center justify-between py-2 bg-[#E7E7E7] rounded-xl px-4">
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 bg-gray-100 rounded-full" />
-                    <span>{item.name}</span>
+                    <div className="h-6 w-6 bg-gray-900 text-white text-xs flex items-center justify-center rounded-full">{String(index + 1).padStart(2, "0")}</div>
+                    <span className="text-sm">{item.name}</span>
                   </div>
-                  <span>{item.price}</span>
+                  <span className="text-sm">{item.price}</span>
                 </div>
               ))}
             </div>
-            <div className="bg-gray-300 p-4 rounded-lg">
+            <div className="bg-[#E7E7E7] p-4 rounded-lg">
               {/* Calculations */}
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
@@ -159,12 +159,16 @@ const OrderCard = ({ orderNumber, status, date, time, items, subtotal }: OrderCa
                   <span>Tip</span>
                   <span>₦20</span>
                 </div>
-                <Separator />
-                <div className="flex justify-between font-semibold">
+                <div className="pt-5 pb-1">
+                  <Separator className="border border-dashed border-[#5E5E5E]" />
+                </div>
+                <div className="flex justify-between text-sm">
                   <span>Total</span>
                   <span>₦17.5</span>
                 </div>
               </div>
+
+              <Separator className="border border-dashed border-[#5E5E5E] mt-48" />
               {/* Payment Section */}
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
@@ -176,16 +180,16 @@ const OrderCard = ({ orderNumber, status, date, time, items, subtotal }: OrderCa
                   <p className="text-sm text-gray-500 mb-3">Payment Method</p>
                   <div className="grid grid-cols-3 gap-3">
                     <Button variant="outline" className="flex flex-col gap-2 h-auto py-3 border-primary">
-                        <Banknote color="green" />
-                      <span className="text-xs text-green-700">Cash</span>
+                        <Banknote fill="green" />
+                      <span className="text-xs">Cash</span>
                     </Button>
                     <Button variant="outline" className="flex flex-col gap-2 h-auto py-3 border-primary">
-                        <CreditCard color="green" />
-                      <span className="text-xs text-green-700">Debit Card</span>
+                        <CreditCard fill="green" />
+                      <span className="text-xs">Debit Card</span>
                     </Button>
                     <Button variant="outline" className="flex flex-col gap-2 h-auto py-3 border-primary">
-                        <Wallet2 color="green" />
-                      <span className="text-xs text-green-700">E-wallet</span>
+                        <Wallet2 fill="green" />
+                      <span className="text-xs">E-wallet</span>
                     </Button>
                   </div>
                 </div>
