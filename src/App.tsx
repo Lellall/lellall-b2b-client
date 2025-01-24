@@ -1,12 +1,14 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Layout from "./features/layout/layout";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Suspense } from "react";
+import Layout from './features/layout/layout';
 import AuthLayout from "./features/auth/auth-layout";
 import Login from "./features/auth/login"; // Replace with your actual Login component
-import { Suspense } from "react";
 import Registration from "./features/auth/registration";
 import ForgotPassword from "./features/auth/forgot-password";
 import Shops from "./features/shops/shops";
 import Menu from "./features/menu/menu";
+// import Inventory from './features/inventory';
+import Orders from './features/menu/order';
 
 const App = () => {
   const isAuthenticated = false;
@@ -45,6 +47,8 @@ const App = () => {
             <Route path="shops" element={<Shops />} />
             <Route path="settings" element={<div>settings</div>} />
             <Route path="menu" element={<Menu />} />
+            {/* <Route path="inventory" element={<Inventory />} /> */}
+           <Route path="menu/orders" element={<Orders />} />
           </Route>
         )}
       </Routes>

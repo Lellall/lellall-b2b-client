@@ -1,4 +1,5 @@
 import { StyledButton } from '@/components/button/button-lellall';
+import { useNavigate } from 'react-router-dom';
 import SearchBar from '@/components/search-bar/search-bar';
 import { theme } from '@/theme/theme';
 import { Add, ArrowRight, DocumentUpload, Edit, ArrowRight3, Filter, Setting2 } from 'iconsax-react';
@@ -15,6 +16,7 @@ import ConfigureMenu from './configure-menu';
 const Menu = () => {
     const [counters, setCounters] = useState({});
     const [modalOpen, setModalOpen] = useState(false);
+    const navigate = useNavigate();
     const handleCounterChange = (itemName, action) => {
         setCounters(prevCounters => {
             const item = items.find(i => i.name === itemName);
@@ -274,7 +276,7 @@ const Menu = () => {
                                 </div>
                             </div>
                             <div className="flex justify-center mt-5 absolute bottom-5 text-[#979797]">
-                                <StyledButton background={theme.colors.active} color={theme.colors.secondary} width='300px' variant="outline">Send To Kitchen</StyledButton>
+                                <StyledButton background={theme.colors.active} color={theme.colors.secondary} width='300px' variant="outline" onClick={() => navigate('/menu/orders')}>Send To Kitchen</StyledButton>
                             </div>
                         </div>
                     </div>
