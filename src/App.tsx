@@ -7,7 +7,7 @@ import Registration from "./features/auth/registration";
 import ForgotPassword from "./features/auth/forgot-password";
 import Shops from "./features/shops/shops";
 import Menu from "./features/menu/menu";
-// import Inventory from './features/inventory';
+import Inventory from './features/inventory';
 import Orders from './features/menu/order';
 
 const App = () => {
@@ -47,7 +47,7 @@ const App = () => {
             <Route path="shops" element={<Shops />} />
             <Route path="settings" element={<div>settings</div>} />
             <Route path="menu" element={<Menu />} />
-            {/* <Route path="inventory" element={<Inventory />} /> */}
+            <Route path="inventory" element={<Inventory />} />
            <Route path="menu/orders" element={<Orders />} />
           </Route>
         )}

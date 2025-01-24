@@ -67,7 +67,7 @@ export function NewOrderDialog() {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="default" className="bg-white hover:bg-gray-100">
+          <Button variant="outline">
             Add Item
           </Button>
         </DialogTrigger>
