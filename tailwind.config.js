@@ -3,8 +3,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: "var(--color-primary)",
-        secondary: "var(--color-secondary)",
+        primary: "#05431E",
+        accent: "#0E5D37",
+        secondary: "#FFFFFF",
+        "accent-foreground": "#fff",
+        "primary-foreground": "#FFFFFF",
+        "secondary-foreground": "#000",
+      },
+      fontFamily: {
+        sans: ["Lato", "sans-serif"],
       },
     },
   },

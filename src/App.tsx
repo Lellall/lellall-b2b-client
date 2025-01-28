@@ -9,7 +9,7 @@ import Shops from "./features/shops/shops"
 import Menu from "./features/menu/menu"
 import Reservations from "./features/reservations/reservations"
 import Reservation from "./features/reservations/reservation"
-
+import Orders from "./features/menu/order"
 const App = () => {
   const isAuthenticated = false
 
@@ -57,6 +57,8 @@ const App = () => {
             <Route path="menu" element={<Menu />} />
             <Route path="reservations" element={<Reservations />} />
             <Route path="reservations/:id" element={<Reservation />} />
+            {/* <Route path="inventory" element={<Inventory />} /> */}
+            <Route path="menu/orders" element={<Orders />} />
           </Route>
         )}
       </Routes>
