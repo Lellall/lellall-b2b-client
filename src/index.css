@@ -1,3 +1,30 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.rbc-event {
+  /* background: red !important; */
+}
+.rbc-btn-group button {
+  /* background: green !important; */
+  /* border: none !important; */
+  /* background: rgba(237, 237, 237, 0.903) !important; */
+}
+.rbc-active {
+  background: #05431e !important;
+  color: #fff !important;
+}
+.rbc-header {
+  border: none !important;
+}
+.rbc-month-header {
+  background: #f1f4f9;
+  padding: 5px !important;
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+.rbc-month-view,
+.rbc-month-row,
+.rbc-day-bg {
+  border: none !important;
+}
