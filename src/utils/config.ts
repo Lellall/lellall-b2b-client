@@ -1,9 +1,9 @@
 const config = {
   development: {
-    BACKEND_URL: "https://api.dev.lellall.com/backend-core/",
+    BACKEND_URL: "https://api.dev.lellall.com/b2b-api",
   },
   production: {
-    BACKEND_URL: "https://api.lellall.com",
+    BACKEND_URL: "https://api.dev.lellall.com/b2b-api",
   },
 }
 

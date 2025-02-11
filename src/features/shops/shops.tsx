@@ -1,9 +1,10 @@
 import { useState } from "react";
 import Shop from "./shop";
+import { AccordionDemo } from "./branch";
 
 const Shops = () => {
     const [activeTab, setActiveTab] = useState('tab-1');
-    const openTab = (tab) => {
+    const openTab = (tab: string) => {
         setActiveTab(tab);
     };
     return (
@@ -27,7 +28,9 @@ const Shops = () => {
                 {activeTab === 'tab-1' && <div>
                     <Shop />
                 </div>}
-                {activeTab === 'tab-2' && <div>Content for Tab 2</div>}
+                {activeTab === 'tab-2' && <div>
+                    <AccordionDemo />
+                </div>}
             </div>
         </div>
     )

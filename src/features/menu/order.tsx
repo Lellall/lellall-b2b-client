@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import OrderCard from "./components/order-card";
+import SearchBar from "@/components/search-bar/search-bar";
 
 const Orders = () => {
   return (
@@ -9,10 +10,20 @@ const Orders = () => {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div className="flex items-center gap-4">
-            <input
-              type="text"
-              placeholder="Search items"
-              className="px-4 py-2 border rounded-md"
+            <SearchBar
+              placeholder="Search Items"
+              width="300px"
+              height="42px"
+              border="1px solid #fff"
+              borderRadius="10px"
+              backgroundColor="#ffffff"
+              shadow={false}
+              fontSize="11px"
+              color="#444"
+              inputPadding="10px"
+              placeholderColor="#bbb"
+              iconColor="#ccc"
+              iconSize={15}
             />
             <div className="flex gap-2">
               <Button variant="default" className="bg-primary text-white">All</Button>

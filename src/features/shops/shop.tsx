@@ -32,7 +32,7 @@ const Shop = () => {
                     <Add size="32" color="#000" /> Add Menu
                 </StyledButton>
             </div>
-            <div className='flex flex-wrap justify-left gap-12 '>
+            <div className='flex flex-wrap justify-left gap-4 '>
                 {[1, 2, 3, 4, 5, 6].map((_, index) => (
                     <Card
                         key={index}
