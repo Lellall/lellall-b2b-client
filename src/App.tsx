@@ -1,19 +1,20 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Suspense } from "react";
-import Layout from './features/layout/layout';
-import AuthLayout from "./features/auth/auth-layout";
-import Login from "./features/auth/login"; // Replace with your actual Login component
-import Registration from "./features/auth/registration";
-import ForgotPassword from "./features/auth/forgot-password";
-import Shops from "./features/shops/shops";
-import Menu from "./features/menu/menu";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import { Suspense } from "react"
+import Layout from "./features/layout/layout"
+import AuthLayout from "./features/auth/auth-layout"
+import Login from "./features/auth/login" // Replace with your actual Login component
+import Registration from "./features/auth/registration"
+import ForgotPassword from "./features/auth/forgot-password"
+import Shops from "./features/shops/shops"
+import Menu from "./features/menu/menu"
 // import Inventory from './features/inventory';
-import Orders from './features/menu/order';
-import ViewShop from './features/shops/view-shop';
-import Reports from './features/reports/reports';
-import Subscriptions from './features/subscriptions/subscriptions';
+import Orders from "./features/menu/order"
+import ViewShop from "./features/shops/view-shop"
+import Reports from "./features/reports/reports"
+import Subscriptions from "./features/subscriptions/subscriptions"
 import Reservations from "./features/reservations/reservations"
 import Reservation from "./features/reservations/reservation"
+import Staff from "./features/staff/staff"
 
 const App = () => {
   const isAuthenticated = false
@@ -68,6 +69,7 @@ const App = () => {
             <Route path="reservations/:id" element={<Reservation />} />
             {/* <Route path="inventory" element={<Inventory />} /> */}
             <Route path="menu/orders" element={<Orders />} />
+            <Route path="staffs" element={<Staff />} />
           </Route>
         )}
       </Routes>
