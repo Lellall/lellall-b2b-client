@@ -4,6 +4,7 @@ import moment from "moment"
 import Modal from "@/components/modal/modal"
 import ReservationForm from "./components/reservation-form"
 import EventCardDetails from "./components/event-card-details"
+import StyledCalendar from "./components/mod-calender"
 
 function Reservations() {
   const [modalOpen, setModalOpen] = useState(false)
@@ -102,22 +103,10 @@ function Reservations() {
 
   return (
     <div>
-      <h1>Reservations</h1>
+      {/* <h1>Reservations</h1> */}
 
       <div>
-        <Calendar
-          selectable
-          localizer={localizer}
-          events={events}
-          startAccessor="start"
-          endAccessor="end"
-          style={{ height: 500 }}
-          onSelectSlot={handleDateSelect}
-          defaultView="month"
-          components={{
-            event: EventCard,
-          }}
-        />
+        <StyledCalendar />
 
         {/* Custom Modal */}
         {isEventModalOpen && selectedEvent && (
