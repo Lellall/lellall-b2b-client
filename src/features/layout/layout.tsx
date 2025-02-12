@@ -3,7 +3,7 @@ import styled, { ThemeProvider } from 'styled-components';
 import { useMediaQuery } from 'react-responsive';
 import { Outlet, NavLink } from 'react-router-dom';
 import { theme } from '../../theme/theme';
-import { Activity, Alarm, ArchiveBox, ArrowForwardSquare, BackSquare, Calendar2, ConvertCard, Element2, Home, Link, Setting, User, UserSearch } from 'iconsax-react';
+import { Activity, Alarm, ArchiveBox, ArrowForwardSquare, BackSquare, Calendar2, MoneyChange, Element2, Home, Link, Setting, User, UserSearch } from 'iconsax-react';
 import Logo from '../../../assets/Logo.svg';
 import Menu from '../../../assets/menu-collapse.svg';
 
@@ -153,12 +153,6 @@ const Layout = () => {
                             </Icon>
                             <Text isSidebarOpen={isSidebarOpen}>Staffs</Text>
                         </NavItem>
-                        <NavItem to="/supplier">
-                            <Icon>
-                                <ConvertCard size={16} />
-                            </Icon>
-                            <Text isSidebarOpen={isSidebarOpen}>Supplier</Text>
-                        </NavItem>
                         <NavItem to="/reports">
                             <Icon>
                                 <Activity size={16} />
@@ -176,6 +170,12 @@ const Layout = () => {
                                 <Setting size={16} />
                             </Icon>
                             <Text isSidebarOpen={isSidebarOpen}>Settings</Text>
+                        </NavItem>
+                        <NavItem to="/subscriptions">
+                            <Icon>
+                                <MoneyChange size={16} />
+                            </Icon>
+                            <Text isSidebarOpen={isSidebarOpen}>Subscriptions</Text>
                         </NavItem>
                     </nav>
                 </Sidebar>

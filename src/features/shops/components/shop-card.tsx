@@ -7,6 +7,7 @@ interface CardProps {
   title: string;
   actionDotColor?: string;
   className?: string;
+  onClick: () => void;
 }
 
 const StyledCard = styled.div`
@@ -31,9 +32,9 @@ const StyledImage = styled.img`
   border-radius: 8px;
 `;
 
-const Card: React.FC<CardProps> = ({ imageSrc, title, actionDotColor = 'bg-black', className = '' }) => {
+const Card: React.FC<CardProps> = ({ imageSrc, title, actionDotColor = 'bg-black', className = '', onClick }) => {
   return (
-    <div>
+    <div onClick={onClick}>
       <StyledCard className={className}>
         <div className="relative flex flex-col">
           <StyledImage src={imageSrc} alt={title} />
@@ -41,7 +42,7 @@ const Card: React.FC<CardProps> = ({ imageSrc, title, actionDotColor = 'bg-black
       </StyledCard>
       <div className="mt-1 w-[350px] px-1 flex justify-between">
         <div className='text-xs'>{title}</div>
-        <div className='mr-1'><More size="20px" color="#000"/></div>
+        <div className='mr-1'><More size="20px" color="#000" /></div>
       </div>
     </div>
   );
