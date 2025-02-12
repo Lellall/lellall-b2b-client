@@ -1,13 +1,12 @@
 import Card from './components/shop-card';
 import img from '../../../assets/placeholder.svg';
-import Input from '@/components/input/input';
-import { Button } from '@/components/ui/button';
 import { StyledButton } from '@/components/button/button-lellall';
-import { theme } from '@/theme/theme';
 import { Add } from 'iconsax-react';
 import SearchBar from '@/components/search-bar/search-bar';
+import { useNavigate } from 'react-router-dom';
 
 const Shop = () => {
+    const navigate = useNavigate()
     return (
         <div>
             <div className="flex mb-5 justify-between">
@@ -39,6 +38,7 @@ const Shop = () => {
                         imageSrc={img}
                         title="Sample shop name"
                         actionDotColor="bg-red-500"
+                        onClick={() => navigate(`/shops/${index}`)}
                     />
                 ))}
             </div>
