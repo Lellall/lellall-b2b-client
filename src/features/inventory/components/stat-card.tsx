@@ -16,7 +16,7 @@ interface StatCardProps {
     secondarySubtitle,
   }: StatCardProps) => {
     return (
-      <div className="p-4 rounded-lg border border-gray-200">
+      <div className="py-2 px-4">
         <h3 className={`${color} text-sm font-medium`}>{title}</h3>
         <div className="mt-2 flex justify-between items-end">
           <div>

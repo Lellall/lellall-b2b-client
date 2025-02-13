@@ -71,7 +71,7 @@ export function NewOrderDialog() {
             Add Item
           </Button>
         </DialogTrigger>
-        <DialogContent className="bg-white sm:max-w-[425px]">
+        <DialogContent className="bg-white sm:max-w-[425px] max-h-screen overflow-y-auto">
           <DialogHeader>
             <DialogTitle>New Order</DialogTitle>
           </DialogHeader>
@@ -84,9 +84,9 @@ export function NewOrderDialog() {
                   <FormItem>
                     <FormLabel>Product Name</FormLabel>
                     <FormControl>
-                      <Input className="bg-gray-100" placeholder="Product Name" {...field} />
+                      <Input className="bg-[#3D41421F]" placeholder="Product Name" {...field} />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-500" />
                   </FormItem>
                 )}
               />
@@ -96,10 +96,10 @@ export function NewOrderDialog() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Product ID</FormLabel>
-                    <FormControl className="bg-gray-100">
+                    <FormControl className="bg-[#3D41421F]">
                       <Input placeholder="Product ID" {...field} />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-500" />
                   </FormItem>
                 )}
               />
@@ -110,18 +110,18 @@ export function NewOrderDialog() {
                   <FormItem>
                     <FormLabel>Category</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl className="bg-gray-100">
+                      <FormControl className="bg-[#3D41421F]">
                         <SelectTrigger>
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-white">
-                        <SelectItem className="hover:bg-gray-100" value="beverages">Beverages</SelectItem>
-                        <SelectItem className="hover:bg-gray-100" value="food">Food</SelectItem>
-                        <SelectItem className="hover:bg-gray-100" value="supplies">Supplies</SelectItem>
+                        <SelectItem value="beverages">Beverages</SelectItem>
+                        <SelectItem value="food">Food</SelectItem>
+                        <SelectItem value="supplies">Supplies</SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
+                    <FormMessage className="text-red-500" />
                   </FormItem>
                 )}
               />
@@ -132,9 +132,9 @@ export function NewOrderDialog() {
                   <FormItem>
                     <FormLabel>Order Value</FormLabel>
                     <FormControl className="bg-gray-100">
-                      <Input placeholder="Order Value" type="number" {...field} />
+                      <Input className="bg-[#3D41421F]" placeholder="Order Value" type="number" {...field} />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-500" />
                   </FormItem>
                 )}
               />
@@ -146,9 +146,9 @@ export function NewOrderDialog() {
                     <FormItem>
                       <FormLabel>Quantity</FormLabel>
                       <FormControl className="hover:bg-gray-100">
-                        <Input placeholder="Quantity" type="number" {...field} />
+                        <Input className="bg-[#3D41421F]" placeholder="Quantity" type="number" {...field} />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-red-500" />
                     </FormItem>
                   )}
                 />
@@ -159,7 +159,7 @@ export function NewOrderDialog() {
                     <FormItem>
                       <FormLabel>Unit</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
+                        <FormControl className="bg-[#3D41421F]">
                           <SelectTrigger>
                             <SelectValue placeholder="Unit" />
                           </SelectTrigger>
@@ -170,7 +170,7 @@ export function NewOrderDialog() {
                           <SelectItem value="liters">Liters</SelectItem>
                         </SelectContent>
                       </Select>
-                      <FormMessage />
+                      <FormMessage className="text-red-500" />
                     </FormItem>
                   )}
                 />
@@ -182,9 +182,9 @@ export function NewOrderDialog() {
                   <FormItem>
                     <FormLabel>Buying Price</FormLabel>
                     <FormControl className="bg-gray-100">
-                      <Input placeholder="Buying Price" type="number" {...field} />
+                      <Input className="bg-[#3D41421F]" placeholder="Buying Price" type="number" {...field} />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-500" />
                   </FormItem>
                 )}
               />
@@ -196,7 +196,7 @@ export function NewOrderDialog() {
                     <FormLabel>Date of Delivery</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <FormControl>
+                        <FormControl className="bg-[#3D41421F]">
                           <Button
                             variant={"outline"}
                             className={
@@ -225,7 +225,7 @@ export function NewOrderDialog() {
                         />
                       </PopoverContent>
                     </Popover>
-                    <FormMessage />
+                    <FormMessage className="text-red-500" />
                   </FormItem>
                 )}
               />
@@ -240,7 +240,7 @@ export function NewOrderDialog() {
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <div className="space-y-1 leading-none">
+                    <div className="space-y-1 leading-none text-[#858D9D]">
                       <FormLabel>
                         Notify on the date of delivery
                       </FormLabel>
