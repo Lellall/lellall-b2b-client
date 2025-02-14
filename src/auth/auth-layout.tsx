@@ -1,8 +1,9 @@
 import React from "react";
 import { useMediaQuery } from "react-responsive";
-import { theme } from "../../theme/theme";
-import logo from "../../../public/vite.svg"
-import banner from "../../../assets/Image.svg"
+
+import logo from "../../public/vite.svg"
+import banner from "../../assets/Image.svg"
+import { theme } from "@/theme/theme";
 
 export interface AuthLayoutProps {
     children: React.ReactNode

@@ -2,7 +2,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { StyledButton } from "@/components/button/button-lellall"
-import Input from "../../components/input/input"
+import Input from "@/components/input/input"
 import { theme } from "@/theme/theme"
 import { Button } from "@/components/ui/button"
 import { toast } from "react-toastify";
