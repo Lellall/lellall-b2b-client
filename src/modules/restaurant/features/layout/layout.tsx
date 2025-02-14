@@ -2,10 +2,11 @@ import React from 'react';
 import styled, { ThemeProvider } from 'styled-components';
 import { useMediaQuery } from 'react-responsive';
 import { Outlet, NavLink } from 'react-router-dom';
-import { theme } from '../../theme/theme';
 import { Activity, Alarm, ArchiveBox, ArrowForwardSquare, BackSquare, Calendar2, MoneyChange, Element2, Home, Link, Setting, User, UserSearch } from 'iconsax-react';
-import Logo from '../../../assets/Logo.svg';
-import Menu from '../../../assets/menu-collapse.svg';
+// import Logo from '@/assets/Logo.svg';
+import Menu from '../.././../../../assets/menu-collapse.svg';
+import { theme } from '@/theme/theme';
+import Logo from '../../../../../assets/Logo.svg'
 
 const LayoutWrapper = styled.div`
   display: flex;

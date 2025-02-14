@@ -1,7 +1,7 @@
 import { StyledButton } from "@/components/button/button-lellall"
-import Input from "../../components/input/input"
 import { theme } from "@/theme/theme"
 import { Button } from "@/components/ui/button"
+import Input from "@/components/input/input"
 
 const ForgotPassword = () => {
   return (

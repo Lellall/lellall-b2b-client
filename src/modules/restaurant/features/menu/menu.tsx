@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import SearchBar from '@/components/search-bar/search-bar';
 import { theme } from '@/theme/theme';
 import { Add, ArrowRight, DocumentUpload, Edit, ArrowRight3, Filter, Setting2 } from 'iconsax-react';
-import pizza from '../../assets/pizza.svg'
-import burger from '../../assets/burger.svg'
-import bakery from '../../assets/bakery.svg'
-import chicken from '../../assets/chicken.svg'
-import sea from '../../assets/sea.svg'
-import drinks from '../../assets/drinks.svg'
+import pizza from '@/assets/pizza.svg'
+import burger from '@/assets/burger.svg'
+import bakery from '@/assets/bakery.svg'
+import chicken from '@/assets/chicken.svg'
+import sea from '@/assets/sea.svg'
+import drinks from '@/assets/drinks.svg'
 import { useState } from 'react';
 import Modal from '@/components/modal/modal';
 import ConfigureMenu from './configure-menu';

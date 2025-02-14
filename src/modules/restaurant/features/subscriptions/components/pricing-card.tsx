@@ -2,7 +2,7 @@ import { StyledButton } from "@/components/button/button-lellall";
 import { theme } from "@/theme/theme";
 import React from "react";
 import styled from "styled-components";
-import tick from '../../../assets/tick.svg';
+import tick from '@/assets/tick.svg';
 
 interface PricingCardProps {
     title: string;
