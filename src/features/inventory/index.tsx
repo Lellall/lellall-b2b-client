@@ -4,6 +4,7 @@ import { Filter, Download } from "lucide-react";
 import StatCard from "./components/stat-card";
 import ProductsTable from "./components/products-table";
 import { NewOrderDialog } from "./components/add-product-dialog";
+import { RequestSupplyDialog } from "./components/request-supply-dialog";
 
 const Inventory = () => {
   return (
@@ -52,9 +53,7 @@ const Inventory = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <h2 className="text-xl font-semibold">Products</h2>
               <div className="flex flex-wrap items-center gap-3">
-                <Button variant="default" className="bg-primary hover:bg-green-700">
-                  Request Supply
-                </Button>
+                <RequestSupplyDialog />
                 <NewOrderDialog />
                 <Button variant="outline" className="gap-2">
                   <Filter className="h-4 w-4" />
