@@ -12,7 +12,7 @@ import Layout from './modules/restaurant/features/layout/layout';
 // import ForgotPassword from "./features/auth/forgot-password";
 import Shops from "./modules/restaurant/features/shops/shops";
 import Menu from "./modules/restaurant/features/menu/menu";
-// import Inventory from './modules/restaurant/features/inventory';
+import Inventory from './modules/restaurant/features/inventory';
 import Orders from './modules/restaurant/features/menu/order';
 import ViewShop from './modules/restaurant/features/shops/view-shop';
 import Reports from './modules/restaurant/features/reports/reports';
@@ -38,7 +38,7 @@ const App = () => {
     <Route path="subscriptions" element={<Subscriptions />} />
     <Route path="reservations" element={<Reservations />} />
     <Route path="reservations/:id" element={<Reservation />} />
-    {/* <Route path="inventory" element={<Inventory />} /> */}
+    <Route path="inventory" element={<Inventory />} />
     <Route path="menu/orders" element={<Orders />} />
   </>
   const adminRoutes = <>

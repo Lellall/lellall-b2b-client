@@ -127,13 +127,13 @@ const OrderCard = ({ orderNumber, status, date, time, items, subtotal }: OrderCa
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetContent className="bg-white sm:max-w-md overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>Table 01</SheetTitle>
-            <span className="text-sm text-gray-500">Watson Joyce</span>
+            <SheetTitle className="text-2xl font-medium">Table 01</SheetTitle>
+            <span className="text-base text-gray-500">Watson Joyce</span>
           </SheetHeader>
 
           <div className="mt-8 space-y-6">
             {/* Order Items */}
-            <div className="space-y-4">
+            <div className="space-y-4 mb-16">
               {items.map((item, index) => (
                 <div key={index} className="rounded-lg flex p-2 justify-between items-center mb-3 last:mb-0 bg-[#FAFBFF]">
                    <div className="flex">
@@ -167,12 +167,16 @@ const OrderCard = ({ orderNumber, status, date, time, items, subtotal }: OrderCa
                   <span>Tip</span>
                   <span>₦20</span>
                 </div>
-                <Separator />
-                <div className="flex justify-between font-semibold">
+                <div className="pt-5 pb-1">
+                  <Separator className="border border-dashed border-[#5E5E5E]" />
+                </div>
+                <div className="flex justify-between text-sm">
                   <span>Total</span>
                   <span>₦17.5</span>
                 </div>
               </div>
+
+              <Separator className="border border-dashed border-[#5E5E5E] mt-48" />
               {/* Payment Section */}
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
