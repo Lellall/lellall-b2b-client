@@ -7,9 +7,9 @@ import PieChart from "./components/pie-chart.component";
 import LineChart from "./components/xy-chart.component";
 import Table from "@/components/ui/table";
 import InfoCard from "../shops/components/info-card";
-import users from '../../assets/users.svg';
-import confirmed from '../../assets/confirmed.svg';
-import failed from '../../assets/failed.svg';
+import users from '@/assets/users.svg';
+import confirmed from '@/assets/confirmed.svg';
+import failed from '@/assets/failed.svg';
 
 
 const Reports = () => {

@@ -1,8 +1,8 @@
 import InfoCard from "./components/info-card";
-import packageIcon from '../../assets/package.svg';
-import totalIcon from '../../assets/total.svg';
-import pendingIcon from '../../assets/pending.svg';
-import financeIcon from '../../assets/finance.svg';
+import packageIcon from '@/assets/package.svg';
+import totalIcon from '@/assets/total.svg';
+import pendingIcon from '@/assets/pending.svg';
+import financeIcon from '@/assets/finance.svg';
 import Table from "@/components/ui/table";
 import { Eye } from "iconsax-react";
 import { theme } from "@/theme/theme";
