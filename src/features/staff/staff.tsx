@@ -1,3 +1,4 @@
+import Modal from "@/components/modal/modal"
 import SearchBar from "@/components/search-bar/search-bar"
 import { TabButton, TabContainer, TabPanel } from "@/components/tab"
 import { Button } from "@/components/ui/button"
@@ -6,6 +7,7 @@ import { SelectContent, Select, SelectItem, SelectTrigger, SelectValue } from "@
 import { Eye, Trash } from "iconsax-react"
 import { Pencil } from "lucide-react"
 import { useState } from "react"
+import StaffForm from "./components/staff-form"
 
 // Sample data for staff management
 const staffData = [
@@ -165,6 +167,28 @@ function Staff() {
   const handleTabSwitch = (val: string) => {
     setActiveTab(val)
   }
+  const [formValues, setFormValues] = useState({
+    tableNumber: "",
+    paxNumber: "",
+    reservationDate: "",
+    reservationTime: "",
+    depositFee: "",
+    status: "Confirmed",
+    title: "Mr",
+    fullName: "",
+    phoneNumber: "",
+    email: "",
+    customerId: "#12354564",
+    paymentMethod: "Visa **** 1234",
+  })
+  const [modalOpen, setModalOpen] = useState(false)
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormValues({
+      ...formValues,
+      [name]: value,
+    })
+  }
 
   return (
     <div className="p-6">
@@ -173,7 +197,7 @@ function Staff() {
           {activeTab === "staff" ? <p>Staff ({staffData.length})</p> : <SearchBar />}
           <div className="flex gap-3">
             <Button variant={"ghost"}>Sort By</Button>
-            <Button>Add Staff</Button>
+            <Button onClick={() => setModalOpen(true)}>Add Staff</Button>
           </div>
         </div>
         <TabContainer className="!w-[300px] my-5">
@@ -250,6 +274,16 @@ function Staff() {
           ))}
         </TabPanel>
       </main>
+      <div className="overflow-y-auto">
+        <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} position={"right"}>
+          <StaffForm
+            formValues={formValues}
+            handleChange={handleChange}
+            setFormValues={setFormValues}
+            setModalOpen={setModalOpen}
+          />
+        </Modal>
+      </div>
     </div>
   )
 }
