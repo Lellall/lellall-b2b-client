@@ -1,7 +1,7 @@
 import Breadcrumb from "@/components/ui/breadcrumb";
 import styled from "styled-components";
-import banner from '../../assets/banner.svg';
-import circle from '../../assets/circle.svg';
+import banner from '@/assets/banner.svg';
+import circle from '@/assets/circle.svg';
 import TabsLayout from "./tabs-layout";
 
 export const Banner = styled.div`
