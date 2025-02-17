@@ -1,5 +1,5 @@
 import Card from './components/shop-card';
-import img from '../../../assets/placeholder.svg';
+import img from '../.././../../../assets/placeholder.svg';
 import { StyledButton } from '@/components/button/button-lellall';
 import { Add } from 'iconsax-react';
 import SearchBar from '@/components/search-bar/search-bar';

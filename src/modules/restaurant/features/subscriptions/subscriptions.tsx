@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import subs from '../../assets/subs.svg';
+import subs from '@/assets/subs.svg';
 import { useState } from "react";
 import LellallSwitch from "@/components/ui/switch.component";
 import PricingCard from "./components/pricing-card";
