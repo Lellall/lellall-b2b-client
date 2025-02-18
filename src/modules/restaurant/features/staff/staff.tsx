@@ -2,12 +2,11 @@ import Modal from "@/components/modal/modal"
 import SearchBar from "@/components/search-bar/search-bar"
 import { TabButton, TabContainer, TabPanel } from "@/components/tab"
 import { Button } from "@/components/ui/button"
-import { FormControl } from "@/components/ui/form"
-import { SelectContent, Select, SelectItem, SelectTrigger, SelectValue } from "@radix-ui/react-select"
 import { Eye, Trash } from "iconsax-react"
 import { Pencil } from "lucide-react"
 import { useState } from "react"
 import StaffForm from "./components/staff-form"
+import { useNavigate } from "react-router-dom"
 
 // Sample data for staff management
 const staffData = [
@@ -164,6 +163,7 @@ interface AttendanceRecordProps {
 
 function Staff() {
   const [activeTab, setActiveTab] = useState("staff")
+  const navigation = useNavigate()
   const handleTabSwitch = (val: string) => {
     setActiveTab(val)
   }
@@ -254,7 +254,11 @@ function Staff() {
                         <button>
                           <Eye size={16} />
                         </button>
-                        <button>
+                        <button
+                          onClick={() => {
+                            navigation(`/staffs/${staff.id}`)
+                          }}
+                        >
                           <Pencil size={16} />
                         </button>
                         <button>
