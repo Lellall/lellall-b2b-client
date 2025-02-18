@@ -22,11 +22,11 @@ import Reservation from "./modules/restaurant/features/reservations/reservation"
 import AdminLayout from "./modules/admin/features/layout/layout"
 import Operations from "./modules/admin/features/operations/operations"
 import ViewOrderOperations from "./modules/admin/features/operations/view-order-operations"
-import Staff from "./features/staff/staff"
+import Staff from "./modules/restaurant/features/staff/staff"
 
 const App = () => {
   const isAuthenticated = false
-  const isAdmin = true
+  const isAdmin = false
 
   const restaurantRoutes = (
     <>
