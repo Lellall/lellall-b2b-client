@@ -23,6 +23,7 @@ import AdminLayout from "./modules/admin/features/layout/layout"
 import Operations from "./modules/admin/features/operations/operations"
 import ViewOrderOperations from "./modules/admin/features/operations/view-order-operations"
 import Staff from "./modules/restaurant/features/staff/staff"
+import StaffProfile from "./modules/restaurant/features/staff/components/staff-profile"
 
 const App = () => {
   const isAuthenticated = false
@@ -43,6 +44,7 @@ const App = () => {
       {/* <Route path="inventory" element={<Inventory />} /> */}
       <Route path="menu/orders" element={<Orders />} />
       <Route path="staffs" element={<Staff />} />
+      <Route path="staffs/:id" element={<StaffProfile />} />
     </>
   )
   const adminRoutes = (
