@@ -3,6 +3,7 @@ import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, 
 import storage from "redux-persist/lib/storage"
 
 import { baseApi as api } from "./api/baseApi"
+import authSlice from "./api/auth/auth.slice"
 const persistConfig = {
   key: "root",
   version: 1,
@@ -12,6 +13,7 @@ const persistConfig = {
 
 const rootReducer = combineReducers({
   [api.reducerPath]: api.reducer,
+  auth: authSlice,
 })
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)
