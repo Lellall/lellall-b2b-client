@@ -2,6 +2,7 @@ import { toast } from "react-toastify"
 import { LoginRequest, LoginResponse } from "./typings"
 import { setAuthState, logout } from "./auth.slice"
 import { baseApi } from "../baseApi"
+import { ErrorHandler } from "@/utils/error-handler"
 
 interface EmailRequest {
   email: string
@@ -31,7 +32,7 @@ const authApi = baseApi.injectEndpoints({
             })
           )
         }).catch((err) => {
-          // Errorhandler(err)
+          ErrorHandler(err)
         })
       },
     }),
@@ -55,6 +56,7 @@ const authApi = baseApi.injectEndpoints({
           )
           return data
         } catch (err) {
+          Errorhandler(err)
           return err
         }
       },

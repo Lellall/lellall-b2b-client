@@ -1,12 +1,16 @@
 import React from 'react';
 import styled, { ThemeProvider } from 'styled-components';
 import { useMediaQuery } from 'react-responsive';
-import { Outlet, NavLink } from 'react-router-dom';
-import { Activity, Alarm, ArchiveBox, ArrowForwardSquare, BackSquare, Calendar2, MoneyChange, Element2, Home, Link, Setting, User, UserSearch } from 'iconsax-react';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Activity, Alarm, ArchiveBox, ArrowForwardSquare, BackSquare, Calendar2, MoneyChange, Element2, Home, Link, Setting, User, UserSearch, Logout } from 'iconsax-react';
 // import Logo from '@/assets/Logo.svg';
 import Menu from '../.././../../../assets/menu-collapse.svg';
 import { theme } from '@/theme/theme';
 import Logo from '../../../../../assets/Logo.svg'
+import { useDispatch, useSelector } from 'react-redux';
+import { selectAuth } from '@/redux/api/auth/auth.slice';
+import { logout } from "@/redux/api/auth/auth.slice";
+import { persistor } from '@/redux/store';
 
 const LayoutWrapper = styled.div`
   display: flex;
@@ -106,9 +110,38 @@ const Text = styled.span`
   display: ${(props) => (props.isSidebarOpen ? 'inline' : 'none')};
 `;
 
+const LogoutButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  text-decoration: none;
+  color: ${(props) => props.theme.colors.active};
+  font-weight: 300;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  &:hover {
+    color: ${(props) => props.theme.colors.hoverFont};
+    border-radius: 8px;
+  }
+`;
+
 const Layout = () => {
     const isMobile = useMediaQuery({ query: `(max-width: ${theme.breakpoints.mobile})` });
     const [isSidebarOpen, setSidebarOpen] = React.useState(!isMobile);
+    const dispatch = useDispatch()
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        dispatch(logout()); // Dispatch logout action
+        await persistor.purge(); // Clear persisted state
+        localStorage.removeItem("access_token"); // Clear tokens if used
+        localStorage.removeItem("refresh_token");
+        navigate("/"); // Redirect to login page
+    };
 
     const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
@@ -178,6 +211,12 @@ const Layout = () => {
                             </Icon>
                             <Text isSidebarOpen={isSidebarOpen}>Subscriptions</Text>
                         </NavItem>
+                        <LogoutButton onClick={handleLogout}>
+                            <Icon>
+                                <Logout size={16} />
+                            </Icon>
+                            <Text isSidebarOpen={isSidebarOpen}>Logout</Text>
+                        </LogoutButton>
                     </nav>
                 </Sidebar>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
