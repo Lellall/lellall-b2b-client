@@ -10,6 +10,7 @@ yarn.lock
 yarn
 .yarn/install-state.gz
 .@/
+package-lock.josn
 
 node_modules/
 dist
