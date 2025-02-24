@@ -12,6 +12,13 @@ import Layout from "./modules/restaurant/features/layout/layout"
 // import ForgotPassword from "./features/auth/forgot-password";
 import Shops from "./modules/restaurant/features/shops/shops"
 import Menu from "./modules/restaurant/features/menu/menu"
+import Inventory from "./modules/restaurant/features/inventory"
+import Orders from "./modules/restaurant/features/menu/order"
+import ViewShop from "./modules/restaurant/features/shops/view-shop"
+import Reports from "./modules/restaurant/features/reports/reports"
+import Subscriptions from "./modules/restaurant/features/subscriptions/subscriptions"
+import Shops from "./modules/restaurant/features/shops/shops"
+import Menu from "./modules/restaurant/features/menu/menu"
 // import Inventory from './modules/restaurant/features/inventory';
 import Orders from "./modules/restaurant/features/menu/order"
 import ViewShop from "./modules/restaurant/features/shops/view-shop"
@@ -29,6 +36,29 @@ const App = () => {
   const isAuthenticated = false
   const isAdmin = false
 
+  const restaurantRoutes = (
+    <>
+      <Route index element={<div>hello</div>} />
+      <Route path="shops" element={<Shops />} />
+      <Route path="shops/:id" element={<ViewShop />} />
+      <Route path="settings" element={<div>settings</div>} />
+      <Route path="menu" element={<Menu />} />
+      <Route path="reports" element={<Reports />} />
+      <Route path="menu/orders" element={<Orders />} />
+      <Route path="subscriptions" element={<Subscriptions />} />
+      <Route path="reservations" element={<Reservations />} />
+      <Route path="reservations/:id" element={<Reservation />} />
+      <Route path="inventory" element={<Inventory />} />
+      <Route path="menu/orders" element={<Orders />} />
+    </>
+  )
+  const adminRoutes = (
+    <>
+      <Route index element={<div>hello</div>} />
+      <Route path="operations" element={<Operations />} />
+      <Route path="operations/:id" element={<ViewOrderOperations />} />
+    </>
+  )
   const restaurantRoutes = (
     <>
       <Route index element={<div>hello</div>} />
