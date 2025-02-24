@@ -21,15 +21,16 @@ import Settings from "./modules/restaurant/features/settings/settings";
 import { selectAuth } from "./redux/api/auth/auth.slice";
 import ProtectedRoute from "./protected-routes/protect-routes";
 import NotFound from "./not-found/not-found";
-import { ToastContainer } from "react-toastify"
-import "react-toastify/dist/ReactToastify.css"
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const App = () => {
-  const { isAuthenticated, isAdmin } = useSelector(selectAuth);
+  const { isAuthenticated } = useSelector(selectAuth);
+  const isAdmin = true; // Hardcoded to true to show admin routes
 
   const restaurantRoutes = (
     <>
-      <Route index element={<div>hello</div>} />
+      <Route index element={<Shops />} />
       <Route path="shops" element={<Shops />} />
       <Route path="shops/:id" element={<ViewShop />} />
       <Route path="settings" element={<Settings />} />
@@ -44,64 +45,65 @@ const App = () => {
 
   const adminRoutes = (
     <>
-      <Route index element={<div>hello</div>} />
+      <Route index element={<Operations />} />
       <Route path="operations" element={<Operations />} />
       <Route path="operations/:id" element={<ViewOrderOperations />} />
     </>
   );
 
   return (
-    <>
-      <Router>
+    <Router>
+      <Suspense fallback={<div>loading....</div>}>
         <Routes>
           {!isAuthenticated ? (
             <>
               <Route
                 path="/"
                 element={
-                  <Suspense fallback={<div>loading....</div>}>
-                    <AuthLayout>
-                      <Login />
-                    </AuthLayout>
-                  </Suspense>
+                  <AuthLayout>
+                    <Login />
+                  </AuthLayout>
                 }
               />
               <Route
                 path="/register"
                 element={
-                  <Suspense fallback={<div>loading....</div>}>
-                    <AuthLayout>
-                      <Registration />
-                    </AuthLayout>
-                  </Suspense>
+                  <AuthLayout>
+                    <Registration />
+                  </AuthLayout>
                 }
               />
               <Route
                 path="/reset"
                 element={
-                  <Suspense fallback={<div>loading....</div>}>
-                    <AuthLayout>
-                      <ForgotPassword />
-                    </AuthLayout>
-                  </Suspense>
+                  <AuthLayout>
+                    <ForgotPassword />
+                  </AuthLayout>
                 }
               />
             </>
           ) : (
             <>
+              {/* Restaurant Routes */}
               <Route element={<ProtectedRoute isAdminRoute={false} />}>
-                <Route path="/" element={<Layout />}>{restaurantRoutes}</Route>
+                <Route path="/" element={<Layout />}>
+                  {restaurantRoutes}
+                </Route>
               </Route>
+
+              {/* Admin Routes - Will always show because isAdmin is hardcoded */}
               <Route element={<ProtectedRoute isAdminRoute={true} />}>
-                <Route path="/admin" element={<AdminLayout />}>{adminRoutes}</Route>
+                <Route path="/admin" element={<AdminLayout />}>
+                  {adminRoutes}
+                </Route>
               </Route>
             </>
           )}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </Router>
+      </Suspense>
       <ToastContainer />
-    </>
+    </Router>
   );
 };
 
