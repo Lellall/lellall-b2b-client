@@ -25,9 +25,9 @@ const authApi = baseApi.injectEndpoints({
           dispatch(
             setAuthState({
               isAuthenticated: true,
-              accessToken: data.data.access_token,
+              accessToken: data.data.accessToken,
               // user: data.user,
-              refreshToken: data.data.refresh_token,
+              refreshToken: data.data.refreshToken,
               user: data.data.user,
             })
           )
@@ -56,7 +56,7 @@ const authApi = baseApi.injectEndpoints({
           )
           return data
         } catch (err) {
-          Errorhandler(err)
+          ErrorHandler(err)
           return err
         }
       },

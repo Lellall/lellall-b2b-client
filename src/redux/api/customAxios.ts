@@ -23,6 +23,7 @@ const endpointsRequiringToken = [
   "/order-statistic",
   "invoices",
   "^/restaurants/[a-fA-F0-9-]+$/",
+  "^/reservations",
   /^\/products\/[a-fA-F0-9-]+$/,
 ]
 
@@ -32,6 +33,7 @@ const endpointsWithoutToken = ["/auth/login", "/auth/register", "/auth/refresh-t
 CustomAxios.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("access_token")
+
     const requiresToken = endpointsRequiringToken.some((pattern) => config.url?.match(pattern))
     const skipToken = endpointsWithoutToken.some((endpoint) => config.url?.includes(endpoint))
 
@@ -52,7 +54,8 @@ async function refreshToken() {
   if (!refresh) refresh = "null"
   return CustomAxios.post("auth/refresh-token", {
     refreshToken: localStorage.getItem("refresh_token") || "null",
-    role: USER_ROLE,
+    // role: USER_ROLE,
+    role: "user",
   }).catch(() => {
     window.location.href = "/login"
   })
@@ -62,28 +65,25 @@ CustomAxios.interceptors.response.use(
   (res) => res,
   async (err) => {
     const originalConfig = err.config
-    if (err.response) {
-      if (
-        (err.response.status === 401 || err.response.status === 403) &&
-        !originalConfig._retry
-      ) {
-        originalConfig._retry = true
-        try {
-          const rs = await refreshToken()
-          const { access_token } = rs?.data ?? null
-          if (access_token) {
-            localStorage.setItem("access_token", access_token)
-            CustomAxios.defaults.headers.common.Authorization = `Bearer ${access_token}`
-            return await CustomAxios(originalConfig)
-          }
-        } catch (_error) {
-          return Promise.reject(_error)
-        }
-      }
-      if (err.response.status === 403 && err.response.data) {
-        return Promise.reject(err.response.data)
-      }
-    }
+    // if (err.response) {
+    //   if ((err.response.status === 401 || err.response.status === 403) && !originalConfig._retry) {
+    //     originalConfig._retry = true
+    //     try {
+    //       const rs = await refreshToken()
+    //       const { access_token } = rs?.data ?? null
+    //       if (access_token) {
+    //         localStorage.setItem("access_token", access_token)
+    //         CustomAxios.defaults.headers.common.Authorization = `Bearer ${access_token}`
+    //         return await CustomAxios(originalConfig)
+    //       }
+    //     } catch (_error) {
+    //       return Promise.reject(_error)
+    //     }
+    //   }
+    //   if (err.response.status === 403 && err.response.data) {
+    //     return Promise.reject(err.response.data)
+    //   }
+    // }
     return Promise.reject(err)
   }
 )

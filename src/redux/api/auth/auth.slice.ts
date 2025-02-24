@@ -1,35 +1,37 @@
 // auth.slice.js
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit"
+import { LoginResponse } from "./typings"
 
-const initialState = {
+const initialState: LoginResponse = {
   isAuthenticated: false,
-  accessToken: null,
-  refreshToken: null,
+  accessToken: "",
+  refreshToken: "",
   user: null,
   isAdmin: false,
-};
+  token_type: "",
+}
 
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
     setAuthState: (state, action) => {
-      state.isAuthenticated = action.payload.isAuthenticated;
-      state.accessToken = action.payload.accessToken;
-      state.refreshToken = action.payload.refreshToken;
-      state.user = action.payload.user;
-      state.isAdmin = action.payload.user?.role === "ADMIN";
+      state.isAuthenticated = action.payload.isAuthenticated
+      state.accessToken = action.payload.accessToken
+      state.refreshToken = action.payload.refreshToken
+      state.user = action.payload.user
+      state.isAdmin = action.payload.user?.role === "ADMIN"
     },
     logout: (state) => {
-      state.isAuthenticated = false;
-      state.accessToken = null;
-      state.refreshToken = null;
-      state.user = null;
-      state.isAdmin = false;
+      state.isAuthenticated = false
+      state.accessToken = ""
+      state.refreshToken = ""
+      state.user = null
+      state.isAdmin = false
     },
   },
-});
+})
 
-export const { setAuthState, logout } = authSlice.actions;
-export const selectAuth = (state: { auth: any; }) => state.auth;
-export default authSlice.reducer;
+export const { setAuthState, logout } = authSlice.actions
+export const selectAuth = (state: { auth: LoginResponse }) => state.auth
+export default authSlice.reducer

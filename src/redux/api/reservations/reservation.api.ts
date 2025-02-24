@@ -5,7 +5,7 @@ const reservationApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     postReservation: builder.mutation<Reservation, void>({
       query: (data) => ({
-        url: "/reservation",
+        url: "/reservations",
         method: "POST",
         body: data,
       }),
