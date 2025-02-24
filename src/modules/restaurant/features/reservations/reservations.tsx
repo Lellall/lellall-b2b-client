@@ -5,12 +5,15 @@ import Modal from "@/components/modal/modal"
 import ReservationForm from "./components/reservation-form"
 import EventCardDetails from "./components/event-card-details"
 import StyledCalendar from "./components/mod-calender"
+import { useReservationsQuery } from "@/redux/api/reservations/reservation.api"
 
 function Reservations() {
   const [modalOpen, setModalOpen] = useState(false)
   const [isEventModalOpen, setIsEventModalOpen] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [selectedDate, setSelectedDate] = useState({ start: "", end: "" })
+  const { data, isLoading } = useReservationsQuery()
+  console.log(data)
   const [formValues, setFormValues] = useState({
     tableNumber: "",
     paxNumber: "",

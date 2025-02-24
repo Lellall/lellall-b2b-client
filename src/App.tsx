@@ -27,7 +27,7 @@ import StaffProfile from "./modules/restaurant/features/staff/components/staff-p
 
 const App = () => {
   const isAuthenticated = false
-  const isAdmin = true
+  const isAdmin = false
 
   const restaurantRoutes = (
     <>
@@ -58,7 +58,7 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        {isAuthenticated ? (
+        {!isAuthenticated ? (
           <>
             <Route
               path="/"
