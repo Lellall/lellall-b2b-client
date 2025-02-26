@@ -26,11 +26,12 @@ export interface User {
 }
 
 export interface LoginResponse {
-  refresh_token: string
-  access_token: string
+  refreshToken: string
+  accessToken: string
   token_type: string
   isAuthenticated: boolean
-  user: User
+  user: User | null
+  isAdmin: boolean
 }
 
 export interface LoginRequest {
