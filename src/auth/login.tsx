@@ -31,7 +31,7 @@ const Login = () => {
       const result = await login(data).unwrap()
       // Handle successful login, perhaps navigate to home or dashboard
       localStorage.setItem("access_token", result.accessToken)
-      console.log(result.accessToken)
+
       toast.success("Login successful!")
     } catch (error) {
       // Handle login error
