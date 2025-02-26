@@ -9,13 +9,14 @@ const reservationApi = baseApi.injectEndpoints({
         method: "POST",
         body: data,
       }),
+      invalidatesTags: ["RESERVATIONS"],
       async onQueryStarted(_args, { queryFulfilled: qf }) {
         qf.then(() => {
           toast.success("Reserved Successfully")
         }).catch((err) => {
           // Errorhandler(err)
           const msg = err.message || "Failed to reserved"
-          toast.success(msg)
+          toast.error(msg)
         })
       },
     }),
@@ -23,11 +24,13 @@ const reservationApi = baseApi.injectEndpoints({
       query: () => ({
         url: "/reservations",
       }),
+      providesTags: ["RESERVATIONS"],
     }),
     reservation: builder.query<Reservation[], { id: string }>({
       query: ({ id }) => ({
         url: `/reservations/${id}`,
       }),
+      providesTags: ["RESERVATIONS"],
     }),
     updateReservation: builder.query<Reservation, RequestUpdate>({
       query: ({ id, ...rest }) => ({
@@ -35,12 +38,14 @@ const reservationApi = baseApi.injectEndpoints({
         method: "PUT",
         body: rest,
       }),
+      providesTags: ["RESERVATIONS"],
     }),
     deleteReservation: builder.query<Reservation, { id: string }>({
       query: ({ id }) => ({
         url: `/reservations/${id}`,
         method: "DELETE",
       }),
+      providesTags: ["RESERVATIONS"],
     }),
   }),
 })

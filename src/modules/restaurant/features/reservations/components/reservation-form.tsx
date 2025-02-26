@@ -1,183 +1,184 @@
-import { User } from "iconsax-react"
-import { useState } from "react"
-import PaymentMethodDropdown from "../select"
+import { ChangeEvent, useEffect } from "react"
+// import PaymentMethodDropdown from "../select"
 import { Button } from "@/components/ui/button"
+import Input from "@/components/input/input"
+import { usePostReservationMutation } from "@/redux/api/reservations/reservation.api"
 
-function ReservationForm({ formValues, setFormValues, setModalOpen, handleChange }) {
+function ReservationForm({ setModalOpen, reset, watch, errors, register, handleSubmit, setValue, clearErrors }) {
+  const [handlePostReservation, { isLoading, isSuccess }] = usePostReservationMutation()
+  const onSubmit = (data) => {
+    const { reservationDate, ...rest } = data
+
+    const timeZoneOffset = reservationDate.getTimezoneOffset() * 60000
+
+    // Create a new date adjusted for the time zone offset
+    const localDate = new Date(reservationDate.getTime() - timeZoneOffset)
+
+    // Format the date as YYYY-MM-DD
+    const formattedDate = localDate.toISOString().split("T")[0]
+
+    console.log(reservationDate) // Original date with time zone
+    console.log(formattedDate) // Formatted date in local time zone
+    const dataToSubmit = { ...rest, reservationDate: formattedDate }
+    console.log(dataToSubmit)
+    // handlePostReservation(dataToSubmit)
+    //   .unwrap()
+    //   .then(() => {
+    //     setModalOpen(false)
+    //     reset()
+    //   })
+  }
+
   return (
-    <>
-      <div className="max-w-2xl mx-auto p-6 space-y-8">
-        {/* Reservation Details */}
-        <div className="grid grid-cols-2 gap-2 ">
-          <div className="space-y-2 ">
-            <label className="block text-gray-900">Table Number</label>
-            <input
-              type="text"
-              name="tableNumber"
-              value={formValues.tableNumber}
-              onChange={handleChange}
-              className="w-full bg-gray-100 p-3 rounded-lg"
-            />
-          </div>
+    <form onSubmit={handleSubmit(onSubmit)} className="max-w-2xl mx-auto p-6 space-y-8">
+      {/* Reservation Details */}
+      <div className="grid grid-cols-2 gap-2">
+        <Input
+          label="Table Number"
+          placeholder="Table Number"
+          type="text"
+          value={watch("tableNumber")}
+          register={register}
+          {...register("tableNumber", { required: "Table Number is required" })}
+          error={errors.tableNumber?.message}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => {
+            setValue("tableNumber", e.target.value)
+            clearErrors("tableNumber")
+          }}
+        />
+        <Input
+          label="Reservation Date"
+          placeholder="Reservation Date"
+          type="date"
+          value={watch("reservationDate")}
+          error={errors.reservationDate?.message}
+          register={register}
+          {...register("reservationDate", { required: "Reservation Date is required" })}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => {
+            setValue("reservationDate", e.target.value)
+            clearErrors("reservationDate")
+          }}
+        />
+        <Input
+          label="Reservation Time"
+          placeholder="Reservation Time"
+          type="time"
+          value={watch("reservationTime")}
+          error={errors.reservationTime?.message}
+          register={register}
+          {...register("reservationTime", { required: "Reservation Time is required" })}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => {
+            setValue("reservationTime", e.target.value)
+            clearErrors("reservationTime")
+          }}
+        />
+        <Input
+          label="Deposit Fee"
+          placeholder="Deposit Fee"
+          type="text"
+          value={watch("depositFee")}
+          error={errors.depositFee?.message}
+          register={register}
+          {...register("depositFee", { required: "Deposit Fee is required" })}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => {
+            setValue("depositFee", e.target.value)
+            clearErrors("depositFee")
+          }}
+        />
+      </div>
 
-          <div className="space-y-2">
-            <label className="block text-gray-900">Number of Person </label>
-            <input
-              type="text"
-              name="paxNumber"
-              value={formValues.paxNumber}
-              onChange={handleChange}
-              className="w-full bg-gray-100 p-3 rounded-lg"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-gray-900">Reservation Date</label>
-            <input
-              type="date"
-              name="reservationDate"
-              value={formValues.reservationDate}
-              onChange={handleChange}
-              className="w-full bg-gray-100 p-3 rounded-lg"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-gray-900">Reservation Time</label>
-            <input
-              type="time"
-              name="reservationTime"
-              value={formValues.reservationTime}
-              onChange={handleChange}
-              className="w-full bg-gray-100 p-3 rounded-lg"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-gray-900">Deposit Fee</label>
-            <input
-              type="text"
-              name="depositFee"
-              value={formValues.depositFee}
-              onChange={handleChange}
-              className="w-full bg-gray-100 p-3 rounded-lg"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-gray-900">Status</label>
-            <input
-              type="text"
-              name="status"
-              value={formValues.status}
-              onChange={handleChange}
-              className="w-full bg-gray-100 p-3 rounded-lg text-pink-500"
-            />
-          </div>
+      {/* Customer Details */}
+      <div className="space-y-1">
+        <h2 className="text-2xl font-semibold">Customer Details</h2>
+        <div className="my-3">
+          <Input
+            label="Title"
+            placeholder="Title"
+            type="text"
+            value={watch("customerTitle")}
+            error={errors.customerTitle?.message}
+            register={register}
+            {...register("customerTitle", { required: "Title is required" })}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+              setValue("customerTitle", e.target.value)
+              clearErrors("customerTitle")
+            }}
+          />
         </div>
-
-        {/* Customer Details */}
-        <div className="space-y-1">
-          <h2 className="text-2xl font-semibold">Customer Details</h2>
-
-          <div className="space-y-2">
-            <div className="space-y-1">
-              <label className="block text-gray-900">Title</label>
-              <input
-                type="text"
-                name="title"
-                value={formValues.title}
-                onChange={handleChange}
-                className="w-full bg-gray-100 p-3 rounded-lg"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="block text-gray-900">First Name</label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formValues.fullName}
-                  onChange={handleChange}
-                  className="w-full bg-gray-100 p-3 rounded-lg"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="block text-gray-900">Surname</label>
-                <input
-                  type="text"
-                  value={formValues.fullName.split(" ")[1] || ""}
-                  className="w-full bg-gray-100 p-3 rounded-lg"
-                  onChange={(e) => {
-                    const fullName = e.target.value.split(" ")
-                    setFormValues({
-                      ...formValues,
-                      fullName: fullName.join(" "),
-                    })
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <label className="block text-gray-900">Phone Number</label>
-                <input
-                  type="text"
-                  name="phoneNumber"
-                  value={formValues.phoneNumber}
-                  onChange={handleChange}
-                  className="w-full bg-gray-100 p-3 rounded-lg"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="block text-gray-900">Email Address</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formValues.email}
-                  onChange={handleChange}
-                  className="w-full bg-gray-100 p-3 rounded-lg"
-                />
-              </div>
-            </div>
-          </div>
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="First Name"
+            placeholder="First Name"
+            type="text"
+            value={watch("customerFirstName")}
+            error={errors.customerFirstName?.message}
+            register={register}
+            {...register("customerFirstName", { required: "First Name is required" })}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+              setValue("customerFirstName", e.target.value)
+              clearErrors("customerFirstName")
+            }}
+          />
+          <Input
+            label="Last Name"
+            placeholder="Last Name"
+            type="text"
+            value={watch("customerLastName")}
+            error={errors.customerLastName?.message}
+            register={register}
+            {...register("customerLastName", { required: "Last Name is required" })}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+              setValue("customerLastName", e.target.value)
+              clearErrors("customerLastName")
+            }}
+          />
         </div>
-
-        {/* Additional Information */}
-        <div className="space-y-1">
-          <h2 className="text-2xl font-semibold">Additional Information</h2>
-
-          <div className="flex items-center space-x-2  py-3 rounded-lg">
-            <p className="bg-green-900 p-2 rounded-full text-white">
-              <User size={16} />
-            </p>
-            <span className="flex-grow">Customer ID</span>
-            <p>#12345</p>
-          </div>
-
-          {/* <div className="flex items-center space-x-2 bg-white py-2 rounded-lg">
-                <p className="bg-green-900 p-2 rounded-full text-white">
-                  <User size={16} />
-                </p>
-
-                <span className="flex-grow">Payment Method</span>
-              </div> */}
-          <PaymentMethodDropdown />
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex justify-end space-x-4">
-          <Button onClick={() => setModalOpen(false)} className="text-gray-500 ">
-            Cancel
-          </Button>
-          <Button onClick={() => setModalOpen(false)} className="bg-green-900 text-white">
-            Save
-          </Button>
+        <div className="grid grid-cols-2 gap-2">
+          <Input
+            label="Phone Number"
+            placeholder="Phone Number"
+            type="text"
+            value={watch("customerPhone")}
+            error={errors.customerPhone?.message}
+            register={register}
+            {...register("customerPhone", { required: "Phone Number is required" })}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+              setValue("customerPhone", e.target.value)
+              clearErrors("customerPhone")
+            }}
+          />
+          <Input
+            label="Email Address"
+            placeholder="Email Address"
+            type="email"
+            value={watch("customerEmail")}
+            error={errors.customerEmail?.message}
+            register={register}
+            {...register("customerEmail", { required: "Email Address is required" })}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+              setValue("customerEmail", e.target.value)
+              clearErrors("customerEmail")
+            }}
+          />
         </div>
       </div>
-    </>
+
+      {/* Additional Information */}
+      {/* <div className="space-y-1">
+      <h2 className="text-2xl font-semibold">Additional Information</h2>
+      <PaymentMethodDropdown />
+    </div> */}
+
+      {/* Action Buttons */}
+      <div className="flex justify-end space-x-4">
+        <Button onClick={() => setModalOpen(false)} className="text-gray-500">
+          Cancel
+        </Button>
+        <Button type="submit" className="bg-green-900 text-white">
+          {isLoading ? "Reserving" : "Save"}
+        </Button>
+      </div>
+    </form>
   )
 }
 
