@@ -7,6 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FormControl } from "@/components/ui/form"
 import { useState } from "react"
 import { useForm, FormProvider } from "react-hook-form"
+import { format, parseISO, isValid } from 'date-fns';
+import { useDeleteOrderMutation, useUpdateOrderMutation } from "@/redux/api/orders/order.api"
+import { toast } from "react-toastify"
 
 interface OrderItem {
   name: string
@@ -15,32 +18,63 @@ interface OrderItem {
 }
 
 interface OrderCardProps {
-  orderNumber: string
-  status: "Ready" | "Pending"
+  orderId: string
+  orderNumber: number
+  status: "READY" | "PENDING"
   date: string
   time: string
   items: OrderItem[]
   subtotal: string
 }
 
-const OrderCard = ({ orderNumber, status, date, time, items, subtotal }: OrderCardProps) => {
+const OrderCard = ({ orderId, orderNumber, status, date, time, items, subtotal }: OrderCardProps) => {
   const [isOpen, setIsOpen] = useState(false)
   const methods = useForm({
     defaultValues: {
       status: status.toLowerCase(),
     },
   })
+  const [deleteOrder, { isLoading: isDeleting }] = useDeleteOrderMutation();
+  const [updateOrder, { isLoading: isUpdating }] = useUpdateOrderMutation();
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Ready":
+      case "READY":
         return "bg-green-100 text-green-800 hover:bg-green-200"
-      case "Pending":
+      case "PENDING":
         return "bg-orange-100 text-orange-800 hover:bg-orange-200"
       default:
         return "bg-gray-100 text-gray-800 hover:bg-gray-200"
     }
-  }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteOrder(orderId).unwrap();
+      toast.success("Order deleted successfully");
+    } catch (error) {
+      console.error("Error deleting order:", error);
+    }
+  };
+  const handleUpdate = async (val) => {
+    console.log(items);
+    const payload = {
+      status: val.toUpperCase(),
+      items: items.map( i => (
+        {
+          menuItemId: i.name,
+          quantity: Number(i.qty)}
+      )),
+    };
+
+    try {
+      await updateOrder({ orderId, payload }).unwrap();
+      toast.success("Order updated successfully");
+    } catch (error) {
+      console.error("Error updating order:", error);
+      toast.error("Error updating order");
+    }
+  };
 
   return (
     <>
@@ -54,7 +88,7 @@ const OrderCard = ({ orderNumber, status, date, time, items, subtotal }: OrderCa
           </div>
           <div>
             <Badge className={getStatusColor(status) + " w-[110px] text-xs"}>
-              {status === "Ready" ? "Ready to serve" : "completed"}
+              {status === "READY" ? "Ready to serve" : "PENDING"}
             </Badge>
             <FormProvider {...methods}>
               <form className="border-none">
@@ -62,6 +96,7 @@ const OrderCard = ({ orderNumber, status, date, time, items, subtotal }: OrderCa
                   defaultValue={status.toLowerCase()}
                   onValueChange={(value) => {
                     console.log(`Status changed to: ${value}`)
+                    handleUpdate(value)
                   }}
                 >
                   <FormControl className="border-none bg-white shadow-none">
@@ -82,13 +117,13 @@ const OrderCard = ({ orderNumber, status, date, time, items, subtotal }: OrderCa
         </div>
 
         <div className="flex justify-between items-start">
-          <div className="text-sm text-gray-500">{date}</div>
-          <div className="text-sm text-gray-500">{time}</div>
+          <div className="text-sm text-gray-500">{date && isValid(parseISO(date)) ? format(parseISO(date), 'EEEE, dd, yyyy') : "Invalid Date"}</div>
+          <div className="text-sm text-gray-500">{time && isValid(parseISO(time)) ? format(parseISO(time), 'h:mm a') : "Invalid Date"}</div>
         </div>
         {/* <div className="border-b pt-3"/> */}
         <Separator className="bg-gray-500" />
 
-        <div className="space-y-3">
+        <div className="space-y-3 h-[180px] max-h-[180px] overflow-y-auto">
           <div className="grid grid-cols-4 text-base text-gray-500">
             <div>Qty</div>
             <div className="col-span-2">Items</div>
@@ -115,7 +150,7 @@ const OrderCard = ({ orderNumber, status, date, time, items, subtotal }: OrderCa
             <Button variant="outline" size="icon">
               <PenLine />
             </Button>
-            <Button variant="outline" size="icon">
+            <Button variant="outline" size="icon" onClick={handleDelete}>
               <Trash2 />
             </Button>
           </div>

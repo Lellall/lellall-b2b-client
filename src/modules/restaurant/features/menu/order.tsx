@@ -2,8 +2,14 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import OrderCard from "./components/order-card";
 import SearchBar from "@/components/search-bar/search-bar";
+import { useGetOrdersQuery } from "@/redux/api/orders/order.api";
 
 const Orders = () => {
+  const { data: orders, isLoading, error } = useGetOrdersQuery();
+  
+  if(isLoading) return <div>Loading...</div>;
+  if(error) return <div>Error: {error?.data?.message}</div>;
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -40,45 +46,22 @@ const Orders = () => {
 
         {/* Orders Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <OrderCard
-            orderNumber="01"
-            status="Ready"
-            date="Wednesday, 28, 2024"
-            time="4:48 PM"
-            items={[
-              { name: "Scrambled eggs with toast", qty: "01", price: "₦199" },
-              { name: "Smoked Salmon Bagel", qty: "01", price: "₦120" },
-              { name: "Belgian Wiffles", qty: "02", price: "₦220" },
-              { name: "Classi Lemoniade", qty: "01", price: "₦110" },
-            ]}
-            subtotal="₦649"
-          />
-          <OrderCard
-            orderNumber="02"
-            status="Pending"
-            date="Wednesday, 28, 2024"
-            time="4:48 PM"
-            items={[
-              { name: "Scrambled eggs with toast", qty: "01", price: "₦199" },
-              { name: "Smoked Salmon Bagel", qty: "01", price: "₦120" },
-              { name: "Belgian Wiffles", qty: "02", price: "₦220" },
-              { name: "Classi Lemoniade", qty: "01", price: "₦110" },
-            ]}
-            subtotal="₦649"
-          />
-          <OrderCard
-            orderNumber="03"
-            status="Ready"
-            date="Wednesday, 28, 2024"
-            time="4:48 PM"
-            items={[
-              { name: "Scrambled eggs with toast", qty: "01", price: "₦199" },
-              { name: "Smoked Salmon Bagel", qty: "01", price: "₦120" },
-              { name: "Belgian Wiffles", qty: "02", price: "₦220" },
-              { name: "Classi Lemoniade", qty: "01", price: "₦110" },
-            ]}
-            subtotal="₦649"
-          />
+          {orders?.map( (o, i) => (
+            <OrderCard
+              key={o.id}
+              orderId={o.id}
+              orderNumber={i + 1}
+              status={o.status.toUpperCase() as "READY" | "PENDING"}
+              date={o.createdAt}
+              time={o.updatedAt}
+              items={o.orderItems.map( item => ({
+                name: item.name,
+                qty: item.quantity.toString(),
+                price: item.price.toString()
+              }))}
+              subtotal={o.orderItems.reduce((acc, item) => acc + item.price, 0).toString()}
+            />
+          ))}
         </div>
       </div>
     </div>
