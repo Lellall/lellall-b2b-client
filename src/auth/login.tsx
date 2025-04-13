@@ -7,16 +7,18 @@ import { theme } from "@/theme/theme"
 import { Button } from "@/components/ui/button"
 import { toast } from "react-toastify";
 import { useLoginMutation } from '@/redux/api/auth/auth.api';
+import Notifications from '@/notification';
 
 const schema = yup.object({
-    username: yup.string().email('Invalid email format').required('Email is required'),
+    email: yup.string().email('Invalid email format').required('Email is required'),
     password: yup.string().required('Password is required').min(6, 'Password must be at least 6 characters'),
 }).required();
 
-const Login = () => {
+const Login = ({ subomain }) => {
     const { control, handleSubmit, formState: { errors } } = useForm({
         resolver: yupResolver(schema)
     });
+    console.log(subomain, 'subomains');
 
     const [login, { isLoading }] = useLoginMutation();
 
@@ -34,12 +36,12 @@ const Login = () => {
     return (
         <div className="">
             <div className="text-center mb-10">
-                <h1 className="text-2xl font-semibold text-green-900">Welcome Back</h1>
+                <h1 className="text-2xl font-semibold text-green-900">{subomain?.name}</h1>
                 <p className="mt-2 text-sm ">Enter your email and password to sign in</p>
             </div>
             <form onSubmit={handleSubmit(onSubmit)}>
                 <Controller
-                    name="username"
+                    name="email"
                     control={control}
                     render={({ field }) => <Input width='350px' label="Email" placeholder="Your email address" type="email" error={errors.username?.message} {...field} />}
                 />

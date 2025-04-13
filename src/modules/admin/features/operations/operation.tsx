@@ -1,7 +1,7 @@
 import { StyledButton } from '@/components/button/button-lellall'
 import SearchBar from '@/components/search-bar/search-bar'
 import StatusDropdown from '@/components/ui/drop-down-btn'
-import Table from '@/components/ui/table'
+import Table from '@/components/ui/table' 
 import { theme } from '@/theme/theme'
 import { Add, Eye, Filter, More } from 'iconsax-react'
 import { useState } from 'react'
