@@ -5,7 +5,7 @@ const config = {
   },
   production: {
     BACKEND_URL: "https://api-b2b-dev.lellall.com/",
-    // BACKEND_URL: "https://api-b2b-dev.lellall.com/",
+    // BACKEND_URL: "https://api-b2b-dev.lellall.com/", 
   },
 }
 
