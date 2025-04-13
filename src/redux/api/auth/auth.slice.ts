@@ -13,8 +13,8 @@ interface AuthState {
 
 const initialState: AuthState = {
   isAuthenticated: false,
-  accessToken: null,
-  refreshToken: null,
+  accessToken: "",
+  refreshToken: "",
   user: null,
   isAdmin: false,
   isSuperAdmin: false,
@@ -49,7 +49,7 @@ const authSlice = createSlice({
       localStorage.setItem("subdomain", action.payload);
     },
   },
-});
+})
 
 export const { setAuthState, logout, setSubdomain } = authSlice.actions;
 export const selectAuth = (state: { auth: AuthState }) => state.auth;

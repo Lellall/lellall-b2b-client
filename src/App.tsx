@@ -75,7 +75,7 @@ const App = () => {
       <Route path="reservations/:id" element={<Reservation />} />
       <Route path="/verify-payment" element={<VerifyPaymentPage />} />
     </>
-  );
+  )
 
   const adminRoutes = (
     <>
@@ -83,7 +83,7 @@ const App = () => {
       <Route path="operations" element={<Operations />} />
       <Route path="operations/:id" element={<ViewOrderOperations />} />
     </>
-  );
+  )
 
   const isKycPending = false; // user?.ownedRestaurant?.kycStatus === 'PENDING';
   const isSuperAdmin = user?.role === 'SUPERADMIN';
@@ -151,7 +151,7 @@ const App = () => {
       </Suspense>
       <ToastContainer />
     </Router>
-  );
-};
+  )
+}
 
-export default App;
+export default App
