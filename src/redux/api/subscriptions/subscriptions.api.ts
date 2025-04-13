@@ -211,33 +211,33 @@ export const subscriptionApi = baseApi.injectEndpoints({
         }),
 
         initiateSubscriptionPayment: builder.mutation<
-            PaymentResponse,
-            { restaurantId: string; dto: PaymentDto; provider: "paystack" | "flutterwave" }
-        >({
-            query: ({ restaurantId, dto, provider }) => ({
-                url: `/subscription-plans/pay/${restaurantId}?provider=${provider}`,
-                method: "POST",
-                body: dto,
-                credentials: "include",
-            }),
-            async onQueryStarted(_args, { queryFulfilled }) {
-                try {
-                    const { data } = await queryFulfilled;
-                    toast.success("Payment initiated successfully", {
-                        position: "top-right",
-                    });
-                    if (data.paymentLink) {
-                        window.location.href = data.paymentLink;
-                    }
-                } catch (err: any) {
-                    ErrorHandler(err);
-                    toast.error(err?.error?.data?.message || "Failed to initiate payment", {
-                        position: "top-right",
-                    });
-                    throw err;
-                }
-            },
+        PaymentResponse,
+        { restaurantId: string; dto: PaymentDto; provider: "paystack" | "flutterwave"; subdomain?: string } // Add optional subdomain
+      >({
+        query: ({ restaurantId, dto, provider, subdomain }) => ({
+          url: `/subscription-plans/pay/${restaurantId}?provider=${provider}${subdomain ? `&subdomain=${subdomain}` : ''}`, // Append subdomain if provided
+          method: "POST",
+          body: dto,
+          credentials: "include",
         }),
+        async onQueryStarted(_args, { queryFulfilled }) {
+          try {
+            const { data } = await queryFulfilled;
+            toast.success("Payment initiated successfully", {
+              position: "top-right",
+            });
+            if (data.paymentLink) {
+              window.location.href = data.paymentLink;
+            }
+          } catch (err: any) {
+            ErrorHandler(err);
+            toast.error(err?.error?.data?.message || "Failed to initiate payment", {
+              position: "top-right",
+            });
+            throw err;
+          }
+        },
+      }),
 
         verifyPayment: builder.mutation<
             VerifyPaymentResponse,
