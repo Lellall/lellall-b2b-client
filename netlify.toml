@@ -1,7 +1,7 @@
 [context.production]
 command = "npm run build"
 publish = "dist"
-branch = "master"
+branch = "main"
 
 [context.deploy-preview]
 command = "npm run build"
