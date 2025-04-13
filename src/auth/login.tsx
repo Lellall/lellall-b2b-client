@@ -10,7 +10,7 @@ import { useLoginMutation } from "@/redux/api/auth/auth.api"
 
 const schema = yup
   .object({
-    username: yup.string().email("Invalid email format").required("Email is required"),
+    email: yup.string().email("Invalid email format").required("Email is required"),
     password: yup.string().required("Password is required").min(6, "Password must be at least 6 characters"),
   })
   .required()
@@ -47,7 +47,7 @@ const Login = () => {
       </div>
       <form onSubmit={handleSubmit(onSubmit)}>
         <Controller
-          name="username"
+          name="email"
           control={control}
           render={({ field }) => (
             <Input
@@ -55,7 +55,7 @@ const Login = () => {
               label="Email"
               placeholder="Your email address"
               type="email"
-              error={errors.username?.message}
+              error={errors.email?.message}
               {...field}
             />
           )}
