@@ -91,11 +91,11 @@ const Login = () => {
             {isLoading ? "Logging in..." : "SIGN IN"}
           </StyledButton>
         </div>
-        <div className="flex mt-2 justify-center">
+        {/* <div className="flex mt-2 justify-center">
           <Button variant="link" className="mb-2 text-xs">
             Don't have an account? <span className="text-green-800 text-[14px]">Sign up</span>
           </Button>
-        </div>
+        </div> */}
       </form>
     </div>
   )

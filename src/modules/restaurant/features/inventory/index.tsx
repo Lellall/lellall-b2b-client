@@ -5,74 +5,61 @@ import StatCard from "./components/stat-card";
 import ProductsTable from "./components/products-table";
 import { NewOrderDialog } from "./components/add-product-dialog";
 import { RequestSupplyDialog } from "./components/request-supply-dialog";
+import { useState } from "react";
+import StockSheet from "./stock/stock-sheet";
+import Kitchen from "./stock/kitchen";
+import Orders from "../menu/order";
+import InventoryComponent from "./inventory";
+import KitchenView from "./stock/view-orders";
 
 const Inventory = () => {
+  const [activeTab, setActiveTab] = useState('tab-1');
+  const openTab = (tab: string) => {
+    setActiveTab(tab);
+  };
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Overall Inventory Section */}
-        <div className="bg-white rounded-lg p-4">
-          <h2 className="text-xl font-semibold mb-4">Overall Inventory</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 divide-x">
-            <StatCard
-              title="Categories"
-              color="text-blue-500"
-              value="14"
-              subtitle="Last 7 days"
-            />
-            <StatCard
-              title="Total Products"
-              color="text-orange-500"
-              value="868"
-              subtitle="Last 7 days"
-              secondaryValue="₦25000"
-              secondarySubtitle="Revenue"
-            />
-            <StatCard
-              title="Reordered Products"
-              color="text-purple-500"
-              value="5"
-              subtitle="Last 7 days"
-              secondaryValue="₦2500"
-              secondarySubtitle="Cost"
-            />
-            <StatCard
-              title="Low Stocks"
-              color="text-red-500"
-              value="12"
-              subtitle="Ordered"
-              secondaryValue="2"
-              secondarySubtitle="Not in stock"
-            />
-          </div>
-        </div>
-
-        {/* Products Section */}
-        <div className="bg-white rounded-lg">
-          <div className="p-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <h2 className="text-xl font-semibold">Products</h2>
-              <div className="flex flex-wrap items-center gap-3">
-                <RequestSupplyDialog />
-                <NewOrderDialog />
-                <Button variant="outline" className="gap-2">
-                  <Filter className="h-4 w-4" />
-                  Filters
-                </Button>
-                <Button variant="outline" className="gap-2">
-                  Import
-                </Button>
-                <Button variant="outline" className="gap-2">
-                  <Download className="h-4 w-4" />
-                  Download all
-                </Button>
-              </div>
-            </div>
-          </div>
-          <ProductsTable />
-        </div>
+    <>
+      <div className="flex mb-4 border-b border-gray-200">
+        <button
+          className={`py-2 px-4 text-xs  text-center text-gray-600 hover:text-gray-800 focus:outline-none ${activeTab === 'tab-1' ? 'border-b-2 border-green-900 text-green-900' : ''}`}
+          onClick={() => openTab('tab-1')}
+        >
+          Orders
+        </button>
+        <button
+          className={`py-2 px-4 text-xs  text-center text-gray-600 hover:text-gray-800 focus:outline-none ${activeTab === 'tab-2' ? 'border-b-2 border-green-900 text-green-900' : ''}`}
+          onClick={() => openTab('tab-2')}
+        >
+          Stock Sheet
+        </button>
+        <button
+          className={`py-2 px-4 text-xs  text-center text-gray-600 hover:text-gray-800 focus:outline-none ${activeTab === 'tab-3' ? 'border-b-2 border-green-900 text-green-900' : ''}`}
+          onClick={() => openTab('tab-3')}
+        >
+          Kitchen
+        </button>
+        <button
+          className={`py-2 px-4 text-xs  text-center text-gray-600 hover:text-gray-800 focus:outline-none ${activeTab === 'tab-4' ? 'border-b-2 border-green-900 text-green-900' : ''}`}
+          onClick={() => openTab('tab-4')}
+        >
+          Inventory
+        </button>
       </div>
-    </div>
+      <div className="pt-4">
+        {activeTab === 'tab-1' && <div>
+          <KitchenView />
+        </div>}
+        {activeTab === 'tab-2' && <div>
+          <StockSheet />
+        </div>}
+        {activeTab === 'tab-3' && <div>
+          <Kitchen />
+        </div>}
+        {activeTab === 'tab-4' && <div>
+        <InventoryComponent />
+        </div>}
+      </div>
+    </>
   );
 };
 

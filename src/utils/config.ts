@@ -1,9 +1,11 @@
 const config = {
   development: {
-    BACKEND_URL: "https://api.dev.lellall.com/b2b-api",
+    BACKEND_URL: "http://localhost:3333/",
+    // BACKEND_URL: "https://api-b2b-dev.lellall.com/",
   },
   production: {
-    BACKEND_URL: "https://api.dev.lellall.com/b2b-api",
+    BACKEND_URL: "http://localhost:3333/",
+    // BACKEND_URL: "https://api-b2b-dev.lellall.com/",
   },
 }
 

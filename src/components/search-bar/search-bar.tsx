@@ -74,7 +74,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       border={border}
       borderRadius={borderRadius}
       backgroundColor={backgroundColor}
-      shadow={shadow}
+      // shadow={shadow}
     >
       <SearchInput
         type="text"

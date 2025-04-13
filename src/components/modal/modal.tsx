@@ -1,14 +1,15 @@
-import React from "react"
-import styled from "styled-components"
-import "tailwindcss/tailwind.css"
+import React from "react";
+import styled from "styled-components";
+import "tailwindcss/tailwind.css";
 
 type ModalProps = {
-  isOpen: boolean
-  onClose: () => void
-  position?: "center" | "left" | "right" | "top" | "bottom"
-  width?: string
-  children: React.ReactNode
-}
+  isOpen: boolean;
+  onClose: () => void;
+  position?: "center" | "left" | "right" | "top" | "bottom";
+  width?: string;
+  variant?: "modal" | "wizard";
+  children: React.ReactNode;
+};
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -21,77 +22,107 @@ const ModalOverlay = styled.div`
   justify-content: center;
   align-items: center;
   z-index: 1000;
-`
+`;
 
-const ModalContent = styled.div<{ position: ModalProps["position"]; open: boolean; width?: string }>`
+const ModalContent = styled.div<{
+  position: ModalProps["position"];
+  open: boolean;
+  width?: string;
+  variant?: ModalProps["variant"];
+}>`
   background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  max-width: 500px;
-  width: ${(props) => props.width || "100%"}; // Use the width prop if provided, otherwise default to 100%
+  border-radius: 16px;
   position: absolute;
   transition: all 0.3s ease;
   overflow-y: auto;
 
+  /* Base padding */
+  padding: ${({ variant }) => (variant === "wizard" ? "2rem" : "1.5rem")};
+
+  /* Width handling */
+  ${({ width, variant }) => `
+    width: ${width || (variant === "wizard" ? "100%" : "auto")};
+    max-width: ${width ? "none" : (variant === "wizard" ? "64rem" : "32rem")};
+  `}
+
+  /* Position-specific styles */
   ${(props) =>
+    props.open &&
     props.position === "center" &&
     `
+    transform: translate(-50%, -50%);
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
   `}
+
+  ${(props) =>
+    props.open &&
+    props.position !== "center" &&
+    `
+    transform: translate(0, 0);
+  `}
+
   ${(props) =>
     props.position === "left" &&
     `
     left: 0;
     top: 0;
     height: 100%;
-    transform: translateX(-100%);
+    transform: translateX(${props.open ? "0" : "-100%"});
   `}
+
   ${(props) =>
     props.position === "right" &&
     `
     right: 0;
     top: 0;
     height: 100%;
-    transform: translateX(100%);
+    transform: translateX(${props.open ? "0" : "100%"});
   `}
+
   ${(props) =>
     props.position === "top" &&
     `
     top: 0;
     left: 0;
     right: 0;
-    transform: translateY(-100%);
-    width: auto;
+    transform: translateY(${props.open ? "0" : "-100%"});
   `}
+
   ${(props) =>
     props.position === "bottom" &&
     `
     bottom: 0;
     left: 0;
     right: 0;
-    transform: translateY(100%);
-    width: auto;
+    transform: translateY(${props.open ? "0" : "100%"});
   `}
-  ${(props) =>
-    props.open &&
-    `
-    transform: translate(0, 0);
-  `}
-`
+`;
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, position = "center", children }) => {
-  if (!isOpen) return null
+const Modal: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  position = "center",
+  width,
+  variant = "modal",
+  children,
+}) => {
+  if (!isOpen) return null;
 
   return (
     <ModalOverlay onClick={onClose}>
-      <ModalContent position={position} open={isOpen} onClick={(e) => e.stopPropagation()}>
+      <ModalContent
+        position={position}
+        open={isOpen}
+        width={width}
+        variant={variant}
+        onClick={(e) => e.stopPropagation()}
+        className="border border-gray-200"
+      >
         {children}
       </ModalContent>
     </ModalOverlay>
-  )
-}
+  );
+};
 
-export default Modal
+export default Modal;

@@ -1,12 +1,29 @@
+// src/modules/admin/features/layout/layout.tsx
 import React from 'react';
 import styled, { ThemeProvider } from 'styled-components';
 import { useMediaQuery } from 'react-responsive';
 import { Outlet, NavLink } from 'react-router-dom';
-import { Activity, Alarm, ArchiveBox, ArrowForwardSquare, BackSquare, Calendar2, MoneyChange, Element2, Home, Link, Setting, User, UserSearch, Car, MessageQuestion } from 'iconsax-react';
-// import Logo from '@/assets/Logo.svg';
-import Menu from '../.././../../../assets/menu-collapse.svg';
+import { Home, UserSearch, Car, MessageQuestion, Setting } from 'iconsax-react';
+import Menu from '../../../../../assets/menu-collapse.svg';
+import Logo from '../../../../../assets/Logo.svg';
 import { theme } from '@/theme/theme';
-import Logo from '../../../../../assets/Logo.svg'
+import { useSelector } from 'react-redux';
+import { selectAuth } from '@/redux/api/auth/auth.slice';
+import { useNavigate } from 'react-router-dom';
+
+// Styled Components with TypeScript
+interface SidebarProps {
+    isMobile: boolean;
+    isSidebarOpen: boolean;
+}
+
+interface LogoWrapperProps {
+    isSidebarOpen: boolean;
+}
+
+interface TextProps {
+    isSidebarOpen: boolean;
+}
 
 const LayoutWrapper = styled.div`
   display: flex;
@@ -14,7 +31,7 @@ const LayoutWrapper = styled.div`
   overflow: hidden;
 `;
 
-const Sidebar = styled.div`
+const Sidebar = styled.div<SidebarProps>`
   width: ${(props) =>
         props.isMobile
             ? props.isSidebarOpen
@@ -32,7 +49,7 @@ const Sidebar = styled.div`
   position: relative;
 `;
 
-const LogoWrapper = styled.div`
+const LogoWrapper = styled.div<LogoWrapperProps>`
   display: flex;
   align-items: ${(props) => (props.isSidebarOpen ? 'left' : 'center')};
   justify-content: ${(props) => (props.isSidebarOpen ? 'left' : 'left')};
@@ -100,21 +117,41 @@ const Icon = styled.div`
   font-size: 20px;
 `;
 
-const Text = styled.span`
+const Text = styled.span<TextProps>`
   font-size: 14px;
-  font-weigth: 100;
+  font-weight: 100;
   display: ${(props) => (props.isSidebarOpen ? 'inline' : 'none')};
 `;
 
-const AdminLayout = () => {
+const RestaurantName = styled.div<TextProps>`
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  color: ${(props) => props.theme.colors.primaryFont};
+  display: ${(props) => (props.isSidebarOpen ? 'block' : 'none')};
+`;
+
+// Component Props
+interface AdminLayoutProps {
+    subdomainData: any;
+}
+
+const AdminLayout: React.FC<AdminLayoutProps> = ({ subdomainData }) => {
     const isMobile = useMediaQuery({ query: `(max-width: ${theme.breakpoints.mobile})` });
     const [isSidebarOpen, setSidebarOpen] = React.useState(!isMobile);
+    const { isAuthenticated } = useSelector(selectAuth);
+    const navigate = useNavigate();
 
     const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
     React.useEffect(() => {
         setSidebarOpen(!isMobile);
     }, [isMobile]);
+
+    if (!isAuthenticated) {
+        navigate("/");
+        return null;
+    }
 
     return (
         <ThemeProvider theme={theme}>
@@ -123,32 +160,37 @@ const AdminLayout = () => {
                     <LogoWrapper isSidebarOpen={isSidebarOpen}>
                         <img src={Logo} alt="Logo" />
                     </LogoWrapper>
+                    {subdomainData && (
+                        <RestaurantName isSidebarOpen={isSidebarOpen}>
+                            {subdomainData.name} - Admin
+                        </RestaurantName>
+                    )}
                     <nav className="mt-10 mx-3">
-                        <NavItem to="/operations" end>
+                        <NavItem to="/admin/operations" end>
                             <Icon>
                                 <Home size={16} />
                             </Icon>
                             <Text isSidebarOpen={isSidebarOpen}>Operations</Text>
                         </NavItem>
-                        <NavItem to="/agents">
+                        <NavItem to="/admin/agents">
                             <Icon>
                                 <UserSearch size={16} />
                             </Icon>
                             <Text isSidebarOpen={isSidebarOpen}>Agents</Text>
                         </NavItem>
-                        <NavItem to="/reports">
+                        {/* <NavItem to="/admin/reports">
                             <Icon>
                                 <Car size={16} />
                             </Icon>
                             <Text isSidebarOpen={isSidebarOpen}>Logistics</Text>
-                        </NavItem>
-                        <NavItem to="/shops">
+                        </NavItem> */}
+                        {/* <NavItem to="/admin/shops">
                             <Icon>
                                 <MessageQuestion size={16} />
                             </Icon>
                             <Text isSidebarOpen={isSidebarOpen}>Customer Care</Text>
-                        </NavItem>
-                        <NavItem to="/settings">
+                        </NavItem> */}
+                        <NavItem to="/admin/settings">
                             <Icon>
                                 <Setting size={16} />
                             </Icon>
@@ -160,15 +202,9 @@ const AdminLayout = () => {
                     <Header>
                         <div style={{ position: 'relative' }}>
                             <ToggleButton onClick={toggleSidebar}>
-                                {isSidebarOpen ? (
-                                    <Icon style={{ width: '30px', height: '30px' }}>
-                                        <img src={Menu} alt="" />
-                                    </Icon>
-                                ) : (
-                                    <Icon style={{ width: '30px', height: '30px' }}>
-                                        <img src={Menu} alt="" />
-                                    </Icon>
-                                )}
+                                <Icon style={{ width: '30px', height: '30px' }}>
+                                    <img src={Menu} alt="Menu" />
+                                </Icon>
                             </ToggleButton>
                         </div>
                     </Header>

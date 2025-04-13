@@ -12,6 +12,15 @@ yarn
 .@/
 package-lock.josn
 
+# Yarn dependencies
+node_modules/
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+
 node_modules/
 dist
 dist-ssr
