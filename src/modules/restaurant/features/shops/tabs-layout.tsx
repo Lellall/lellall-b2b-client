@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Order from "./order.component";
-import Invoices from "./Invoices.component";
+// import Invoices from "./Invoices.component";
 import MenuCategory from "./menu-catetory.component";
 import Staffs from "./staffs.component";
 
@@ -54,7 +54,7 @@ const TabsLayout = () => {
                     <div>hello</div>
                 </div>}
                 {activeTab === 'tab-3' && <div>
-                    <div><Invoices /></div>
+                    {/* <div><Invoices /></div> */}
                 </div>}
                 {activeTab === 'tab-4' && <div>
                     <div><MenuCategory /></div>
