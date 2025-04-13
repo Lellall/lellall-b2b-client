@@ -1,8 +1,8 @@
-import { defineConfig } from "vite"
-import react from "@vitejs/plugin-react"
-import eslintPlugin from "vite-plugin-eslint"
-import svgr from "vite-plugin-svgr"
-import path from "path"
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import eslintPlugin from "vite-plugin-eslint";
+import svgr from "vite-plugin-svgr";
+import path from "path";
 
 export default defineConfig({
   plugins: [
@@ -10,7 +10,7 @@ export default defineConfig({
     eslintPlugin(),
     svgr({
       include: "**/*.svg?react",
-    })
+    }),
   ],
   server: {
     host: "0.0.0.0", // Allows access via subdomains
@@ -28,4 +28,8 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-})
+  build: {
+    outDir: "dist", // Explicitly set output directory
+    emptyOutDir: true, // Clean the dist folder before building
+  },
+});

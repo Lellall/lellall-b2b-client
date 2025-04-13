@@ -6,7 +6,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { StyledButton } from '@/components/button/button-lellall';
 import SearchBar from '@/components/search-bar/search-bar';
 import { Add, Trash, Edit } from 'iconsax-react';
-import { useGetReservationQuery, useCreateReservationMutation, useUpdateReservationMutation, useDeleteReservationMutation } from '@/redux/api/reservations/reservations.api';
+import { useGetReservationQuery, useCreateReservationMutation } from '@/redux/api/reservations/reservations.api';
 import { useGetAllMenuItemsQuery } from '@/redux/api/menu/menu.api';
 import { useSelector } from 'react-redux';
 import { selectAuth } from '@/redux/api/auth/auth.slice';
@@ -386,8 +386,8 @@ export default function StyledCalendar() {
 
     const { data: reservations, isLoading: isLoadingReservations, refetch } = useGetReservationQuery(subdomain);
     const [createReservation] = useCreateReservationMutation();
-    const [updateReservation] = useUpdateReservationMutation();
-    const [deleteReservation] = useDeleteReservationMutation();
+    // const [updateReservation] = useUpdateReservationMutation();
+    // const [deleteReservation] = useDeleteReservationMutation();
     const { data: menuItems = [], isLoading: isLoadingMenu } = useGetAllMenuItemsQuery({ subdomain });
 
     const [selectedEvent, setSelectedEvent] = useState<ReservationEvent | null>(null);
@@ -494,7 +494,7 @@ export default function StyledCalendar() {
     const handleDelete = async () => {
         if (selectedEvent?.id) {
             if (window.confirm('Are you sure you want to delete this reservation?')) {
-                await deleteReservation({ subdomain, id: selectedEvent.id }).unwrap();
+                // await deleteReservation({ subdomain, id: selectedEvent.id }).unwrap();
                 setSelectedEvent(null);
                 refetch();
             }
@@ -561,7 +561,7 @@ export default function StyledCalendar() {
                 if (submissionData.orderItems && submissionData.orderItems.length === 0) {
                     delete submissionData.orderItems;
                 }
-                await updateReservation({ subdomain, id: selectedEvent.id, data: submissionData }).unwrap();
+                // await updateReservation({ subdomain, id: selectedEvent.id, data: submissionData }).unwrap();
             } else {
                 await createReservation({ subdomain, data: submissionData }).unwrap();
             }
