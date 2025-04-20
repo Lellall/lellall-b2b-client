@@ -13,193 +13,192 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 
 const StockSheet = () => {
-    const columns = [
-        { key: "productName", label: "Name" },
-        { key: "openingStock", label: "O/Stock" },
-        { key: "added", label: "Added" },
-        { key: "quantityUsed", label: "Quantity Used" },
-        { key: "closingStock", label: "C/Stock" },
-        { key: "unitPrice", label: "Unit Price" },
-        { key: "grandTotal", label: "Grand Total" },
-        { key: "unitOfMeasurement", label: "Unit of Measurement" },
-    ];
+  const columns = [
+    { key: 'productName', label: 'Name', className: 'table-cell' },
+    { key: 'openingStock', label: 'O/Stock', className: 'hidden lg:table-cell' },
+    { key: 'added', label: 'Added', className: 'hidden lg:table-cell' },
+    { key: 'quantityUsed', label: 'Qty Used', className: 'hidden lg:table-cell' },
+    { key: 'closingStock', label: 'C/Stock', className: 'table-cell' },
+    { key: 'unitPrice', label: 'Price', className: 'hidden lg:table-cell' },
+    { key: 'grandTotal', label: 'Total', className: 'hidden lg:table-cell' },
+    { key: 'unitOfMeasurement', label: 'Unit', className: 'hidden lg:table-cell' },
+  ];
 
-    const { subdomain } = useSelector(selectAuth);
-    const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const { subdomain } = useSelector(selectAuth);
+  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
-    // Ensure RTK Query refetches when date changes
-    const { data, error, isLoading, refetch: refetchStockSheet } = useGetStockSheetQuery(
-        { subdomain, date: selectedDate },
-        { refetchOnMountOrArgChange: true }
-    );
-    const { data: stats, refetch: refetchStats } = useGetStockSheetStatsQuery(
-        { subdomain, date: selectedDate },
-        { refetchOnMountOrArgChange: true }
-    );
-    const [triggerStockSheetDownload, { isFetching: isFetchingStockSheet }] = useLazyDownloadStockSheetExportQuery();
+  const { data = [], error, isLoading, refetch: refetchStockSheet } = useGetStockSheetQuery(
+    { subdomain, date: selectedDate },
+    { refetchOnMountOrArgChange: true }
+  );
+  const { data: stats, refetch: refetchStats } = useGetStockSheetStatsQuery(
+    { subdomain, date: selectedDate },
+    { refetchOnMountOrArgChange: true }
+  );
+  const [triggerStockSheetDownload, { isFetching: isFetchingStockSheet }] = useLazyDownloadStockSheetExportQuery();
 
-    // Refetch data when selectedDate changes
-    useEffect(() => {
-        refetchStockSheet();
-        refetchStats();
-    }, [selectedDate, refetchStockSheet, refetchStats]);
+  useEffect(() => {
+    refetchStockSheet();
+    refetchStats();
+  }, [selectedDate, refetchStockSheet, refetchStats]);
 
-    const handleStockSheetDownload = async () => {
-        if (!subdomain) {
-            toast.error("Subdomain not found", { position: "top-right" });
-            return;
-        }
-        try {
-            await triggerStockSheetDownload({
-                subdomain,
-                format: 'csv',
-                date: selectedDate
-            }).unwrap();
-            toast.success("Stock sheet downloaded successfully", { position: "top-right" });
-        } catch (error) {
-            console.error("Stock sheet download failed:", error);
-            toast.error("Failed to download stock sheet", { position: "top-right" });
-        }
-    };
-
-    const handleDateChange = (e) => {
-        setSelectedDate(e.target.value);
-    };
-
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-                <ColorRing
-                    height="80"
-                    width="80"
-                    radius="9"
-                    color={theme.colors.active}
-                    ariaLabel="three-dots-loading"
-                    visible={true}
-                />
-            </div>
-        );
+  const handleStockSheetDownload = async () => {
+    if (!subdomain) {
+      toast.error('Subdomain not found', { position: 'top-right' });
+      return;
     }
-
-    if (error) {
-        return (
-            <div className="min-h-screen bg-gray-100 flex items-center justify-center text-red-500">
-                Error loading stock sheet: {JSON.stringify(error)}
-            </div>
-        );
+    try {
+      await triggerStockSheetDownload({ subdomain, format: 'csv', date: selectedDate }).unwrap();
+      toast.success('Stock sheet downloaded successfully', { position: 'top-right' });
+    } catch (error) {
+      console.error('Stock sheet download failed:', error);
+      toast.error('Failed to download stock sheet', { position: 'top-right' });
     }
+  };
 
-    const today = format(new Date(selectedDate), "PPP");
+  const handleDateChange = (e) => {
+    setSelectedDate(e.target.value);
+  };
 
-    const statColors = [
-        "bg-blue-100 text-blue-700",
-        "bg-green-100 text-green-700",
-        "bg-yellow-100 text-yellow-700",
-        "bg-purple-100 text-purple-700",
-        "bg-red-100 text-red-700",
-    ];
-
-    const round = (value) => (value !== undefined ? parseFloat(value).toFixed(2) : "-");
-
-    const statsData = [
-        { label: "Total Stock Value", value: stats?.totalStockValue ?? "-" },
-        { label: "Total Added Stock", value: round(stats?.totalAddedStock) },
-        { label: "Total Quantity Used", value: round(stats?.totalQuantityUsed) },
-        { label: "Average Daily Usage", value: `${round(stats?.averageDailyUsage)}%` },
-        { label: "Low Stock Items", value: stats?.lowStockItems ?? "-" },
-    ];
-
-    const tableData = data?.map(item => ({
-        ...item,
-        openingStock: round(item.openingStock),
-        added: round(item.added),
-        quantityUsed: round(item.quantityUsed),
-        closingStock: round(item.closingStock),
-        unitPrice: moneyFormatter(item.unitPrice),
-        grandTotal: round(item.grandTotal),
-    })) ?? [];
-
+  if (isLoading) {
     return (
-        <div className="min-h-screen">
-            <div className="max-w-7xl mx-auto space-y-6">
-                <div className="bg-white rounded-xl p-6 w-full">
-                    <div className="flex justify-between items-center border-b pb-4">
-                        <h2 className="text-xl font-semibold text-gray-900">Stock Summary</h2>
-                        <div className="flex items-center gap-4">
-                            <input
-                                type="date"
-                                value={selectedDate}
-                                onChange={handleDateChange}
-                                className="border rounded-md p-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                            <p className="text-gray-500 text-sm">As of {today}</p>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mt-6">
-                        {statsData.map((item, index) => (
-                            <div
-                                key={index}
-                                className={`p-4 rounded-lg text-center font-medium ${statColors[index % statColors.length]}`}
-                            >
-                                <p className="text-sm">{item.label}</p>
-                                <p className="text-xl font-bold">{item.value}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                        <SearchBar
-                            placeholder="Search Items"
-                            width="300px"
-                            height="42px"
-                            border="1px solid #fff"
-                            borderRadius="10px"
-                            backgroundColor="#ffffff"
-                            shadow={false}
-                            fontSize="11px"
-                            color="#444"
-                            inputPadding="10px"
-                            placeholderColor="#bbb"
-                            iconColor="#ccc"
-                            iconSize={15}
-                        />
-                        <StyledButton
-                            style={{ padding: '10px 20px', fontWeight: 300 }}
-                            background="#fff"
-                            color="#000"
-                            width="120px"
-                            variant="outline"
-                        >
-                            <Filter size="20" color="#000" className="mr-1" /> Filters
-                        </StyledButton>
-                    </div>
-                    <StyledButton
-                        style={{ padding: '10px 20px', fontWeight: 300 }}
-                        background={theme.colors.active}
-                        color={theme.colors.secondary}
-                        width="150px"
-                        variant="outline"
-                        onClick={handleStockSheetDownload}
-                        disabled={isFetchingStockSheet}
-                        className={`px-4 py-2 bg-green-500 text-white rounded ${isFetchingStockSheet ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-600'}`}
-                    >
-                        <ExportCircle size="20" color="#fff" className="mr-1" />
-                        {isFetchingStockSheet ? 'Downloading...' : 'Export Sheet (CSV)'}
-                    </StyledButton>
-                </div>
-
-                <Table
-                    selectable
-                    bordered
-                    columns={columns}
-                    data={tableData}
-                />
-            </div>
-        </div>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <ColorRing
+          height="80"
+          width="80"
+          radius="9"
+          color={theme.colors.active}
+          ariaLabel="three-dots-loading"
+          visible={true}
+        />
+      </div>
     );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center text-red-500 text-sm">
+        Error loading stock sheet: {JSON.stringify(error)}
+      </div>
+    );
+  }
+
+  const today = format(new Date(selectedDate), 'PPP');
+
+  const statColors = [
+    'bg-blue-100 text-blue-700',
+    'bg-green-100 text-green-700',
+    'bg-yellow-100 text-yellow-700',
+    'bg-purple-100 text-purple-700',
+    'bg-red-100 text-red-700',
+  ];
+
+  const round = (value) => (value !== undefined ? parseFloat(value).toFixed(2) : '-');
+
+  const statsData = [
+    { label: 'Total Stock Value', value: stats?.totalStockValue ?? '-' },
+    { label: 'Total Added Stock', value: round(stats?.totalAddedStock) },
+    { label: 'Total Quantity Used', value: round(stats?.totalQuantityUsed) },
+    { label: 'Average Daily Usage', value: `${round(stats?.averageDailyUsage)}%` },
+    { label: 'Low Stock Items', value: stats?.lowStockItems ?? '-' },
+  ];
+
+  const tableData = data.map((item) => ({
+    ...item,
+    openingStock: round(item.openingStock),
+    added: round(item.added),
+    quantityUsed: round(item.quantityUsed),
+    closingStock: round(item.closingStock),
+    unitPrice: moneyFormatter(item.unitPrice),
+    grandTotal: round(item.grandTotal),
+  }));
+
+  return (
+    <div className="min-h-screen p-2 sm:p-4 bg-gray-100">
+      <div className="w-full sm:max-w-7xl mx-auto space-y-4">
+        {/* Stock Summary Section */}
+        <div className="bg-white rounded-xl p-2 sm:p-4 overflow-hidden box-border max-w-full">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-2 sm:pb-4 gap-2">
+            <h2 className="text-base sm:text-xl font-semibold text-gray-900">Stock Summary</h2>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={handleDateChange}
+                className="p-2 text-xs sm:text-sm text-gray-700 bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
+              />
+              <p className="text-xs sm:text-sm text-gray-500">As of {today}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-4">
+            {statsData.map((item, index) => (
+              <div
+                key={index}
+                className={`p-2 sm:p-3 rounded-lg text-center font-medium max-w-full ${statColors[index % statColors.length]} hover:bg-gray-50`}
+              >
+                <p className="text-xs sm:text-sm truncate">{item.label}</p>
+                <p className="text-sm sm:text-lg font-bold truncate">{item.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+            <SearchBar
+              placeholder="Search Items"
+              width={{ base: '100%', sm: '200px', md: '300px' }}
+              height="36px"
+              border="none"
+              borderRadius="8px"
+              backgroundColor="#ffffff"
+              shadow={false}
+              fontSize={{ base: '10px', sm: '11px' }}
+              color="#444"
+              inputPadding="6px"
+              placeholderColor="#bbb"
+              iconColor="#ccc"
+              iconSize={14}
+            />
+            <StyledButton
+              style={{ padding: '6px 10px', fontWeight: 300 }}
+              background="#fff"
+              color="#000"
+              width={{ base: '100px', sm: '120px' }}
+              variant="outline"
+              className="flex items-center justify-center gap-1 text-xs sm:text-sm"
+              aria-label="Filter stock items"
+            >
+              <Filter size={14} className="w-3 h-3 sm:w-4 sm:h-4 mr-1" color="#000" /> Filters
+            </StyledButton>
+          </div>
+          <StyledButton
+            style={{ padding: '6px 10px', fontWeight: 300 }}
+            background={theme.colors.active}
+            color={theme.colors.secondary}
+            width={{ base: '100%', sm: '150px' }}
+            variant="outline"
+            onClick={handleStockSheetDownload}
+            disabled={isFetchingStockSheet}
+            className={`flex items-center justify-center gap-1 text-xs sm:text-sm ${
+              isFetchingStockSheet ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-600'
+            }`}
+            aria-label="Export stock sheet as CSV"
+          >
+            <ExportCircle size={14} className="w-3 h-3 sm:w-4 sm:h-4 mr-1" color="#fff" />
+            {isFetchingStockSheet ? 'Downloading...' : 'Export Sheet (CSV)'}
+          </StyledButton>
+        </div>
+
+        {/* Table Section */}
+        <div className="overflow-x-auto w-full">
+          <Table selectable columns={columns} data={tableData} />
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default StockSheet;

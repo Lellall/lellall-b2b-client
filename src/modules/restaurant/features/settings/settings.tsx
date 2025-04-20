@@ -114,16 +114,16 @@ const Settings = () => {
                         </div>
                         <div className="flex items-center mb-6">
                             <div className="mt-5 ml-3">
-                                <img
-                                    src={
-                                        user?.avatar ||
-                                        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8dXNlcnxlbnwwfHwwfHx8MA%3D%3D"
-                                    }
+                                {/* <img
+                                    // src={
+                                    //     user?.avatar ||
+                                    //     "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8dXNlcnxlbnwwfHwwfHx8MA%3D%3D"
+                                    // }
                                     alt="Profile"
                                     className="w-[120px] h-[120px] rounded-full object-cover"
-                                />
+                                /> */}
                             </div>
-                            <div className="ml-4 mt-10">
+                            <div className=" mt-10">
                                 <div className="text-2xl text-green-800 font-medium">
                                     {user.firstName} {user.lastName}
                                 </div>

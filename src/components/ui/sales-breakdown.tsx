@@ -1,11 +1,11 @@
-import React from "react";
-import styled from "styled-components";
-import { theme } from "@/theme/theme"; // Adjust import based on your theme setup
+// src/components/ui/sales-breakdown.tsx
+import React from 'react';
+import styled from 'styled-components';
 
 interface SalesBreakdownCardProps {
   title: string;
   subtitle: string;
-  salesData: { month: string; revenue: number }[]; // Array from backend
+  salesData: { month: string; revenue: number }[];
 }
 
 const CardContainer = styled.div`
@@ -13,32 +13,46 @@ const CardContainer = styled.div`
   border-radius: 5px;
   padding: 16px;
   width: 100%;
-//   max-width: 600px; // Matches the image width approximately
-//   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; // Clean font style
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  @media (max-width: 768px) {
+    padding: 12px;
+  }
 `;
 
 const Title = styled.h3`
   font-size: 1rem;
   font-weight: 600;
-  color: #666666; // Gray title
+  color: #666666;
   margin-bottom: 4px;
+
+  @media (max-width: 768px) {
+    font-size: 0.875rem;
+  }
 `;
 
 const Subtitle = styled.p`
   font-size: 0.875rem;
   font-weight: 400;
-  color: #999999; // Lighter gray subtitle
+  color: #999999;
   margin-bottom: 12px;
+
+  @media (max-width: 768px) {
+    font-size: 0.75rem;
+  }
 `;
 
 const BarChartContainer = styled.div`
   width: 100%;
   height: 20px;
-  background: #F5F5F5; // Light gray background for the bar container
+  background: #F5F5F5;
   border-radius: 10px;
   overflow: hidden;
   position: relative;
+
+  @media (max-width: 768px) {
+    height: 16px;
+  }
 `;
 
 const Bar = styled.div<{ width: string; color: string; left: string }>`
@@ -56,6 +70,12 @@ const Legend = styled.div`
   justify-content: space-between;
   margin-top: 8px;
   flex-wrap: wrap;
+  gap: 8px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 `;
 
 const LegendItem = styled.div<{ color: string }>`
@@ -65,42 +85,32 @@ const LegendItem = styled.div<{ color: string }>`
   color: #666666;
 
   &:before {
-    content: "";
+    content: '';
     width: 10px;
     height: 10px;
     background: ${(props) => props.color};
     margin-right: 4px;
     border-radius: 50%;
   }
+
+  @media (max-width: 768px) {
+    font-size: 0.7rem;
+  }
 `;
 
-const SalesBreakdownCard: React.FC<SalesBreakdownCardProps> = ({
-  title,
-  subtitle,
-  salesData,
-}) => {
-  // Calculate total revenue
-  const totalRevenue = salesData?.reduce((sum, item) => sum + item.revenue, 0);
+const SalesBreakdownCard: React.FC<SalesBreakdownCardProps> = ({ title, subtitle, salesData }) => {
+  const totalRevenue = salesData?.reduce((sum, item) => sum + item.revenue, 0) || 1;
 
-  // Assign colors to months (cycling through a predefined palette)
-  const colorPalette = [
-    "#FF9999", // Pink
-    "#99CCFF", // Blue
-    "#FFCC99", // Yellow
-    "#CC99FF", // Purple
-    "#99FF99", // Green
-    "#CCCCCC", // Gray
-  ];
+  const colorPalette = ['#FF9999', '#99CCFF', '#FFCC99', '#CC99FF', '#99FF99', '#CCCCCC'];
   const breakdownData = salesData.map((item, index) => ({
     month: item.month,
-    percentage: totalRevenue > 0 ? (item.revenue / totalRevenue) * 100 : 0,
+    percentage: (item.revenue / totalRevenue) * 100,
     color: colorPalette[index % colorPalette.length],
   }));
 
-  // Accumulate widths and positions for bars
   let leftOffset = 0;
   const bars = breakdownData.map((item, index) => {
-    const width = `${(item.percentage / 100) * 100}%`; // Convert percentage to width
+    const width = `${(item.percentage / 100) * 100}%`;
     const barStyle = {
       left: `${leftOffset}%`,
       width,
@@ -114,9 +124,7 @@ const SalesBreakdownCard: React.FC<SalesBreakdownCardProps> = ({
     <CardContainer>
       <Title>{title}</Title>
       <Subtitle>{subtitle}</Subtitle>
-      <BarChartContainer>
-        {bars}
-      </BarChartContainer>
+      <BarChartContainer>{bars}</BarChartContainer>
       <Legend>
         {breakdownData.map((item, index) => (
           <LegendItem key={index} color={item.color}>
