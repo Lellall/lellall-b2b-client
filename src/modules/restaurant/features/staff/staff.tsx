@@ -65,75 +65,120 @@ const Table: React.FC<TableProps> = ({ columns, data, selectable, bordered = fal
 
   if (sortedData.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 bg-white border border-gray-200 rounded-lg">
-        <svg className="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <div className="flex flex-col items-center justify-center p-4 bg-white border border-gray-200 rounded-lg">
+        <svg className="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h-2m-2 0H7" />
         </svg>
-        <h3 className="text-lg font-medium text-gray-700">No Staff Found</h3>
-        <p className="text-sm text-gray-500 text-center mt-2">It looks like there are no staff members yet. Click "Add Staff" to get started!</p>
+        <h3 className="text-base font-medium text-gray-700">No Staff Found</h3>
+        <p className="text-xs text-gray-500 text-center mt-2">It looks like there are no staff members yet. Click "Add Staff" to get started!</p>
       </div>
     );
   }
 
   return (
     <div className="relative w-full">
-      <table className={`w-full bg-white ${bordered ? "border border-gray-200 rounded-lg" : ""} table-auto`}>
-        <thead>
-          <tr className={`${bordered ? "border-b border-gray-200 first:rounded-t-lg" : ""}`}>
-            {selectable && (
-              <th className={`px-4 py-4 text-left text-sm text-gray-700 font-light w-12 ${bordered ? "border-r border-gray-200" : ""}`}>
-                <input
-                  type="checkbox"
-                  className="rounded h-4 w-4 accent-green-900 focus:ring-green-500"
-                  checked={selectAll}
-                  onChange={toggleSelectAll}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </th>
-            )}
-            {columns.map((col) => (
-              <th
-                key={col.key}
-                className={`px-4 py-4 text-left text-sm text-gray-700 font-light ${col.key === "actions" ? "w-20" : "min-w-[120px]"} ${bordered ? "border-r border-gray-200" : ""}`}
-                onClick={() => col.key !== "actions" && handleSort(col.key)}
-              >
-                {col.label} {sortKey === col.key && col.key !== "actions" ? (sortOrder === "asc" ? "▲" : "▼") : ""}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {sortedData.map((row, index) => (
-            <tr
-              key={row.id || index}
-              className={`transition-colors duration-200 ${bordered ? "border-b border-gray-200 last:rounded-b-lg" : ""} ${index % 2 === 0 ? "bg-white hover:bg-gray-50" : "bg-gray-100 hover:bg-gray-200"}`}
-              onClick={(e) => e.stopPropagation()}
-            >
+      {/* Desktop/Table View (sm and above) */}
+      <div className="hidden sm:block overflow-x-auto">
+        <table className={`w-full bg-white ${bordered ? "border border-gray-200 rounded-lg" : ""} table-auto`}>
+          <thead>
+            <tr className={`${bordered ? "border-b border-gray-200 first:rounded-t-lg" : ""}`}>
               {selectable && (
-                <td className={`px-4 text-sm py-4 text-gray-900 font-light w-12 ${bordered ? "border-r border-gray-200" : ""}`}>
+                <th className={`px-4 py-4 text-left text-sm text-gray-700 font-light w-12 ${bordered ? "border-r border-gray-200" : ""}`}>
                   <input
                     type="checkbox"
-                    className="h-4 w-4 accent-green-900 focus:ring-green-500"
-                    checked={selectedRows.has(index)}
-                    onChange={() => handleRowSelect(index)}
+                    className="rounded h-4 w-4 accent-green-900 focus:ring-green-500"
+                    checked={selectAll}
+                    onChange={toggleSelectAll}
                     onClick={(e) => e.stopPropagation()}
                   />
-                </td>
+                </th>
               )}
               {columns.map((col) => (
-                <td
+                <th
                   key={col.key}
-                  className={`px-4 text-sm py-4 text-gray-900 font-light ${col.key === "actions" ? "w-20" : "min-w-[120px] truncate"} ${bordered ? "border-r border-gray-200" : ""} relative`}
-                  onClick={(e) => col.key === "actions" && e.stopPropagation()}
+                  className={`px-4 py-4 text-left text-sm text-gray-700 font-light ${col.key === "actions" ? "w-20" : "min-w-[120px]"} ${bordered ? "border-r border-gray-200" : ""} ${col.key === "lastName" || col.key === "phoneNumber" || col.key === "role" ? "hidden lg:table-cell" : ""}`}
+                  onClick={() => col.key !== "actions" && handleSort(col.key)}
                 >
-                  {col.render ? col.render(row[col.key], row, index) : row[col.key]}
-                </td>
+                  {col.label} {sortKey === col.key && col.key !== "actions" ? (sortOrder === "asc" ? "▲" : "▼") : ""}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {sortedData.map((row, index) => (
+              <tr
+                key={row.id || index}
+                className={`transition-colors duration-200 ${bordered ? "border-b border-gray-200 last:rounded-b-lg" : ""} ${index % 2 === 0 ? "bg-white hover:bg-gray-50" : "bg-gray-100 hover:bg-gray-200"}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {selectable && (
+                  <td className={`px-4 text-sm py-4 text-gray-900 font-light w-12 ${bordered ? "border-r border-gray-200" : ""}`}>
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 accent-green-900 focus:ring-green-500"
+                      checked={selectedRows.has(index)}
+                      onChange={() => handleRowSelect(index)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </td>
+                )}
+                {columns.map((col) => (
+                  <td
+                    key={col.key}
+                    className={`px-4 text-sm py-4 text-gray-900 font-light ${col.key === "actions" ? "w-20" : "min-w-[120px] truncate"} ${bordered ? "border-r border-gray-200" : ""} relative ${col.key === "lastName" || col.key === "phoneNumber" || col.key === "role" ? "hidden lg:table-cell" : ""}`}
+                    onClick={(e) => col.key === "actions" && e.stopPropagation()}
+                  >
+                    {col.render ? col.render(row[col.key], row, index) : row[col.key]}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile View (below sm) */}
+      <div className="block sm:hidden space-y-4">
+        {sortedData.map((row, index) => (
+          <div
+            key={row.id || index}
+            className="bg-white border border-gray-200 rounded-lg p-4 flex flex-col gap-2"
+          >
+            {selectable && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-green-900 focus:ring-green-500"
+                  checked={selectedRows.has(index)}
+                  onChange={() => handleRowSelect(index)}
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <span className="text-sm text-gray-700">Select</span>
+              </div>
+            )}
+            {columns
+              .filter((col) => col.key !== "actions" && col.key !== "lastName" && col.key !== "phoneNumber" && col.key !== "role") // Show only firstName and email on mobile
+              .map((col) => (
+                <div key={col.key} className="flex justify-between items-center">
+                  <span className="text-sm text-gray-700 font-medium">{col.label}:</span>
+                  <span className="text-sm text-gray-900 truncate max-w-[60%]">
+                    {col.render ? col.render(row[col.key], row, index) : row[col.key]}
+                  </span>
+                </div>
+              ))}
+            <div className="flex justify-end">
+              {columns
+                .filter((col) => col.key === "actions")
+                .map((col) => (
+                  <div key={col.key} className="relative">
+                    {col.render && col.render(row[col.key], row, index)}
+                  </div>
+                ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
@@ -153,7 +198,7 @@ interface AttendanceRecordProps {
 function Staff() {
   const sampleAttendanceData = [];
   const [activeTab, setActiveTab] = useState("staff");
-  const [searchTerm, setSearchTerm] = useState(null); // Add search term state
+  const [searchTerm, setSearchTerm] = useState(null);
   const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(null);
@@ -254,7 +299,7 @@ function Staff() {
   };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value); // Update search term from input value
+    setSearchTerm(e.target.value);
   };
 
   const handleCreateStaff = async (e) => {
@@ -340,19 +385,19 @@ function Staff() {
   };
 
   const columns = [
-    { key: "firstName", label: "First Name" },
-    { key: "lastName", label: "Last Name" },
-    { key: "email", label: "Email" },
-    { key: "phoneNumber", label: "Phone" },
-    { key: "address", label: "Address" },
-    { key: "role", label: "Role" },
+    { key: "firstName", label: "First Name",  className: 'table-cell' },
+    { key: "lastName", label: "Last Name",className: 'hidden lg:table-cell' },
+    { key: "email", label: "Email", className: 'hidden lg:table-cell' },
+    { key: "phoneNumber", label: "Phone", className: 'hidden lg:table-cell' },
+    { key: "role", label: "Role", className: 'hidden lg:table-cell' },
     {
       key: "actions",
+      className: 'hidden lg:table-cell',
       label: "Actions",
       render: (_, row, index) => (
         <div className="relative" ref={(el) => (dropdownRefs.current[row.id || index] = el)}>
           <button
-            className="text-blue-500 ml-2"
+            className="text-blue-500 ml-2 p-2"
             onClick={(e) => {
               e.stopPropagation();
               e.preventDefault();
@@ -363,11 +408,11 @@ function Staff() {
           </button>
           {dropdownOpen === (row.id || index) && (
             <div
-              className="absolute right-0 top-6 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-[100]"
+              className="absolute right-0 top-6 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-[100] md:w-48"
               onClick={(e) => e.stopPropagation()}
             >
               <button
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-gray-700 whitespace-nowrap"
+                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-gray-700 whitespace-nowrap text-sm md:text-base"
                 onClick={(e) => {
                   e.stopPropagation();
                   console.log("View", row.id, "index:", index);
@@ -378,7 +423,7 @@ function Staff() {
                 View
               </button>
               <button
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-gray-700 whitespace-nowrap"
+                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-gray-700 whitespace-nowrap text-sm md:text-base"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleEditStaff(row);
@@ -388,7 +433,7 @@ function Staff() {
                 Edit
               </button>
               <button
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-red-500 whitespace-nowrap"
+                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-red-500 whitespace-nowrap text-sm md:text-base"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleConfirmDelete(row.id);
@@ -405,12 +450,12 @@ function Staff() {
   ];
 
   if (isRestaurantLoading || isStatsLoading || isStaffLoading) {
-    return <div className="p-4">Loading...</div>;
+    return <div className="p-4 text-center">Loading...</div>;
   }
 
   if (restaurantError || statsError || staffError) {
     return (
-      <div className="text-red-500 bg-red-100 p-4 rounded-lg">
+      <div className="text-red-500 bg-red-100 p-4 rounded-lg text-center">
         Error loading data. Please try again later.
       </div>
     );
@@ -430,20 +475,20 @@ function Staff() {
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
       <div>
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
           <input
             placeholder="Search staff"
             type="text"
-            className="w-full max-w-md p-2 border border-gray-50 rounded-lg rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="w-full md:max-w-md p-3 border border-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
             onChange={handleSearch}
             value={searchTerm}
           />
-          <div className="flex gap-4">
+          <div className="flex gap-4 justify-end">
             <Button
               onClick={() => setModalOpen(true)}
               variant="primary"
               size="sm"
-              className="bg-amber-600 hover:bg-amber-700 text-white"
+              className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 text-sm"
             >
               Add Staff
             </Button>
@@ -453,15 +498,15 @@ function Staff() {
 
       <main className="mt-8">
         <TabPanel active={activeTab === "staff"}>
-          <div className="bg-white rounded-xl p-6 w-full">
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mt-6">
+          <div className="bg-white rounded-xl p-4 sm:p-6 w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mt-6">
               {statsData.map((item, index) => (
                 <div
                   key={index}
                   className={`p-4 rounded-lg text-center font-medium ${statColors[index % statColors.length]}`}
                 >
-                  <p className="text-sm text-gray-600">{item.label}</p>
-                  <p className="text-xl font-bold text-gray-900">{item.value}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 capitalize">{item.label}</p>
+                  <p className="text-lg sm:text-xl font-bold text-gray-900">{item.value}</p>
                 </div>
               ))}
             </div>
@@ -478,7 +523,7 @@ function Staff() {
       </main>
 
       <div className="overflow-y-auto">
-        <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} position="right">
+        <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} position="right" className="w-full sm:w-96">
           <StaffForm
             formValues={formValues}
             handleChange={handleChange}
@@ -488,7 +533,7 @@ function Staff() {
           />
         </Modal>
 
-        <Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} position="right">
+        <Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} position="right" className="w-full sm:w-96">
           <StaffForm
             formValues={formValues}
             handleChange={handleChange}
@@ -499,20 +544,20 @@ function Staff() {
           />
         </Modal>
 
-        <Modal isOpen={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)} position="center">
+        <Modal isOpen={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)} position="center" className="w-11/12 sm:w-96">
           <div className="p-6">
             <h2 className="text-lg font-semibold mb-4">Confirm Deletion</h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-6 text-sm">
               Are you sure you want to delete this staff member? This action cannot be undone.
             </p>
             <div className="flex justify-end gap-4">
-              <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>
+              <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)} className="text-sm">
                 Cancel
               </Button>
               <Button
                 variant="destructive"
                 onClick={handleDeleteStaff}
-                className="bg-red-600 hover:bg-red-700 text-white"
+                className="bg-red-600 hover:bg-red-700 text-white text-sm"
               >
                 Delete
               </Button>
@@ -540,48 +585,50 @@ const AttendanceRecord = ({
 
   return (
     <div
-      className={`flex justify-between items-center gap-6 my-4 p-4 bg-white rounded-lg border border-gray-200 ${className} transition-all duration-200 hover:bg-gray-50`}
+      className={`flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6 my-4 p-4 bg-white rounded-lg border border-gray-200 ${className} transition-all duration-200 hover:bg-gray-50`}
     >
-      <div className="flex gap-6 items-center">
+      <div className="flex gap-4 items-center">
         <div className="text-sm font-medium text-gray-500">#{recordId}</div>
-        <div className="flex gap-6 items-center">
+        <div className="flex gap-4 items-center">
           <img
-            className="w-12 h-12 rounded-full border border-gray-300"
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-gray-300"
             src={imageUrl}
             alt={`${name}'s profile`}
           />
           <div>
-            <p className="text-lg font-medium text-gray-900">{name}</p>
-            <p className="text-sm text-gray-500">{position}</p>
+            <p className="text-base sm:text-lg font-medium text-gray-900">{name}</p>
+            <p className="text-xs sm:text-sm text-gray-500">{position}</p>
           </div>
         </div>
       </div>
-      <div className="text-sm font-medium text-gray-700">{date}</div>
-      <div className="text-sm font-medium text-gray-700">{time}</div>
-      <div className="flex gap-3">
+      <div className="flex flex-col md:flex-row gap-2 md:gap-4 text-sm font-medium text-gray-700">
+        <div>{date}</div>
+        <div>{time}</div>
+      </div>
+      <div className="flex flex-wrap gap-2">
         <Button
-          className="bg-green-200 text-green-900 hover:bg-green-300"
+          className="bg-green-200 text-green-900 hover:bg-green-300 text-xs sm:text-sm"
           onClick={() => handleStatusClick("present")}
           size="sm"
         >
           Present
         </Button>
         <Button
-          className="bg-red-200 text-red-900 hover:bg-red-300"
+          className="bg-red-200 text-red-900 hover:bg-red-300 text-xs sm:text-sm"
           onClick={() => handleStatusClick("absent")}
           size="sm"
         >
           Absent
         </Button>
         <Button
-          className="bg-yellow-200 text-yellow-900 hover:bg-yellow-300"
+          className="bg-yellow-200 text-yellow-900 hover:bg-yellow-300 text-xs sm:text-sm"
           onClick={() => handleStatusClick("half")}
           size="sm"
         >
           Half Shift
         </Button>
         <Button
-          className="bg-gray-200 text-gray-900 hover:bg-gray-300"
+          className="bg-gray-200 text-gray-900 hover:bg-gray-300 text-xs sm:text-sm"
           onClick={() => handleStatusClick("leave")}
           size="sm"
         >

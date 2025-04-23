@@ -21,27 +21,47 @@ interface SearchBarProps {
 const SearchContainer = styled.div<SearchBarProps>`
   display: flex;
   align-items: center;
-  width: ${(props) => props.width || '300px'};
-  height: ${(props) => props.height || '40px'};
-  padding: 0 10px;
-  border: ${(props) => props.border || '1px solid #e5e5e5'};
-  border-radius: ${(props) => props.borderRadius || '20px'};
-  background-color: ${(props) => props.backgroundColor || '#ffffff'};
-  box-shadow: ${(props) =>
-    props.shadow ? '0 2px 4px rgba(0, 0, 0, 0.1)' : 'none'};
+  width: ${({ width }) => width || 'min(100%, 400px)'}; /* Responsive width */
+  height: ${({ height }) => height || 'clamp(36px, 10vw, 44px)'}; /* Responsive height */
+  padding: 0 6px; /* More minimal padding */
+  // border: ${({ border }) => border || '1px solid #e5e5e5'}; /* Initial border */
+  border-radius: ${({ borderRadius }) => borderRadius || '20px'};
+  background-color: ${({ backgroundColor }) => backgroundColor || '#ffffff'}; /* Initial background */
+  box-shadow: ${({ shadow }) =>
+    shadow ? '0 2px 4px rgba(0, 0, 0, 0.1)' : 'none'};
+
+  /* Media Queries for Tablets */
+  @media (min-width: 768px) {
+    width: ${({ width }) => width || 'min(100%, 500px)'};
+    height: ${({ height }) => height || '48px'};
+    padding: 0 8px; /* Slightly larger but minimal padding */
+  }
+
+  /* Media Queries for Desktops */
+  @media (min-width: 1024px) {
+    width: ${({ width }) => width || '330px'}; /* Fixed 400px width */
+    padding: 0 8px; /* Minimal padding */
+  }
 `;
 
 const SearchInput = styled.input<SearchBarProps>`
   flex: 1;
   border: none;
   outline: none;
-  font-size: ${(props) => props.fontSize || '14px'};
-  color: ${(props) => props.color || '#333'};
+  font-size: ${({ fontSize }) => fontSize || 'clamp(12px, 2.5vw, 14px)'}; /* Responsive font size */
+  color: ${({ color }) => color || '#333'};
   background-color: transparent;
-  padding-left: ${(props) => props.inputPadding || '5px'};
+  padding-left: ${({ inputPadding }) => inputPadding || '8px'};
   font-weight: 300;
+
   ::placeholder {
-    color: ${(props) => props.placeholderColor || '#aaa'};
+    color: ${({ placeholderColor }) => placeholderColor || '#aaa'};
+  }
+
+  /* Media Queries for larger screens */
+  @media (min-width: 768px) {
+    font-size: ${({ fontSize }) => fontSize || '16px'};
+    padding-left: ${({ inputPadding }) => inputPadding || '10px'};
   }
 `;
 
@@ -49,7 +69,7 @@ const IconWrapper = styled.div<SearchBarProps>`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: ${(props) => props.iconColor || '#555'};
+  color: ${({ iconColor }) => iconColor || '#555'};
 `;
 
 const SearchBar: React.FC<SearchBarProps> = ({
@@ -74,7 +94,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       border={border}
       borderRadius={borderRadius}
       backgroundColor={backgroundColor}
-      // shadow={shadow}
+      shadow={shadow}
     >
       <SearchInput
         type="text"

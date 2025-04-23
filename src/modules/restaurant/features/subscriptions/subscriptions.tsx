@@ -9,8 +9,8 @@ import {
   useInitiateSubscriptionPaymentMutation,
 } from "@/redux/api/subscriptions/subscriptions.api";
 import { toast } from "react-toastify";
-import { useSelector } from 'react-redux';
-import { selectAuth } from '@/redux/api/auth/auth.slice';
+import { useSelector } from "react-redux";
+import { selectAuth } from "@/redux/api/auth/auth.slice";
 
 export const Cover = styled.div`
   background-image: url(${subs});
@@ -18,95 +18,93 @@ export const Cover = styled.div`
   background-position: center;
   border-radius: 15px;
   width: 100%;
-  height: 100vh;
+  min-height: 100vh; /* Changed to min-height */
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
   justify-content: center;
   margin: 0 auto;
+  padding: 16px; /* Added padding for mobile */
+
+  @media (max-width: 640px) {
+    background-size: contain; /* Better scaling on mobile */
+    background-repeat: no-repeat;
+    min-height: auto; /* Allow content to dictate height */
+    padding: 12px;
+  }
 `;
 
-// Restyled ProviderCard with modern design
 const ProviderCard = styled.div<{ isSelected: boolean }>`
   display: flex;
   align-items: center;
-  padding: 12px 24px;
-  margin: 0 15px;
+  padding: 12px 16px;
+  margin: 0 8px;
   border-radius: 12px;
-  border: 2px solid 
+  border: 2px solid
     ${(props) =>
-        props.isSelected
-            ? theme.colors.borderSelected
-            : "transparent"}; // No border when not selected for a cleaner look
+      props.isSelected ? theme.colors.borderSelected : "transparent"};
   background: ${(props) =>
-        props.isSelected
-            ? "linear-gradient(45deg, #4A90E2, #50C878)" // Gradient for selected state
-            : "linear-gradient(45deg, #FFFFFF, #F5F7FA)"}; // Soft gradient for default
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); // Subtle shadow for depth
+    props.isSelected
+      ? "linear-gradient(45deg, #4A90E2, #50C878)"
+      : "linear-gradient(45deg, #FFFFFF, #F5F7FA)"};
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   cursor: pointer;
-  transition: all 0.3s ease-in-out; // Smoother transition
-  position: relative; // For potential pseudo-elements or badges
+  transition: all 0.3s ease-in-out;
+  position: relative;
 
   &:hover {
-    transform: translateY(-2px); // Lift effect on hover
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); // Enhanced shadow on hover
-    background: linear-gradient(45deg, #4A90E2, #50C878); // Same as selected for hover
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(45deg, #4A90E2, #50C878);
     border-color: transparent;
   }
 
-  &:after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: 12px;
-    padding: 2px; // Stroke width
-    background: linear-gradient(45deg, #4A90E2, #50C878);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: destination-out;
-    mask-composite: exclude;
-    pointer-events: none; // Ensure clicks go through
+  @media (max-width: 640px) {
+    padding: 10px 12px;
+    margin: 0 4px;
   }
 `;
 
 const ProviderLabel = styled.span`
-  margin-left: 16px;
-  font-size: 18px;
+  margin-left: 12px;
+  font-size: 16px;
   font-weight: 600;
   color: ${(props) => props.theme.colors.providerText};
-  letter-spacing: 0.5px; // Slight spacing for readability
-  text-transform: capitalize; // Better readability
+  letter-spacing: 0.5px;
+  text-transform: capitalize;
   transition: color 0.3s ease-in-out;
 
   ${ProviderCard}:hover & {
-    color: #FFFFFF; // White text on hover for contrast
+    color: #FFFFFF;
   }
 
   ${ProviderCard}[isSelected="true"] & {
-    color: #FFFFFF; // White text when selected
+    color: #FFFFFF;
+  }
+
+  @media (max-width: 640px) {
+    font-size: 14px;
+    margin-left: 8px;
   }
 `;
 
 const Subscriptions = () => {
-  const [isChecked, setChecked] = useState(false); // False = Monthly, True = Annually
-  const [selectedProvider, setSelectedProvider] = useState<"flutterwave" | "paystack" | null>(null); // Track selected provider
+  const [isChecked, setChecked] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<"flutterwave" | "paystack" | null>(null);
   const { data: plans, isLoading, error } = useGetAllSubscriptionPlansQuery();
-  const { subscription, user } = useSelector(selectAuth); // Get current subscription and user
+  const { subscription, user } = useSelector(selectAuth);
   const [initiatePayment, { isLoading: isPaymentLoading }] = useInitiateSubscriptionPaymentMutation();
   const { subdomain } = useSelector(selectAuth);
 
-  // Filter out the "Basic" plan and adjust pricing based on billing cycle
   const filteredPlans = plans
     ? plans
-      .filter((plan) => plan.name !== "Basic") // Exclude Basic plan
-      .map((plan) => ({
-        ...plan,
-        price: isChecked ? plan.price * 12 : plan.price,
-        billingCycle: isChecked ? "Annually" : "Monthly",
-        isCurrent: subscription?.plan?.id === plan.id && subscription?.status === "ACTIVE",
-      }))
+        .filter((plan) => plan.name !== "Basic")
+        .map((plan) => ({
+          ...plan,
+          price: isChecked ? plan.price * 12 : plan.price,
+          billingCycle: isChecked ? "Annually" : "Monthly",
+          isCurrent: subscription?.plan?.id === plan.id && subscription?.status === "ACTIVE",
+        }))
     : [];
 
   const planFeatures = {
@@ -125,13 +123,12 @@ const Subscriptions = () => {
   };
 
   const planStyles = {
-    "Basic Plan": { background: "#1E2A38", color: "#A9CCE3" }, // Deep navy blue-gray, soft sky blue
-    "Standard Plan": { background: "#2E4057", color: "#D4A017" }, // Charcoal blue, mustard gold
-    "Business Plan": { background: "#1ABC9C", color: "#ECF0F1" }, // Vibrant teal, light gray
-    "Premium Plan": { background: "linear-gradient(to right, #D4A017, #8E44AD)", color: "#FFFFFF" }, // Gold to purple, white text
+    "Basic Plan": { background: "#1E2A38", color: "#A9CCE3" },
+    "Standard Plan": { background: "#2E4057", color: "#D4A017" },
+    "Business Plan": { background: "#1ABC9C", color: "#ECF0F1" },
+    "Premium Plan": { background: "linear-gradient(to right, #D4A017, #8E44AD)", color: "#FFFFFF" },
   };
 
-  // Handle payment initiation with subdomain
   const handleInitiatePayment = async (planId: string, planPrice: number) => {
     if (!user?.ownedRestaurant?.id || !user?.email) {
       toast.error("User or restaurant information is missing.");
@@ -160,7 +157,7 @@ const Subscriptions = () => {
         restaurantId: user.ownedRestaurant.id,
         dto: paymentDto,
         provider: selectedProvider,
-        subdomain, // Hardcode or dynamically set the subdomain (e.g., from config or user input)
+        subdomain,
       }).unwrap();
       console.log("Payment initiation response:", response);
       toast.success("Redirecting to payment...");
@@ -191,51 +188,51 @@ const Subscriptions = () => {
 
   return (
     <Cover>
-      <div className="mt-20 my-auto text-2xl text-center ml-1 font-semibold text-[${theme.colors.accent}]">
+      <div className="mt-12 sm:mt-20 text-lg sm:text-2xl text-center font-semibold text-[${theme.colors.accent}]">
         Streamline Your Restaurant Operations
       </div>
-      <div className="mt-1 my-auto text-sm text-center ml-1 font-light text-[${theme.colors.accent}]">
+      <div className="mt-2 text-sm sm:text-base text-center font-light text-[${theme.colors.accent}]">
         Comprehensive Management Solutions for Modern Dining Experiences
       </div>
-      <div className="mx-auto mt-5 flex justify-center text-center">
-        <div className="mt-1 my-auto text-sm text-center ml-1 font-light text-[${theme.colors.accent}]">
+      <div className="mt-6 flex justify-center text-center">
+        <div className="text-sm sm:text-base font-light text-[${theme.colors.accent}]">
           Select Your Preferred Payment Provider
         </div>
       </div>
       {/* Payment Provider Selection */}
-      <div className="mx-auto mt-5 flex justify-center text-center">
-        <div className="flex">
-          <ProviderCard
-            isSelected={selectedProvider === "flutterwave"}
-            onClick={() => setSelectedProvider("flutterwave")}
-          >
-            <img
-              src="https://cdn.brandfetch.io/iddYbQIdlK/id3uOuItwN.svg?c=1dxbfHSJFAPEGdCLU4o5B" // Add logo to public folder
-              alt="Flutterwave"
-              width={30}
-              height={30}
-            />
-            <ProviderLabel>Flutterwave</ProviderLabel>
-          </ProviderCard>
-          <ProviderCard
-            isSelected={selectedProvider === "paystack"}
-            onClick={() => setSelectedProvider("paystack")}
-          >
-            <img
-              src="https://cdn.brandfetch.io/idM5mrwtDs/theme/dark/symbol.svg?c=1dxbfHSJFAPEGdCLU4o5B" // Add logo to public folder
-              alt="Paystack"
-              width={30}
-              height={30}
-            />
-            <ProviderLabel>Paystack</ProviderLabel>
-          </ProviderCard>
-        </div>
+      <div className="mt-4 flex flex-col sm:flex-row justify-center gap-4">
+        <ProviderCard
+          isSelected={selectedProvider === "flutterwave"}
+          onClick={() => setSelectedProvider("flutterwave")}
+        >
+          <img
+            src="https://cdn.brandfetch.io/iddYbQIdlK/id3uOuItwN.svg?c=1dxbfHSJFAPEGdCLU4o5B"
+            alt="Flutterwave"
+            width={24}
+            height={24}
+            className="sm:w-6 sm:h-6"
+          />
+          <ProviderLabel>Flutterwave</ProviderLabel>
+        </ProviderCard>
+        <ProviderCard
+          isSelected={selectedProvider === "paystack"}
+          onClick={() => setSelectedProvider("paystack")}
+        >
+          <img
+            src="https://cdn.brandfetch.io/idM5mrwtDs/theme/dark/symbol.svg?c=1dxbfHSJFAPEGdCLU4o5B"
+            alt="Paystack"
+            width={24}
+            height={24}
+            className="sm:w-6 sm:h-6"
+          />
+          <ProviderLabel>Paystack</ProviderLabel>
+        </ProviderCard>
       </div>
-      <div className="mt-10 flex justify-evenly text-center bg-[${theme.colors.secondary}] min-h-[416px] rounded-xl">
+      <div className="mt-8 flex flex-col sm:flex-row sm:justify-evenly gap-6 sm:gap-4 rounded-xl p-4">
         {filteredPlans.map((plan) => (
           <div
             key={plan.id}
-            className="bg-[${theme.colors.secondary}]"
+            className="w-full sm:w-auto"
             style={{ marginTop: plan.name === "Standard Plan" ? "-20px" : "0" }}
           >
             <PricingCard

@@ -116,21 +116,8 @@ const Content = styled.main`
   width: 100%;
 `;
 
-const ToggleButton = styled.button`
-  background: none;
-  border: none;
-  color: ${(props) => props.theme.colors.primaryFont};
-  font-size: 20px;
-  cursor: pointer;
-  padding: 10px;
+const ToggleButton = styled.button`background: none; position: absolute; left: 15px; top: 5px; border: none; color: ${(props) => props.theme.colors.primaryFont}; font-size: 20px; cursor: pointer; margin: 10px;`;
 
-  @media (min-width: ${theme.breakpoints.mobile}) {
-    position: absolute;
-    top: 20px;
-    left: ${(props) => (props.isSidebarOpen ? '220px' : '50px')};
-    transition: left 0.3s ease;
-  }
-`;
 
 const NavItem = styled(NavLink)`
   display: flex;

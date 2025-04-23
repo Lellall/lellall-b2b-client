@@ -162,21 +162,13 @@ const InventoryComponent = () => {
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
                         <SearchBar
-                            placeholder="Search Items"
-                            width={{ base: '100%', sm: '200px', md: '300px' }}
-                            height="36px"
-                            border="none"
-                            borderRadius="8px"
-                            backgroundColor="#ffffff"
+                            placeholder="Find your favorite items..."
+                            borderRadius="12px"
+                            iconColor="#000"
+                            iconSize={15}
                             shadow={false}
-                            fontSize={{ base: '10px', sm: '11px' }}
-                            color="#444"
-                            inputPadding="6px"
-                            placeholderColor="#bbb"
-                            iconColor="#ccc"
-                            iconSize={14}
                         />
-                        <StyledButton
+                        {/* <StyledButton
                             style={{ padding: '6px 10px', fontWeight: 300 }}
                             background="#fff"
                             color="#000"
@@ -187,7 +179,7 @@ const InventoryComponent = () => {
                         >
                             <Add size={14} className="w-3 h-3 sm:w-4 sm:h-4 mr-1" color="#000" />
                             <Filter size={14} className="w-3 h-3 sm:w-4 sm:h-4 mr-1" color="#000" /> Filters
-                        </StyledButton>
+                        </StyledButton> */}
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                         <StyledButton
@@ -198,9 +190,8 @@ const InventoryComponent = () => {
                             color="#000"
                             width={{ base: '100%', sm: '150px' }}
                             variant="outline"
-                            className={`flex items-center justify-center gap-1 text-xs sm:text-sm ${
-                                isFetching ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
-                            }`}
+                            className={`flex items-center justify-center gap-1 text-xs sm:text-sm ${isFetching ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
+                                }`}
                             aria-label="Export inventory as CSV"
                         >
                             <ExportCircle size={14} className="w-3 h-3 sm:w-4 sm:h-4 mr-1" color="#000" />

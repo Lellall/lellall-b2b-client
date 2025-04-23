@@ -699,9 +699,9 @@ export default function StyledCalendar() {
         <div className="min-h-screen p-2 sm:p-4 bg-gray-100">
             <div className="w-full sm:max-w-7xl mx-auto space-y-4">
                 <div className="flex flex-col sm:flex-row mb-4 justify-between items-start sm:items-center gap-3">
-                    <SearchBar
+                    {/* <SearchBar
                         placeholder="Search reservations"
-                        width={{ base: '100%', sm: '320px' }}
+                        width={{ base: '100%', sm: '100%' }}
                         height="36px"
                         border="1px solid #e5e7eb"
                         borderRadius="8px"
@@ -713,12 +713,19 @@ export default function StyledCalendar() {
                         placeholderColor="#6b7280"
                         iconColor="#9ca3af"
                         iconSize={15}
+                    /> */}
+                    <SearchBar
+                        placeholder="Find your favorite items..."
+                        borderRadius="12px"
+                        iconColor="#000"
+                        iconSize={15}
+                        shadow={false}
                     />
                     <StyledButton
                         style={{ padding: '8px 16px', fontWeight: 600 }}
                         background="#05431E"
                         color="white"
-                        width={{ base: '100%', sm: '180px' }}
+                        width={{ base: '100%', sm: '100%' }}
                         variant="solid"
                         border="none"
                         onClick={() => {
