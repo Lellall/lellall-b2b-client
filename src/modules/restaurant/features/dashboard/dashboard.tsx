@@ -1,4 +1,3 @@
-// src/pages/Dashboard.tsx
 import React from 'react';
 import styled from 'styled-components';
 import PieChartCard from '@/components/ui/pie-chart-card';
@@ -6,18 +5,19 @@ import SalesBreakdownCard from '@/components/ui/sales-breakdown';
 import SalesCard from '@/components/ui/sales-card';
 import { selectAuth } from '@/redux/api/auth/auth.slice';
 import {
-    useGetSalesStatsQuery,
-    useGetMonthlyRevenueBreakdownQuery,
-    useGetInventoryStatsQuery,
+  useGetSalesStatsQuery,
+  useGetMonthlyRevenueBreakdownQuery,
+  useGetInventoryStatsQuery,
 } from '@/redux/api/order/order.api';
-import { useGetReservationByStatsQuery } from "@/redux/api/reservations/reservations.api";
+import { useGetReservationByStatsQuery } from '@/redux/api/reservations/reservations.api';
 import { useSelector } from 'react-redux';
 import { ColorRing } from 'react-loader-spinner';
 import useWindowSize from '@/hooks/use-window-size';
+import DailySalesDashboard from './daily-sales';
 
 const DashboardContainer = styled.div`
   padding: 16px;
-  background: #f5f5f5;
+  // background: #f5f5f5;
 `;
 
 const SalesCardGrid = styled.div`
@@ -54,7 +54,6 @@ const TableWrapper = styled.div`
   margin: 20px 0;
 `;
 
-// Example table data
 const salesTableColumns = [
   { key: 'orderId', label: 'Order ID' },
   { key: 'date', label: 'Date' },
@@ -80,13 +79,11 @@ const Dashboard = () => {
   const { subdomain } = useSelector(selectAuth);
   const { width } = useWindowSize();
 
-  // API Queries
   const { data: salesStats, isLoading: isSalesLoading } = useGetSalesStatsQuery(subdomain);
   const { data: revenueData, isLoading: isRevenueLoading } = useGetMonthlyRevenueBreakdownQuery(subdomain);
   const { data: inventoryStats, isLoading: isInventoryLoading } = useGetInventoryStatsQuery(subdomain);
   const { data: reservationStats, isLoading: isReservationsLoading } = useGetReservationByStatsQuery(subdomain);
 
-  // Static data
   const monthlyExpensesData = [
     { label: 'Food Items', percentage: 60, color: '#99FF99' },
     { label: 'Maintenance', percentage: 15, color: '#FF9999' },
@@ -109,12 +106,11 @@ const Dashboard = () => {
 
   const salesData = revenueData ?? [];
 
-  // Loader
   const isAnyLoading = isSalesLoading || isRevenueLoading || isInventoryLoading || isReservationsLoading;
 
   if (isAnyLoading) {
     return (
-      <div className="min-hmakerspace-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <ColorRing height="80" width="80" radius="9" color="#05431E" ariaLabel="three-dots-loading" visible={true} />
       </div>
     );
@@ -166,16 +162,9 @@ const Dashboard = () => {
                 fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
               }}
             />
-            {/* <PieChartCard
-              title="# Monthly Expenses"
-              data={monthlyExpensesData}
-              legendStyle={{
-                fontSize: '0.7rem',
-                color: '#666666',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-              }}
-            /> */}
           </PieChartContainer>
+          {/* Daily Sales Dashboard */}
+          <DailySalesDashboard subdomain={subdomain}/>
         </MobileViewContainer>
       </DashboardContainer>
     );
@@ -201,7 +190,6 @@ const Dashboard = () => {
           backgroundColor="rgba(255, 159, 41, 0.23)"
         />
       </SalesCardGrid>
-
       <SalesBreakdownCard
         title="Monthly Sales Revenue"
         subtitle="Breakdown by Monthly Sales"
@@ -227,16 +215,8 @@ const Dashboard = () => {
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
           }}
         />
-        {/* <PieChartCard
-          title="# Monthly Expenses"
-          data={monthlyExpensesData}
-          legendStyle={{
-            fontSize: '0.75rem',
-            color: '#666666',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-          }}
-        /> */}
       </PieChartContainer>
+      <DailySalesDashboard subdomain={subdomain} />
     </DashboardContainer>
   );
 };

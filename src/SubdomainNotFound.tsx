@@ -12,14 +12,14 @@ const SubdomainNotFound = () => {
   // Function to extract subdomain from URL as fallback
   const extractSubdomain = () => {
     const host = window.location.href;
-    const extractedSubdomain = host.split('.')[0].split('//')[1];
-    if (extractedSubdomain) {
+    const extractedSubdomain = host.split('.')[0].split('//')[1] || 'unknown';
+    if (extractedSubdomain && extractedSubdomain !== 'unknown') {
       dispatch(setSubdomain(extractedSubdomain));
     }
     return extractedSubdomain;
   };
 
-  const displaySubdomain = subdomain || extractSubdomain() || 'unknown';
+  const displaySubdomain = subdomain || extractSubdomain();
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
@@ -61,7 +61,7 @@ const SubdomainNotFound = () => {
         {/* Actions */}
         <div className="space-y-4">
           <StyledButton
-            onClick={() => window.location.href = '/'}
+            onClick={() => (window.location.href = '/')}
             background="#05431E"
             color="#fff"
             width="200px"
@@ -84,22 +84,29 @@ const SubdomainNotFound = () => {
   );
 };
 
-// Example usage in a parent component
+// SubdomainChecker Component
 const SubdomainChecker = () => {
-  const { subdomain } = useSelector(selectAuth);
+  const { subdomain, role } = useSelector(selectAuth);
   const dispatch = useDispatch();
 
   // Check subdomain from URL if not in Redux
   const host = window.location.href;
-  const extractedSubdomain = host.split('.')[0].split('//')[1];
-  
-  // Here you would typically check if the subdomain exists in your system
-  // For this example, we'll assume 'restaurant' check failed
-  const restaurant = null; // This would come from your API/data check
+  const extractedSubdomain = host.split('.')[0].split('//')[1] || 'unknown';
+
+  // Special case: Skip restaurant check if subdomain is 'admin' and user is SUPER_ADMIN
+  if (extractedSubdomain === 'admin' && role === 'SUPER_ADMIN') {
+    dispatch(setSubdomain(extractedSubdomain));
+    return <App />;
+  }
+
+  // Perform restaurant check for other subdomains
+  // This would typically involve an API call to check if the restaurant exists
+  // For this example, assume the restaurant check failed (restaurant = null)
+  const restaurant = null; // Replace with actual API call to check restaurant existence
 
   if (restaurant) {
     dispatch(setSubdomain(extractedSubdomain));
-    return <App />; // Or your main app component
+    return <App />;
   }
 
   return <SubdomainNotFound />;

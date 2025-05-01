@@ -20,13 +20,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
 
   const currentPath = location.pathname;
 
-  // Explicitly block non-SUPERADMIN users from admin routes
-  if (isAdminRoute && userRole !== 'SUPERADMIN') {
+  // Explicitly block non-SUPER_ADMIN users from admin routes
+  if (isAdminRoute && userRole !== 'SUPER_ADMIN') {
     return <LostScreen />;
   }
 
-  // Allow SUPERADMIN to access only admin routes
-  if (userRole === 'SUPERADMIN' && !isAdminRoute && !currentPath.startsWith('/admin')) {
+  // Allow SUPER_ADMIN to access only admin routes
+  if (userRole === 'SUPER_ADMIN' && !isAdminRoute && !currentPath.startsWith('/admin')) {
     return <LostScreen />;
   }
 

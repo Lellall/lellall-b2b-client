@@ -3,13 +3,14 @@ import React from 'react';
 import styled, { ThemeProvider } from 'styled-components';
 import { useMediaQuery } from 'react-responsive';
 import { Outlet, NavLink } from 'react-router-dom';
-import { Home, UserSearch, Car, MessageQuestion, Setting } from 'iconsax-react';
+import { Home, UserSearch, Car, MessageQuestion, Setting, Logout } from 'iconsax-react';
 import Menu from '../../../../../assets/menu-collapse.svg';
 import Logo from '../../../../../assets/Logo.svg';
 import { theme } from '@/theme/theme';
-import { useSelector } from 'react-redux';
-import { selectAuth } from '@/redux/api/auth/auth.slice';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { selectAuth, logout } from '@/redux/api/auth/auth.slice';
+import { persistor } from '@/redux/store';
 
 // Styled Components with TypeScript
 interface SidebarProps {
@@ -29,6 +30,25 @@ const LayoutWrapper = styled.div`
   display: flex;
   height: 100vh;
   overflow: hidden;
+`;
+const LogoutButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  text-decoration: none;
+  color: ${(props) => props.theme.colors.active};
+  font-weight: 300;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    color: ${(props) => props.theme.colors.hoverFont};
+    border-radius: 8px;
+  }
 `;
 
 const Sidebar = styled.div<SidebarProps>`
@@ -119,7 +139,7 @@ const Icon = styled.div`
 
 const Text = styled.span<TextProps>`
   font-size: 14px;
-  font-weight: 100;
+  font-weight: 300;
   display: ${(props) => (props.isSidebarOpen ? 'inline' : 'none')};
 `;
 
@@ -140,7 +160,18 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ subdomainData }) => {
     const isMobile = useMediaQuery({ query: `(max-width: ${theme.breakpoints.mobile})` });
     const [isSidebarOpen, setSidebarOpen] = React.useState(!isMobile);
     const { isAuthenticated } = useSelector(selectAuth);
+    const dispatch = useDispatch();
     const navigate = useNavigate();
+    const handleLogout = async () => {
+        dispatch(logout());
+        await persistor.purge();
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('subscription');
+        navigate('/');
+    };
+
 
     const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
@@ -160,13 +191,13 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ subdomainData }) => {
                     <LogoWrapper isSidebarOpen={isSidebarOpen}>
                         <img src={Logo} alt="Logo" />
                     </LogoWrapper>
-                    {subdomainData && (
+                    {/* {subdomainData && (
                         <RestaurantName isSidebarOpen={isSidebarOpen}>
                             {subdomainData.name} - Admin
                         </RestaurantName>
-                    )}
+                    )} */}
                     <nav className="mt-10 mx-3">
-                        <NavItem to="/admin/operations" end>
+                        <NavItem to="/" end>
                             <Icon>
                                 <Home size={16} />
                             </Icon>
@@ -178,24 +209,30 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ subdomainData }) => {
                             </Icon>
                             <Text isSidebarOpen={isSidebarOpen}>Agents</Text>
                         </NavItem>
-                        {/* <NavItem to="/admin/reports">
+                        <NavItem to="/admin/reports">
                             <Icon>
                                 <Car size={16} />
                             </Icon>
                             <Text isSidebarOpen={isSidebarOpen}>Logistics</Text>
-                        </NavItem> */}
-                        {/* <NavItem to="/admin/shops">
+                        </NavItem>
+                        <NavItem to="/admin/shops">
                             <Icon>
                                 <MessageQuestion size={16} />
                             </Icon>
                             <Text isSidebarOpen={isSidebarOpen}>Customer Care</Text>
-                        </NavItem> */}
+                        </NavItem>
                         <NavItem to="/admin/settings">
                             <Icon>
                                 <Setting size={16} />
                             </Icon>
                             <Text isSidebarOpen={isSidebarOpen}>Settings</Text>
                         </NavItem>
+                        <LogoutButton onClick={handleLogout}>
+                            <Icon>
+                                <Logout size={16} />
+                            </Icon>
+                            <Text isSidebarOpen={isSidebarOpen}>Logout</Text>
+                        </LogoutButton>
                     </nav>
                 </Sidebar>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>

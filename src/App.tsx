@@ -1,4 +1,3 @@
-// src/App.tsx
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Suspense, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -26,7 +25,6 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useGetRestaurantBySubdomainQuery } from './redux/api/restaurant/restaurant.api';
 import SubdomainNotFound from './SubdomainNotFound';
-import KYCWizard from './KYCWizard';
 import Inventory from './modules/restaurant/features/inventory';
 import Staff from './modules/restaurant/features/staff/staff';
 import VerifyPaymentPage from './modules/restaurant/features/subscriptions/verify-page';
@@ -36,29 +34,42 @@ const App = () => {
   const { isAuthenticated, user, refreshToken } = useSelector(selectAuth);
   const dispatch = useDispatch();
   const host = window.location.href;
-  const subdomain = host.split('.')[0].split('//')[1];
-  const { data: restaurant, isLoading, isError, refetch } = useGetRestaurantBySubdomainQuery(subdomain, {
-    skip: !subdomain,
+  const subdomain = host.split('.')[0].split('//')[1] || 'unknown';
+
+  // Determine if user is SUPER_ADMIN for admin routes
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+  const isAdminSubdomain = subdomain === 'admin';
+
+  // Query restaurant data unless accessing admin subdomain
+  const { data: restaurant, isLoading, isError } = useGetRestaurantBySubdomainQuery(subdomain, {
+    skip: isAdminSubdomain && isSuperAdmin,
   });
 
+  // Store refresh token in localStorage
   useEffect(() => {
     if (refreshToken) {
       localStorage.setItem('refresh_token', refreshToken);
     }
   }, [refreshToken]);
 
-  if (restaurant) {
-    dispatch(setSubdomain(subdomain));
-  }
+  // Set subdomain in Redux when restaurant data is available
+  useEffect(() => {
+    if (restaurant) {
+      dispatch(setSubdomain(subdomain));
+    }
+  }, [restaurant, subdomain, dispatch]);
 
-  if (isLoading) {
+  // Show loading state while checking restaurant data
+  if (isLoading && !(isAdminSubdomain && isSuperAdmin)) {
     return <div className="text-center text-lg">Checking restaurant...</div>;
   }
 
-  if (isError) {
+  // Show SubdomainNotFound if restaurant query fails and not on admin subdomain
+  if (isError && !isAdminSubdomain) {
     return <SubdomainNotFound />;
   }
 
+  // Define restaurant routes for non-SUPER_ADMIN users (ADMIN, WAITER, MANAGER)
   const restaurantRoutes = (
     <>
       <Route index element={<Dashboard />} />
@@ -73,20 +84,18 @@ const App = () => {
       <Route path="subscriptions" element={<Subscriptions />} />
       <Route path="reservations" element={<Reservations />} />
       <Route path="reservations/:id" element={<Reservation />} />
-      <Route path="/verify-payment" element={<VerifyPaymentPage />} />
+      <Route path="verify-payment" element={<VerifyPaymentPage />} />
     </>
-  )
+  );
 
+  // Define admin routes for SUPER_ADMIN users
   const adminRoutes = (
     <>
       <Route index element={<Operations />} />
       <Route path="operations" element={<Operations />} />
       <Route path="operations/:id" element={<ViewOrderOperations />} />
     </>
-  )
-
-  const isKycPending = false; // user?.ownedRestaurant?.kycStatus === 'PENDING';
-  const isSuperAdmin = user?.role === 'SUPERADMIN';
+  );
 
   return (
     <Router>
@@ -119,27 +128,19 @@ const App = () => {
                 }
               />
             </>
-          ) : isKycPending ? (
-            <Route
-              path="/*"
-              element={
-                <KYCWizard
-                  restaurantData={restaurant}
-                  onComplete={() => refetch()}
-                />
-              }
-            />
           ) : (
             <>
-              <Route element={<ProtectedRoute isAdminRoute={false} />}>
-                <Route path="/" element={<Layout subdomainData={restaurant} />}>
-                  {restaurantRoutes}
+              {!isSuperAdmin && (
+                <Route element={<ProtectedRoute isAdminRoute={false} />}>
+                  <Route path="/" element={<Layout subdomainData={restaurant} />}>
+                    {restaurantRoutes}
+                  </Route>
                 </Route>
-              </Route>
+              )}
 
               {isSuperAdmin && (
                 <Route element={<ProtectedRoute isAdminRoute={true} />}>
-                  <Route path="/admin" element={<AdminLayout subdomainData={restaurant} />}>
+                  <Route path="/" element={<AdminLayout subdomainData={restaurant} />}>
                     {adminRoutes}
                   </Route>
                 </Route>
@@ -151,7 +152,7 @@ const App = () => {
       </Suspense>
       <ToastContainer />
     </Router>
-  )
-}
+  );
+};
 
-export default App
+export default App;
