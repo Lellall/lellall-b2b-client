@@ -1,10 +1,9 @@
-// src/pages/Orders.tsx
 import { Button } from "@/components/ui/button";
 import React, { useState } from "react";
 import { Plus } from "lucide-react";
 import OrderCard from "./components/order-card";
 import SearchBar from "@/components/search-bar/search-bar";
-import { Add, MinusCirlce, Send, Receipt, Edit } from "iconsax-react";
+import { Add, MinusCirlce, Send, Receipt, Edit, Trash } from "iconsax-react"; // Added Trash icon
 import { useCreateOrdersMutation, useUpdateOrdersMutation } from "@/redux/api/order/order.api";
 import { useGetAllMenuItemsQuery } from "@/redux/api/menu/menu.api";
 import { useSelector } from 'react-redux';
@@ -24,6 +23,7 @@ const Orders = () => {
   const [orderSent, setOrderSent] = useState(false);
   const [receipt, setReceipt] = useState(null);
   const [tableNumber, setTableNumber] = useState("01");
+  const [specialNote, setSpecialNote] = useState("");
   const [createdOrders, setCreatedOrders] = useState<any[]>([]);
 
   const { subdomain, user } = useSelector(selectAuth);
@@ -52,6 +52,14 @@ const Orders = () => {
     });
   };
 
+  // New function to remove an item from the order
+  const removeItem = (itemId: string) => {
+    setOrder((prev) => {
+      const { [itemId]: _, ...rest } = prev;
+      return rest;
+    });
+  };
+
   const calculateTotal = () => {
     const subtotal = Object.values(order).reduce((acc: number, { quantity, price }: any) => acc + quantity * price, 0);
     const tax = 100;
@@ -65,6 +73,7 @@ const Orders = () => {
         menuItemId: id,
         quantity,
       })),
+      specialNote,
     };
 
     try {
@@ -78,10 +87,12 @@ const Orders = () => {
           timestamp: new Date().toISOString(),
           total: calculateTotal().total,
           status: "PENDING",
+          specialNote,
         },
       ]);
       setOrderSent(true);
       setOrder({});
+      setSpecialNote("");
     } catch (error) {
       console.error("Failed to send order:", error);
       alert("Failed to send order. Try again.");
@@ -102,6 +113,7 @@ const Orders = () => {
       tax,
       total,
       date: new Date().toLocaleString(),
+      specialNote,
     };
     setReceipt(receiptData);
   };
@@ -137,7 +149,7 @@ const Orders = () => {
         {/* Header Section */}
         <div className="flex flex-col gap-4 mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <SearchBar
+            <SearchBar
               placeholder="Search Items"
               width="300px"
               height="42px"
@@ -218,33 +230,43 @@ const Orders = () => {
           {/* Order Summary & Created Orders */}
           <div className="space-y-6">
             {/* Current Order Summary */}
-            <div className="bg-white p-4 rounded-lg  h-[80vh] sm:h-[70vh] flex flex-col">
-              <div className="flex justify-between items-center mb-3">
-                <p className="text-xs sm:text-sm font-semibold">Table {tableNumber}</p>
-                <Edit
-                  size={14}
-                  className="w-3.5 h-3.5 sm:w-4 sm:h-4 cursor-pointer text-[#05431E]"
-                  onClick={() => setTableNumber(prompt("Enter table number", tableNumber) || tableNumber)}
-                  aria-label="Edit table number"
-                />
-              </div>
+            <div className="bg-white p-4 rounded-lg h-[80vh] sm:h-[70vh] flex flex-col">
               <div className="flex-1 overflow-y-auto mb-3">
                 {Object.entries(order).map(([id, { quantity, price, name }]: [string, any], index) => (
                   <div
                     key={id}
                     className="rounded-lg flex p-2 justify-between items-center mb-2 last:mb-0 bg-[#FAFBFF]"
                   >
-                    <div className="flex items-center">
+                    <div className="flex items-center flex-1">
                       <div className="bg-[#05431E] p-1 text-center text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 text-[10px] sm:text-xs flex items-center justify-center">
                         {String(index + 1).padStart(2, "0")}
                       </div>
-                      <p className="ml-2 text-[10px] sm:text-xs truncate max-w-[120px] sm:max-w-[150px]">
+                      <p className="ml-2 text-[10px] sm:text-xs truncate max-w-[100px] sm:max-w-[130px]">
                         {name} x{quantity}
                       </p>
                     </div>
-                    <p className="text-[10px] sm:text-xs">₦{(price * quantity).toLocaleString()}</p>
+                    <div className="flex items-center space-x-2">
+                      <p className="text-[10px] sm:text-xs">₦{(price * quantity).toLocaleString()}</p>
+                      <button
+                        onClick={() => removeItem(id)}
+                        className="text-red-500 hover:text-red-600"
+                        aria-label={`Remove ${name} from order`}
+                      >
+                        <Trash size={14} className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
+                {/* Special Note Input */}
+                <div className="mt-3">
+                  <textarea
+                    value={specialNote}
+                    onChange={(e) => setSpecialNote(e.target.value)}
+                    placeholder="Add special note (e.g., no onions, extra sauce)"
+                    className="w-full p-2 rounded-lg bg-[#FAFBFF] text-[10px] sm:text-xs border border-gray-200 focus:outline-none focus:border-[#05431E]"
+                    rows={3}
+                  />
+                </div>
               </div>
               <div className="bg-[#FAFBFF] p-3 sm:p-4 rounded-lg">
                 <div className="flex justify-between">
@@ -282,13 +304,6 @@ const Orders = () => {
                     </>
                   )}
                 </Button>
-                <Button
-                  onClick={generateReceipt}
-                  disabled={!Object.keys(order).length}
-                  className="flex items-center bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 text-xs sm:text-sm transition-all disabled:bg-gray-400"
-                >
-                  <Receipt size={14} className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" /> Receipt
-                </Button>
               </div>
             </div>
 
@@ -310,6 +325,7 @@ const Orders = () => {
                     status={createdOrder.status}
                     subdomain={subdomain}
                     id={createdOrder.id}
+                    specialNote={createdOrder.specialNote}
                   />
                 ))}
               </div>
@@ -320,10 +336,13 @@ const Orders = () => {
         {/* Receipt Modal */}
         {receipt && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1100]">
-            <div className="bg-white p-4 rounded-lg  w-full max-w-[90%] sm:max-w-[400px]">
+            <div className="bg-white p-4 rounded-lg w-full max-w-[90%] sm:max-w-[400px]">
               <h2 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">Receipt</h2>
               <p className="text-[10px] sm:text-xs text-gray-600 mb-2">{receipt.date}</p>
               <p className="text-[10px] sm:text-xs text-gray-600 mb-2">{receipt.table}</p>
+              {receipt.specialNote && (
+                <p className="text-[10px] sm:text-xs text-gray-600 mb-2">Note: {receipt.specialNote}</p>
+              )}
               <ul className="space-y-1 mb-2 max-h-32 sm:max-h-40 overflow-y-auto">
                 {receipt.items.map((item: any) => (
                   <li
@@ -335,24 +354,12 @@ const Orders = () => {
                   </li>
                 ))}
               </ul>
-              <div className="flex justify-between text-[10px] sm:text-sm">
-                <span>Subtotal</span>
-                <span>₦{receipt.subtotal.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-[10px] sm:text-sm mt-1">
-                <span>Tax</span>
-                <span>₦{receipt.tax.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-[10px] sm:text-sm font-semibold mt-2">
-                <span>Total</span>
-                <span>₦{receipt.total.toLocaleString()}</span>
-              </div>
-              <Button
+              < button
                 onClick={() => setReceipt(null)}
                 className="mt-4 bg-[#05431E] text-white hover:bg-[#04391A] w-full text-xs sm:text-sm"
               >
                 Close
-              </Button>
+              </button>
             </div>
           </div>
         )}
