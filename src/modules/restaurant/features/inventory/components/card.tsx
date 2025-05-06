@@ -20,20 +20,21 @@ const Card = ({ orders, expandedOrders, toggleExpand, handleStatusUpdate }) => {
                                 #{order.id.substring(0, 6)}
                             </span>
                             <span
-                                className={`text-[10px] sm:text-xs px-2 py-1 rounded-full ${order.status === 'PENDING'
+                                className={`text-[10px] sm:text-xs px-2 py-1 rounded-full ${
+                                    order.status === 'PENDING'
                                         ? 'bg-yellow-100 text-yellow-800'
                                         : order.status === 'PREPARING'
-                                            ? 'bg-blue-100 text-blue-800'
-                                            : order.status === 'SERVED'
-                                                ? 'bg-green-100 text-green-800'
-                                                : 'bg-red-100 text-red-800'
-                                    }`}
+                                        ? 'bg-blue-100 text-blue-800'
+                                        : order.status === 'SERVED'
+                                        ? 'bg-green-100 text-green-800'
+                                        : 'bg-red-100 text-red-800'
+                                }`}
                             >
                                 {order.status}
                             </span>
-                        <div ref={contentRef}>
-                            <ReceiptPDF orderData={order} reactToPrintFn={reactToPrintFn} />
-                        </div>
+                            <div ref={contentRef}>
+                                <ReceiptPDF orderData={order} reactToPrintFn={reactToPrintFn} />
+                            </div>
                         </div>
                         <p className="text-[10px] sm:text-xs text-gray-600 mb-2">
                             {new Date(order.createdAt).toLocaleString()}
@@ -65,15 +66,27 @@ const Card = ({ orders, expandedOrders, toggleExpand, handleStatusUpdate }) => {
                             ) : (
                                 <p
                                     className="truncate text-[10px] sm:text-sm"
-                                    title={order.orderItems.map((item) => `${item.menuItem.name} (x${item.quantity})`).join(', ')}
+                                    title={order.orderItems
+                                        .map((item) => `${item.menuItem.name} (x${item.quantity})`)
+                                        .join(', ')}
                                 >
-                                    {order.orderItems.map((item) => `${item.menuItem.name} (x${item.quantity})`).join(', ')}
+                                    {order.orderItems
+                                        .map((item) => `${item.menuItem.name} (x${item.quantity})`)
+                                        .join(', ')}
+                                </p>
+                            )}
+                            {/* Add specialNote display */}
+                            {order.specialNote && (
+                                <p className="text-[10px] sm:text-xs text-gray-600 mt-2 italic">
+                                    Note: {order.specialNote}
                                 </p>
                             )}
                         </div>
                         <div className="mt-3 sm:mt-4">
                             <p className="text-xs sm:text-sm font-semibold text-gray-800">
-                                ₦{order.orderItems.reduce((acc, item) => acc + item.menuItem.price * item.quantity, 0).toLocaleString()}
+                                ₦{order.orderItems
+                                    .reduce((acc, item) => acc + item.menuItem.price * item.quantity, 0)
+                                    .toLocaleString()}
                             </p>
                             <select
                                 value={order.status}

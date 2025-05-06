@@ -1,7 +1,6 @@
 import React, { useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
-import { Receipt as Btn } from "iconsax-react";
-
+import { Receipt as Btn } from 'iconsax-react';
 
 const Receipt = ({ orderData, reactToPrintFn }) => {
   const componentRef = useRef();
@@ -21,7 +20,6 @@ const Receipt = ({ orderData, reactToPrintFn }) => {
     });
   };
 
-
   return (
     <div>
       {/* Inline style tag to ensure the media query is applied */}
@@ -39,7 +37,6 @@ const Receipt = ({ orderData, reactToPrintFn }) => {
         className="flex text-[10px] sm:text-xs text-[#05431E] hover:underline focus:outline-none"
       >
         <Btn size={14} className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" /> Print
-
       </button>
       <div
         ref={componentRef}
@@ -58,6 +55,12 @@ const Receipt = ({ orderData, reactToPrintFn }) => {
             <p>
               <span className="font-semibold">Status:</span> {orderData.status}
             </p>
+            {/* Add specialNote display */}
+            {orderData.specialNote && (
+              <p>
+                <span className="font-semibold">Special Note:</span> {orderData.specialNote}
+              </p>
+            )}
           </div>
           <hr className="border-gray-300 my-1" />
           <table className="w-full border-collapse mb-2 text-xs">
