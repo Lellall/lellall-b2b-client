@@ -1,10 +1,8 @@
 import Modal from "@/components/modal/modal";
-import SearchBar from "@/components/search-bar/search-bar";
-import { TabButton, TabContainer, TabPanel } from "@/components/tab";
 import { Button } from "@/components/ui/button";
-import { Eye, More, Trash } from "iconsax-react";
+import { Trash } from "iconsax-react";
 import { Pencil } from "lucide-react";
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import StaffForm from "./components/staff-form";
 import { useSelector } from "react-redux";
 import { selectAuth } from "@/redux/api/auth/auth.slice";
@@ -54,8 +52,13 @@ const Table: React.FC<TableProps> = ({ columns, data, selectable, bordered = fal
 
   const handleRowSelect = (index: number) => {
     const newSelectedRows = new Set(selectedRows);
-    newSelectedRows.has(index) ? newSelectedRows.delete(index) : newSelectedRows.add(index);
+    if (newSelectedRows.has(index)) {
+      newSelectedRows.delete(index);
+    } else {
+      newSelectedRows.add(index);
+    }
     setSelectedRows(newSelectedRows);
+    setSelectAll(newSelectedRows.size === data.length);
   };
 
   const toggleSelectAll = () => {
@@ -90,7 +93,6 @@ const Table: React.FC<TableProps> = ({ columns, data, selectable, bordered = fal
                     className="rounded h-4 w-4 accent-green-900 focus:ring-green-500"
                     checked={selectAll}
                     onChange={toggleSelectAll}
-                    onClick={(e) => e.stopPropagation()}
                   />
                 </th>
               )}
@@ -110,7 +112,6 @@ const Table: React.FC<TableProps> = ({ columns, data, selectable, bordered = fal
               <tr
                 key={row.id || index}
                 className={`transition-colors duration-200 ${bordered ? "border-b border-gray-200 last:rounded-b-lg" : ""} ${index % 2 === 0 ? "bg-white hover:bg-gray-50" : "bg-gray-100 hover:bg-gray-200"}`}
-                onClick={(e) => e.stopPropagation()}
               >
                 {selectable && (
                   <td className={`px-4 text-sm py-4 text-gray-900 font-light w-12 ${bordered ? "border-r border-gray-200" : ""}`}>
@@ -119,15 +120,13 @@ const Table: React.FC<TableProps> = ({ columns, data, selectable, bordered = fal
                       className="h-4 w-4 accent-green-900 focus:ring-green-500"
                       checked={selectedRows.has(index)}
                       onChange={() => handleRowSelect(index)}
-                      onClick={(e) => e.stopPropagation()}
                     />
                   </td>
                 )}
                 {columns.map((col) => (
                   <td
                     key={col.key}
-                    className={`px-4 text-sm py-4 text-gray-900 font-light ${col.key === "actions" ? "w-20" : "min-w-[120px] truncate"} ${bordered ? "border-r border-gray-200" : ""} relative ${col.key === "lastName" || col.key === "phoneNumber" || col.key === "role" ? "hidden lg:table-cell" : ""}`}
-                    onClick={(e) => col.key === "actions" && e.stopPropagation()}
+                    className={`px-4 text-sm py-4 text-gray-900 font-light ${col.key === "actions" ? "w-20" : "min-w-[120px] truncate"} ${bordered ? "border-r border-gray-200" : ""} ${col.key === "lastName" || col.key === "phoneNumber" || col.key === "role" ? "hidden lg:table-cell" : ""}`}
                   >
                     {col.render ? col.render(row[col.key], row, index) : row[col.key]}
                   </td>
@@ -152,13 +151,12 @@ const Table: React.FC<TableProps> = ({ columns, data, selectable, bordered = fal
                   className="h-4 w-4 accent-green-900 focus:ring-green-500"
                   checked={selectedRows.has(index)}
                   onChange={() => handleRowSelect(index)}
-                  onClick={(e) => e.stopPropagation()}
                 />
                 <span className="text-sm text-gray-700">Select</span>
               </div>
             )}
             {columns
-              .filter((col) => col.key !== "actions" && col.key !== "lastName" && col.key !== "phoneNumber" && col.key !== "role") // Show only firstName and email on mobile
+              .filter((col) => col.key !== "actions" && col.key !== "lastName" && col.key !== "phoneNumber" && col.key !== "role")
               .map((col) => (
                 <div key={col.key} className="flex justify-between items-center">
                   <span className="text-sm text-gray-700 font-medium">{col.label}:</span>
@@ -167,7 +165,7 @@ const Table: React.FC<TableProps> = ({ columns, data, selectable, bordered = fal
                   </span>
                 </div>
               ))}
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
               {columns
                 .filter((col) => col.key === "actions")
                 .map((col) => (
@@ -184,29 +182,14 @@ const Table: React.FC<TableProps> = ({ columns, data, selectable, bordered = fal
 };
 
 // Staff Component
-interface AttendanceRecordProps {
-  recordId: string | number;
-  imageUrl: string;
-  name: string;
-  position: string;
-  date: string;
-  time: string;
-  onStatusChange?: (status: "present" | "absent" | "half" | "leave") => void;
-  className?: string;
-}
-
 function Staff() {
-  const sampleAttendanceData = [];
-  const [activeTab, setActiveTab] = useState("staff");
-  const [searchTerm, setSearchTerm] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [userToDelete, setUserToDelete] = useState(null);
-  const dropdownRefs = useRef({});
   const { subdomain } = useSelector(selectAuth);
 
   const {
@@ -265,20 +248,6 @@ function Staff() {
     }
   }, [selectedUser, restaurant?.id]);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        Object.values(dropdownRefs.current).every(
-          (ref) => ref && !ref.contains(event.target)
-        )
-      ) {
-        setDropdownOpen(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   const statColors = [
     "bg-amber-50 border-amber-200 text-amber-900",
     "bg-red-50 border-red-200 text-red-900",
@@ -288,10 +257,6 @@ function Staff() {
   ];
 
   const staffData = Array.isArray(staffDataRaw) ? staffDataRaw : [];
-
-  const handleTabSwitch = (val: string) => {
-    setActiveTab(val);
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -318,6 +283,7 @@ function Staff() {
         address: "",
       });
       refetchStaff();
+      toast.success("Staff created successfully");
     } catch (error) {
       console.error("Failed to create staff:", error);
       toast.error(error?.error?.data?.message || "Failed to create staff");
@@ -332,23 +298,10 @@ function Staff() {
       refetchStaff();
       setDeleteConfirmOpen(false);
       setUserToDelete(null);
-      setDropdownOpen(null);
     } catch (error) {
       console.error("Failed to delete staff:", error);
       toast.error(error?.error?.data?.message || "Failed to delete user");
     }
-  };
-
-  const handleConfirmDelete = (userId) => {
-    setUserToDelete(userId);
-    setDeleteConfirmOpen(true);
-    setDropdownOpen(null);
-  };
-
-  const handleEditStaff = (user) => {
-    setSelectedUser(user);
-    setEditModalOpen(true);
-    setDropdownOpen(null);
   };
 
   const handleUpdateStaff = async (e) => {
@@ -380,70 +333,37 @@ function Staff() {
     }
   };
 
-  const handleMoreClick = (rowId) => {
-    setDropdownOpen(dropdownOpen === rowId ? null : rowId);
-  };
-
   const columns = [
-    { key: "firstName", label: "First Name",  className: 'table-cell' },
-    { key: "lastName", label: "Last Name",className: 'hidden lg:table-cell' },
-    { key: "email", label: "Email", className: 'hidden lg:table-cell' },
-    { key: "phoneNumber", label: "Phone", className: 'hidden lg:table-cell' },
-    { key: "role", label: "Role", className: 'hidden lg:table-cell' },
+    { key: "firstName", label: "First Name" },
+    { key: "lastName", label: "Last Name", className: "hidden lg:table-cell" },
+    { key: "email", label: "Email" },
+    { key: "phoneNumber", label: "Phone", className: "hidden lg:table-cell" },
+    { key: "role", label: "Role", className: "hidden lg:table-cell" },
     {
       key: "actions",
-      className: 'hidden lg:table-cell',
       label: "Actions",
-      render: (_, row, index) => (
-        <div className="relative" ref={(el) => (dropdownRefs.current[row.id || index] = el)}>
+      render: (_, row) => (
+        <div className="flex gap-2">
           <button
-            className="text-blue-500 ml-2 p-2"
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              handleMoreClick(row.id || index);
+            aria-label="Edit staff"
+            className="text-blue-500 p-2 rounded hover:bg-gray-100"
+            onClick={() => {
+              setSelectedUser(row);
+              setEditModalOpen(true);
             }}
           >
-            <More size="18" color={theme.colors.active} />
+            <Pencil size={18} />
           </button>
-          {dropdownOpen === (row.id || index) && (
-            <div
-              className="absolute right-0 top-6 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-[100] md:w-48"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-gray-700 whitespace-nowrap text-sm md:text-base"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  console.log("View", row.id, "index:", index);
-                  setDropdownOpen(null);
-                }}
-              >
-                <Eye size={16} />
-                View
-              </button>
-              <button
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-gray-700 whitespace-nowrap text-sm md:text-base"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleEditStaff(row);
-                }}
-              >
-                <Pencil size={16} />
-                Edit
-              </button>
-              <button
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-red-500 whitespace-nowrap text-sm md:text-base"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleConfirmDelete(row.id);
-                }}
-              >
-                <Trash size={16} />
-                Delete
-              </button>
-            </div>
-          )}
+          <button
+            aria-label="Delete staff"
+            className="text-red-500 p-2 rounded hover:bg-gray-100"
+            onClick={() => {
+              setUserToDelete(row.id);
+              setDeleteConfirmOpen(true);
+            }}
+          >
+            <Trash size={18} />
+          </button>
         </div>
       ),
     },
@@ -497,29 +417,22 @@ function Staff() {
       </div>
 
       <main className="mt-8">
-        <TabPanel active={activeTab === "staff"}>
-          <div className="bg-white rounded-xl p-4 sm:p-6 w-full">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mt-6">
-              {statsData.map((item, index) => (
-                <div
-                  key={index}
-                  className={`p-4 rounded-lg text-center font-medium ${statColors[index % statColors.length]}`}
-                >
-                  <p className="text-xs sm:text-sm text-gray-600 capitalize">{item.label}</p>
-                  <p className="text-lg sm:text-xl font-bold text-gray-900">{item.value}</p>
-                </div>
-              ))}
-            </div>
-            <div className="my-4">
-              <Table selectable columns={columns} data={staffData} className="mt-8" />
-            </div>
+        <div className="bg-white rounded-xl p-4 sm:p-6 w-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mt-6">
+            {statsData.map((item, index) => (
+              <div
+                key={index}
+                className={`p-4 rounded-lg text-center font-medium ${statColors[index % statColors.length]}`}
+              >
+                <p className="text-xs sm:text-sm text-gray-600 capitalize">{item.label}</p>
+                <p className="text-lg sm:text-xl font-bold text-gray-900">{item.value}</p>
+              </div>
+            ))}
           </div>
-        </TabPanel>
-        <TabPanel active={activeTab === "attendance"}>
-          {sampleAttendanceData.map((item) => (
-            <AttendanceRecord key={item.recordId} {...item} />
-          ))}
-        </TabPanel>
+          <div className="my-4">
+            <Table selectable columns={columns} data={staffData} className="mt-8" />
+          </div>
+        </div>
       </main>
 
       <div className="overflow-y-auto">
@@ -540,7 +453,6 @@ function Staff() {
             setFormValues={setFormValues}
             setModalOpen={setEditModalOpen}
             onSubmit={handleUpdateStaff}
-            isEdit={true}
           />
         </Modal>
 
@@ -568,75 +480,5 @@ function Staff() {
     </div>
   );
 }
-
-const AttendanceRecord = ({
-  recordId,
-  imageUrl,
-  name,
-  position,
-  date,
-  time,
-  onStatusChange,
-  className = "",
-}: AttendanceRecordProps) => {
-  const handleStatusClick = (status: "present" | "absent" | "half" | "leave") => {
-    onStatusChange?.(status);
-  };
-
-  return (
-    <div
-      className={`flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6 my-4 p-4 bg-white rounded-lg border border-gray-200 ${className} transition-all duration-200 hover:bg-gray-50`}
-    >
-      <div className="flex gap-4 items-center">
-        <div className="text-sm font-medium text-gray-500">#{recordId}</div>
-        <div className="flex gap-4 items-center">
-          <img
-            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-gray-300"
-            src={imageUrl}
-            alt={`${name}'s profile`}
-          />
-          <div>
-            <p className="text-base sm:text-lg font-medium text-gray-900">{name}</p>
-            <p className="text-xs sm:text-sm text-gray-500">{position}</p>
-          </div>
-        </div>
-      </div>
-      <div className="flex flex-col md:flex-row gap-2 md:gap-4 text-sm font-medium text-gray-700">
-        <div>{date}</div>
-        <div>{time}</div>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <Button
-          className="bg-green-200 text-green-900 hover:bg-green-300 text-xs sm:text-sm"
-          onClick={() => handleStatusClick("present")}
-          size="sm"
-        >
-          Present
-        </Button>
-        <Button
-          className="bg-red-200 text-red-900 hover:bg-red-300 text-xs sm:text-sm"
-          onClick={() => handleStatusClick("absent")}
-          size="sm"
-        >
-          Absent
-        </Button>
-        <Button
-          className="bg-yellow-200 text-yellow-900 hover:bg-yellow-300 text-xs sm:text-sm"
-          onClick={() => handleStatusClick("half")}
-          size="sm"
-        >
-          Half Shift
-        </Button>
-        <Button
-          className="bg-gray-200 text-gray-900 hover:bg-gray-300 text-xs sm:text-sm"
-          onClick={() => handleStatusClick("leave")}
-          size="sm"
-        >
-          Leave
-        </Button>
-      </div>
-    </div>
-  );
-};
 
 export default Staff;

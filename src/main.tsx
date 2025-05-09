@@ -8,6 +8,7 @@ import "rc-pagination/assets/index.css"
 import "react-loading-skeleton/dist/skeleton.css"
 import { PersistGate } from "redux-persist/integration/react"
 import "react-big-calendar/lib/css/react-big-calendar.css"
+import { register } from "./serviceWorkerRegistration";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -18,3 +19,4 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     </Provider>
   </React.StrictMode>
 )
+register();
