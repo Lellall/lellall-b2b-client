@@ -1,9 +1,9 @@
-// src/components/Layout.tsx
 import React, { useEffect } from 'react';
 import styled, { ThemeProvider } from 'styled-components';
 import { useMediaQuery } from 'react-responsive';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Logout } from 'iconsax-react';
+import { toast } from 'react-toastify';
 import Menu from '../../../../../assets/menu-collapse.svg';
 import Logo from '../../../../../assets/Logo.svg';
 import { theme } from '@/theme/theme';
@@ -11,7 +11,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { selectAuth, logout } from '@/redux/api/auth/auth.slice';
 import { persistor } from '@/redux/store';
 import { RootState, AppDispatch } from '@/redux/store';
-import { navItemsByRole, NavItemConfig } from '@/roleConfig';
+import { getNavItemsByRole, NavItemConfig } from '@/roleConfig';
 
 interface UserData {
   id: string;
@@ -24,6 +24,15 @@ interface UserData {
       status: string;
       plan: { name: string };
       trialEndDate: string | null;
+      endDate: string | null;
+    };
+  };
+  restaurant?: {
+    subscription?: {
+      status: string;
+      plan: { name: string };
+      trialEndDate: string | null;
+      endDate: string | null;
     };
   };
 }
@@ -43,7 +52,7 @@ interface TextProps {
 
 const LayoutWrapper = styled.div`
   display: flex;
-  height: 100vh;
+  min-height: 100vh;
   overflow: hidden;
 `;
 
@@ -59,9 +68,25 @@ const Sidebar = styled.div<SidebarProps>`
   position: ${(props) => (props.isMobile ? 'fixed' : 'relative')};
   top: 0;
   left: 0;
-  height: 100vh;
+  min-height: 100vh;
   transform: ${(props) => (props.isMobile && !props.isSidebarOpen ? 'translateX(-100%)' : 'translateX(0)')};
   box-shadow: ${(props) => (props.isMobile && props.isSidebarOpen ? '2px 0 8px rgba(0, 0, 0, 0.2)' : 'none')};
+
+  scrollbar-width: thin;
+  scrollbar-color: ${(props) => `${props.theme.colors.active} ${props.theme.colors.primary}`};
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: ${(props) => props.theme.colors.primary};
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: ${(props) => props.theme.colors.active};
+    border-radius: 4px;
+  }
 `;
 
 const Backdrop = styled.div<{ isOpen: boolean }>`
@@ -77,8 +102,8 @@ const Backdrop = styled.div<{ isOpen: boolean }>`
 
 const LogoWrapper = styled.div<LogoWrapperProps>`
   display: flex;
-  align-items: ${(props) => (props.isSidebarOpen ? 'left' : 'center')};
-  justify-content: ${(props) => (props.isSidebarOpen ? 'left' : 'center')};
+  align-items: center;
+  justify-content: ${(props) => (props.isSidebarOpen ? 'flex-start' : 'center')};
   padding: 20px;
 
   img {
@@ -116,8 +141,14 @@ const Content = styled.main`
   width: 100%;
 `;
 
-const ToggleButton = styled.button`background: none; position: absolute; left: 15px; top: 5px; border: none; color: ${(props) => props.theme.colors.primaryFont}; font-size: 20px; cursor: pointer; margin: 10px;`;
-
+const ToggleButton = styled.button`
+  background: none;
+  border: none;
+  color: ${(props) => props.theme.colors.primaryFont};
+  font-size: 20px;
+  cursor: pointer;
+  padding: 10px;
+`;
 
 const NavItem = styled(NavLink)`
   display: flex;
@@ -142,6 +173,8 @@ const NavItem = styled(NavLink)`
 
 const Icon = styled.div`
   font-size: 20px;
+  display: flex;
+  align-items: center;
 `;
 
 const Text = styled.span<TextProps>`
@@ -188,8 +221,8 @@ const SubscriptionCircle = styled.div<{ status: string }>`
   &::before {
     content: '';
     position: absolute;
-    top: 1px;
-    right: 3px;
+    top: -4px;
+    left: -4px;
     width: 24px;
     height: 24px;
     border-radius: 50%;
@@ -219,7 +252,6 @@ const TrialNotice = styled.span`
   font-weight: 500;
 `;
 
-// Optional Close Button (commented out; uncomment to enable)
 const CloseButton = styled.button`
   position: absolute;
   top: 15px;
@@ -241,6 +273,7 @@ const Layout: React.FC<LayoutProps> = ({ subdomainData }) => {
   const [isSidebarOpen, setSidebarOpen] = React.useState(!isMobile);
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, user, subscription } = useSelector(selectAuth);
 
   useEffect(() => {
@@ -248,11 +281,25 @@ const Layout: React.FC<LayoutProps> = ({ subdomainData }) => {
     console.log('Redux subscription:', subscription);
   }, [user, subscription]);
 
-  const calculateDaysLeft = (endDate: string | null): number => {
-    if (!endDate) return 0;
+  const calculateDaysLeft = (subscription: any): number => {
+    if (!subscription) return 0;
+
+    const { status, trialEndDate, endDate } = subscription;
+    let relevantDate: string | null = null;
+
+    // Use endDate for ACTIVE subscriptions, trialEndDate for TRIAL
+    if (status === 'ACTIVE' && endDate) {
+      relevantDate = endDate;
+    } else if (status === 'TRIAL' && trialEndDate) {
+      relevantDate = trialEndDate;
+    }
+
+    if (!relevantDate) return 0;
+
     const today = new Date();
-    const end = new Date(endDate);
+    const end = new Date(relevantDate);
     if (isNaN(end.getTime())) return 0;
+
     const diffTime = end.getTime() - today.getTime();
     return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
   };
@@ -283,18 +330,40 @@ const Layout: React.FC<LayoutProps> = ({ subdomainData }) => {
   }
 
   const userRole = user.role || 'WAITER';
-  const allowedNavItems = navItemsByRole[userRole] || navItemsByRole['WAITER'];
-  const fixed = allowedNavItems.filter((item) => item.icon !== null || (item.text && item.text.trim() !== ''));
-
-  // Use subscription from user.ownedRestaurant or top-level subscription as fallback
-  const currentSubscription = user?.ownedRestaurant?.subscription || subscription;
-  const daysLeft = currentSubscription?.trialEndDate
-    ? calculateDaysLeft(currentSubscription.trialEndDate)
-    : currentSubscription?.endDate
-      ? calculateDaysLeft(currentSubscription.endDate)
-      : 0;
+  const currentSubscription = user?.ownedRestaurant?.subscription || user?.restaurant?.subscription || subscription;
+  const daysLeft = calculateDaysLeft(currentSubscription);
   const status = currentSubscription?.status || 'UNKNOWN';
   const planName = currentSubscription?.plan?.name || 'No Plan';
+
+  // Log for debugging
+  useEffect(() => {
+    console.log('currentSubscription:', currentSubscription);
+    console.log('daysLeft:', daysLeft);
+    console.log('userRole:', userRole);
+    console.log('planName:', planName);
+    console.log('location.pathname:', location.pathname);
+  }, [currentSubscription, daysLeft, userRole, planName, location.pathname]);
+
+  // Get navigation items based on role, subscription status, and plan
+  const allowedNavItems = getNavItemsByRole(userRole, daysLeft, planName);
+
+  // Redirect to /expired or /subscriptions if subscription is expired, but allow /verify-payment
+  useEffect(() => {
+    if (daysLeft === 0 && allowedNavItems.length > 0 && location.pathname !== '/verify-payment') {
+      const targetRoute = allowedNavItems[0]?.to; // Either /expired or /subscriptions
+      if (location.pathname !== targetRoute) {
+        console.log('Redirecting to:', targetRoute);
+        const message =
+          targetRoute === '/expired'
+            ? 'Subscription has expired. Please contact your administrator.'
+            : 'Subscription has expired. Redirecting to subscriptions.';
+        toast.warn(message);
+        navigate(targetRoute, { replace: true });
+      }
+    }
+  }, [daysLeft, allowedNavItems, location.pathname, navigate]);
+
+  const fixed = allowedNavItems.filter((item) => item.icon !== null || (item.text && item.text.trim() !== ''));
 
   return (
     <ThemeProvider theme={theme}>
@@ -304,7 +373,6 @@ const Layout: React.FC<LayoutProps> = ({ subdomainData }) => {
           <LogoWrapper isSidebarOpen={isSidebarOpen}>
             <img src={Logo} alt="Logo" />
           </LogoWrapper>
-          {/* Optional Close Button (uncomment to enable) */}
           {isMobile && isSidebarOpen && (
             <CloseButton onClick={closeSidebar} aria-label="Close sidebar">
               <Icon>
@@ -314,12 +382,14 @@ const Layout: React.FC<LayoutProps> = ({ subdomainData }) => {
               </Icon>
             </CloseButton>
           )}
-          <nav className="mt-10 mx-3">
+          <nav className="mt-10 mx-3" style={{ flex: 1 }}>
             {fixed.map((item) => (
               <NavItem key={item.to} to={item.to} end={item.end} onClick={closeSidebar}>
-                <Icon>
-                  <item.icon size={16} />
-                </Icon>
+                {item.icon && (
+                  <Icon>
+                    <item.icon size={16} />
+                  </Icon>
+                )}
                 <Text isSidebarOpen={isSidebarOpen}>{item.text}</Text>
               </NavItem>
             ))}

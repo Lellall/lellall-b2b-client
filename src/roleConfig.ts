@@ -1,4 +1,4 @@
-import { Element2, Setting, Home, ArchiveBox, Calendar2, UserSearch, Activity, Link, MoneyChange } from 'iconsax-react';
+import { Element2, Setting, Home, ArchiveBox, Calendar2, UserSearch, Activity, MoneyChange } from 'iconsax-react';
 
 export interface NavItemConfig {
   to: string;
@@ -9,7 +9,6 @@ export interface NavItemConfig {
 
 export const navItemsByRole: Record<string, NavItemConfig[]> = {
   WAITER: [
-    { to: '/', icon: Home, text: 'Dashboard', end: true },
     { to: '/menu', icon: Element2, text: 'Menu' },
     { to: '/settings', icon: Setting, text: 'Settings' },
   ],
@@ -24,7 +23,6 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
     { to: '/verify-payment', icon: null, text: '' },
   ],
   MANAGER: [
-    { to: '/', icon: Home, text: 'Dashboard', end: true },
     { to: '/menu', icon: Element2, text: 'Menu' },
     { to: '/inventory', icon: ArchiveBox, text: 'Inventory & Stock' },
     { to: '/reservations', icon: Calendar2, text: 'Reservations' },
@@ -37,27 +35,78 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
   ],
 };
 
-export const isRouteAllowed = (role: string, path: string): boolean => {
-  // Restrict /admin and /operations routes to SUPER_ADMIN only
+const planFeatures: Record<string, string[]> = {
+  'Basic Plan': ['Inventory Management', 'Menu Management'],
+  'Standard Plan': ['Inventory Management', 'Menu Management', 'Reports'],
+  'Business Plan': ['Inventory Management', 'Menu Management', 'Reports', 'Reservations'],
+  'Premium Plan': [
+    'Inventory Management',
+    'Menu Management',
+    'Reports',
+    'Reservations',
+    'Staff Management',
+    'In App Chat',
+    'Multi Branch Management',
+  ],
+};
+
+const featureToRoutes: Record<string, string[]> = {
+  'Inventory Management': ['/inventory'],
+  'Menu Management': ['/menu'],
+  'Reports': ['/reports'],
+  'Reservations': ['/reservations'],
+  'Staff Management': ['/staffs'],
+  'In App Chat': [],
+  'Multi Branch Management': [],
+};
+
+export const getNavItemsByRole = (role: string, daysLeft: number, planName: string | undefined): NavItemConfig[] => {
+  const defaultRoutes = navItemsByRole[role] || navItemsByRole['WAITER'];
+
+  if (daysLeft === 0) {
+    const hasSubscriptionAccess = defaultRoutes.some((item) => item.to === '/subscriptions');
+    if (hasSubscriptionAccess) {
+      return [{ to: '/subscriptions', icon: MoneyChange, text: 'Subscriptions' }];
+    } else {
+      return [{ to: '/expired', icon: MoneyChange, text: 'Subscription Expired' }];
+    }
+  }
+
+  if (!planName || !planFeatures[planName]) {
+    return defaultRoutes;
+  }
+
+  const allowedFeatures = planFeatures[planName];
+  const allowedRoutes = allowedFeatures
+    .flatMap((feature) => featureToRoutes[feature] || [])
+    .concat(['/settings', '/subscriptions', '/verify-payment', '/']);
+
+  return defaultRoutes.filter((item) => allowedRoutes.includes(item.to));
+};
+
+export const isRouteAllowed = (
+  role: string,
+  path: string,
+  daysLeft: number,
+  planName: string | undefined
+): boolean => {
   if (path.startsWith('/admin') || path.startsWith('/operations')) {
     return role === 'SUPER_ADMIN';
   }
 
-  // For SUPER_ADMIN, only allow admin routes
-  if (role === 'SUPER_ADMIN') {
-    const allowedRoutes = navItemsByRole['SUPER_ADMIN'];
-    return allowedRoutes.some((item) => {
-      const baseRoute = item.to.split('/')[1];
-      const basePath = path.split('/')[1];
-      return path === item.to || (baseRoute === basePath && path.startsWith(item.to));
-    });
+  if (path === '/verify-payment') {
+    return true;
   }
 
-  // For non-SUPER_ADMIN roles, check allowed routes
-  const allowedRoutes = navItemsByRole[role] || navItemsByRole['WAITER'];
+  const allowedRoutes = getNavItemsByRole(role, daysLeft, planName);
+
+  if (daysLeft === 0 && path === '/expired' && role !== 'SUPER_ADMIN') {
+    return allowedRoutes.some((item) => item.to === '/expired');
+  }
+
   return allowedRoutes.some((item) => {
-    const baseRoute = item.to.split('/')[1];
-    const basePath = path.split('/')[1];
+    const baseRoute = item.to.split('/')[1] || item.to;
+    const basePath = path.split('/')[1] || path;
     return path === item.to || (baseRoute === basePath && path.startsWith(item.to));
   });
 };

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Suspense, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import AuthLayout from './auth/auth-layout';
@@ -29,6 +29,7 @@ import Inventory from './modules/restaurant/features/inventory';
 import Staff from './modules/restaurant/features/staff/staff';
 import VerifyPaymentPage from './modules/restaurant/features/subscriptions/verify-page';
 import Dashboard from './modules/restaurant/features/dashboard/dashboard';
+import SubscriptionExpired from './SubscriptionExpired';
 
 const App = () => {
   const { isAuthenticated, user, refreshToken } = useSelector(selectAuth);
@@ -39,6 +40,9 @@ const App = () => {
   // Determine if user is SUPER_ADMIN for admin routes
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
   const isAdminSubdomain = subdomain === 'admin';
+
+  // Check if user is allowed to access the dashboard
+  const canAccessDashboard = user?.role === 'ADMIN' || user?.role === 'MANAGER';
 
   // Query restaurant data unless accessing admin subdomain
   const { data: restaurant, isLoading, isError } = useGetRestaurantBySubdomainQuery(subdomain, {
@@ -72,7 +76,10 @@ const App = () => {
   // Define restaurant routes for non-SUPER_ADMIN users (ADMIN, WAITER, MANAGER)
   const restaurantRoutes = (
     <>
-      <Route index element={<Dashboard />} />
+      <Route
+        index
+        element={canAccessDashboard ? <Dashboard /> : <Navigate to="/settings" replace />}
+      />
       <Route path="shops" element={<Shops />} />
       <Route path="shops/:id" element={<ViewShop />} />
       <Route path="settings" element={<Settings />} />
@@ -85,6 +92,7 @@ const App = () => {
       <Route path="reservations" element={<Reservations />} />
       <Route path="reservations/:id" element={<Reservation />} />
       <Route path="verify-payment" element={<VerifyPaymentPage />} />
+      <Route path="expired" element={<SubscriptionExpired />} /> {/* New route */}
     </>
   );
 
