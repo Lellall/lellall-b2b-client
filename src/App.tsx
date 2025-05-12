@@ -44,7 +44,7 @@ const App = () => {
   // Check if user is allowed to access the dashboard
   const canAccessDashboard = user?.role === 'ADMIN' || user?.role === 'MANAGER';
 
-  // Query restaurant data unless accessing admin subdomain
+  // Query restaurant data unless accessing admin subdomain with SUPER_ADMIN
   const { data: restaurant, isLoading, isError } = useGetRestaurantBySubdomainQuery(subdomain, {
     skip: isAdminSubdomain && isSuperAdmin,
   });
@@ -92,7 +92,7 @@ const App = () => {
       <Route path="reservations" element={<Reservations />} />
       <Route path="reservations/:id" element={<Reservation />} />
       <Route path="verify-payment" element={<VerifyPaymentPage />} />
-      <Route path="expired" element={<SubscriptionExpired />} /> {/* New route */}
+      <Route path="expired" element={<SubscriptionExpired />} />
     </>
   );
 
@@ -100,6 +100,10 @@ const App = () => {
   const adminRoutes = (
     <>
       <Route index element={<Operations />} />
+      {/* <Route path="agents" element={<AdminAgents />} />
+      <Route path="reports" element={<AdminReports />} />
+      <Route path="shops" element={<AdminShops />} />
+      <Route path="settings" element={<AdminSettings />} /> */}
       <Route path="operations" element={<Operations />} />
       <Route path="operations/:id" element={<ViewOrderOperations />} />
     </>

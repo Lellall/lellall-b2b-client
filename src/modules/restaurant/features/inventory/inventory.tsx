@@ -168,18 +168,6 @@ const InventoryComponent = () => {
                             iconSize={15}
                             shadow={false}
                         />
-                        {/* <StyledButton
-                            style={{ padding: '6px 10px', fontWeight: 300 }}
-                            background="#fff"
-                            color="#000"
-                            width={{ base: '100px', sm: '120px' }}
-                            variant="outline"
-                            className="flex items-center justify-center gap-1 text-xs sm:text-sm"
-                            aria-label="Filter inventory items"
-                        >
-                            <Add size={14} className="w-3 h-3 sm:w-4 sm:h-4 mr-1" color="#000" />
-                            <Filter size={14} className="w-3 h-3 sm:w-4 sm:h-4 mr-1" color="#000" /> Filters
-                        </StyledButton> */}
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                         <StyledButton
@@ -226,7 +214,16 @@ const InventoryComponent = () => {
 
                 {/* Table Section */}
                 <div className="overflow-x-auto w-full">
-                    <Table selectable bordered columns={columns} data={getProcessedInventory(data)} />
+                    <Table
+                        selectable
+                        bordered
+                        columns={columns}
+                        data={getProcessedInventory(data)}
+                        pagination={{
+                            enabled: true,
+                            itemsPerPage: 10, // Test with smaller page size
+                          }}
+                    />
                 </div>
 
                 <NewSupplyRequestWizard isModalOpen={isModalOpen} setModalOpen={setModalOpen} />

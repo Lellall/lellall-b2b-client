@@ -23,6 +23,23 @@ export const inventoryAApi = baseApi.injectEndpoints({
                 }
             },
         }),
+        getAllSupplyRequest: builder.query({
+            query: (params) => ({
+                url: `${params.subdomain}/supply-request/all`,
+                method: "GET",
+                params: params.search ? { search: params.search } : undefined, // Add search query param if provided
+                credentials: "include",
+            }),
+            providesTags: ["MENU"]
+        }),
+        getSupplyRequestById: builder.query({
+            query: (params) => ({
+                url: `${params.subdomain}/supply-request/${params.id}`,
+                method: "GET",
+                credentials: "include",
+            }),
+            providesTags: ["MENU"]
+        }),
         getStockSheet: builder.query({
             query: ({ subdomain, date }) => ({
                 url: `${subdomain}/inventory/stocksheet${date ? `?date=${date}` : ''}`,
@@ -252,5 +269,7 @@ export const {
     useCreateUnitMutation,
     useGetUnitsQuery,
     useUpdateUnitMutation,
-    useDeleteUnitMutation
+    useDeleteUnitMutation,
+    useGetAllSupplyRequestQuery,
+    useGetSupplyRequestByIdQuery
 } = inventoryAApi;

@@ -214,9 +214,11 @@ function Staff() {
     error: statsError,
   } = useGetUsersStatsQuery(restaurant?.id, { skip: !restaurant?.id });
 
-  const [createUser] = useCreateUserUnderRestaurantMutation();
-  const [deleteUser] = useDeleteUserMutation();
-  const [updateUser] = useUpdateUserMutation();
+  const [createUser, { isLoading: isCreating }] = useCreateUserUnderRestaurantMutation();
+  const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
+  const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
+
+  const loaders = { isCreating, isDeleting, isUpdating }
 
   const [formValues, setFormValues] = useState({
     firstName: "",
@@ -443,6 +445,7 @@ function Staff() {
             setFormValues={setFormValues}
             setModalOpen={setModalOpen}
             onSubmit={handleCreateStaff}
+            loaders={loaders as any}
           />
         </Modal>
 

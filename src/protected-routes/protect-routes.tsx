@@ -14,8 +14,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
   const { isAuthenticated, user, subscription } = useSelector(selectAuth);
   const location = useLocation();
   const userRole = user?.role || 'WAITER';
+  const isSuperAdmin = userRole === 'SUPER_ADMIN';
 
-  // Calculate days left for subscription
+  // Calculate days left for subscription (non-SUPER_ADMIN only)
   const calculateDaysLeft = (subscription: any): number => {
     if (!subscription) return 0;
     const { status, trialEndDate, endDate } = subscription;
@@ -33,9 +34,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
     return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
   };
 
-  const currentSubscription = user?.ownedRestaurant?.subscription || user?.restaurant?.subscription || subscription;
-  const daysLeft = calculateDaysLeft(currentSubscription);
-  const planName = currentSubscription?.plan?.name;
+  const currentSubscription = isSuperAdmin
+    ? null
+    : user?.ownedRestaurant?.subscription || user?.restaurant?.subscription || subscription;
+  const daysLeft = isSuperAdmin ? Infinity : calculateDaysLeft(currentSubscription);
+  const planName = isSuperAdmin ? 'Super Admin' : currentSubscription?.plan?.name;
 
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
@@ -43,23 +46,23 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
 
   const currentPath = location.pathname;
 
-  // Allow /verify-payment for payment verification
-  if (currentPath === '/verify-payment') {
+  // Allow /verify-payment for payment verification (non-SUPER_ADMIN)
+  if (currentPath === '/verify-payment' && !isSuperAdmin) {
     return <Outlet />;
   }
 
-  // Explicitly block non-SUPER_ADMIN users from admin routes
-  if (isAdminRoute && userRole !== 'SUPER_ADMIN') {
+  // Block non-SUPER_ADMIN users from admin routes
+  if (isAdminRoute && !isSuperAdmin) {
     return <LostScreen />;
   }
 
-  // Allow SUPER_ADMIN to access only admin routes
-  if (userRole === 'SUPER_ADMIN' && !isAdminRoute && !currentPath.startsWith('/admin')) {
-    return <LostScreen />;
+  // Restrict SUPER_ADMIN to admin routes only
+  if (isSuperAdmin && !isAdminRoute && !currentPath.startsWith('/admin')) {
+    return <Navigate to="/admin" replace />;
   }
 
-  // Handle expired subscription
-  if (daysLeft === 0) {
+  // Handle expired subscription for non-SUPER_ADMIN
+  if (!isSuperAdmin && daysLeft === 0) {
     const allowedRoutes = getNavItemsByRole(userRole, daysLeft, planName);
     const targetRoute = allowedRoutes[0]?.to; // Either /expired or /subscriptions
     if (currentPath !== targetRoute) {
