@@ -6,231 +6,349 @@ import { format } from "date-fns";
 import { moneyFormatter } from "@/utils/moneyFormatter";
 import SearchBar from '@/components/search-bar/search-bar';
 import { StyledButton } from '@/components/button/button-lellall';
-import { Add, Filter, ExportCircle } from 'iconsax-react';
+import { Add, ExportCircle } from 'iconsax-react';
 import { theme } from '@/theme/theme';
 import { toast } from "react-toastify";
 import NewSupplyRequestWizard from "./request-supply";
-import { useState } from "react";
 import ResupplyRequestWizard from "./resupply-items";
+import BulkUpdateModal from "./components/bulk-update-inventory-wizard";
+import { useState, useMemo, useEffect, memo } from "react";
+import { useBulkUpdateInventoryMutation } from "@/redux/api/inventory/inventory.api";
 
 const InventoryComponent = () => {
-    const { subdomain } = useSelector(selectAuth);
-    const [isModalOpen, setModalOpen] = useState(false);
-    const [resupplyModalOpen, setResupplyModalOpen] = useState(false);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Assume sidebar is collapsed by default on tablets
-    const { data, error, isLoading } = useGetInventoryQuery({
-        subdomain,
-        page: 1,
-        limit: 10,
-    });
+  const { subdomain } = useSelector(selectAuth);
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [resupplyModalOpen, setResupplyModalOpen] = useState(false);
+  const [isBulkUpdateModalOpen, setBulkUpdateModalOpen] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<Record<string, any>[]>([]);
+  const { data, error, isLoading } = useGetInventoryQuery(
+    {
+      subdomain,
+      page: 1,
+      limit: 10,
+      pollingInterval: 0,
+    },
+    { skip: !subdomain } // Prevent query if subdomain is missing
+  );
 
-    const period = 'monthly';
-    const { data: stats } = useGetInventoryStatsORQuery({ subdomain, period });
-    const [triggerDownload, { isFetching }] = useLazyDownloadInventoryExportQuery();
+  const period = 'monthly';
+  const { data: stats } = useGetInventoryStatsORQuery({ subdomain, period });
+  const [triggerDownload, { isFetching }] = useLazyDownloadInventoryExportQuery();
+  const [bulkUpdateInventory, { isLoading: isBulkUpdating }] = useBulkUpdateInventoryMutation();
 
-    const handleDownload = async () => {
-        try {
-            await triggerDownload({ subdomain, format: 'csv' }).unwrap();
-            toast.success("Inventory export downloaded successfully", {
-                position: "top-right",
-            });
-        } catch (error) {
-            console.error("Download failed:", error);
-            toast.error("Failed to download inventory", { position: "top-right" });
-        }
+  const UnitTag = ({ unit }) => {
+    const unitColors = {
+      loaves: "bg-blue-500 text-white",
+      liters: "bg-yellow-500 text-black",
+      bag: "bg-red-500 text-white",
+      number: "bg-purple-500 text-white",
+      unit: "bg-orange-500 text-white",
+      grams: "bg-pink-500 text-white",
+      kilograms: "bg-teal-500 text-white",
+      pieces: "bg-indigo-500 text-white",
+      cartons: "bg-cyan-500 text-white",
+      packs: "bg-lime-500 text-black",
+      cup: "bg-green-600 text-white",
     };
-
-    const columns = [
-        { key: "productName", label: "Product Name", className: 'table-cell' },
-        { key: "unitPrice", label: "Unit Price", className: 'hidden lg:table-cell' },
-        { key: "quantityUsed", label: "Quantity Used", className: 'hidden lg:table-cell' },
-        { key: "unitOfMeasurement", label: "Unit", className: 'hidden lg:table-cell' },
-        { key: "totalBaseQuantity", label: "Total Base Quantity", className: 'hidden lg:table-cell' },
-        { key: "dateAdded", label: "Date Added", className: 'hidden lg:table-cell' },
-        { key: "category", label: "Category", className: 'table-cell' },
-    ];
-
-    const getProcessedInventory = (data) => {
-        return data.map(({ unitPrice, openingStock, closingStock, ...item }) => ({
-            ...item,
-            unitPrice: moneyFormatter(unitPrice),
-            category: <CategoryTag category={item.category} />,
-            unitOfMeasurement: <UnitTag unit={item.unitOfMeasurement} />,
-            dateAdded: format(new Date(item.dateAdded), "MMM dd, yyyy"),
-        }));
-    };
-
-    const CategoryTag = ({ category }) => {
-        const categoryColors = {
-            Supplies: "bg-green-500 text-white",
-            Food: "bg-yellow-500 text-black",
-            Equipment: "bg-blue-500 text-white",
-            Beverages: "bg-red-500 text-white",
-            Miscellaneous: "bg-gray-500 text-white",
-        };
-
-        return (
-            <span className={`px-2 py-1 rounded ${categoryColors[category] || "bg-gray-500 text-white"}`}>
-                {category}
-            </span>
-        );
-    };
-
-    const UnitTag = ({ unit }) => {
-        const unitColors = {
-            loaves: "bg-blue-500 text-white",
-            liters: "bg-yellow-500 text-black",
-            Bag: "bg-red-500 text-white",
-            number: "bg-purple-500 text-white",
-            unit: "bg-orange-500 text-white",
-            grams: "bg-pink-500 text-white",
-            kilograms: "bg-teal-500 text-white",
-            pieces: "bg-indigo-500 text-white",
-            cartons: "bg-cyan-500 text-white",
-            packs: "bg-lime-500 text-black",
-        };
-
-        return (
-            <span className={`px-2 py-1 rounded ${unitColors[unit] || "bg-gray-500 text-white"}`}>
-                {unit}
-            </span>
-        );
-    };
-
-    const today = format(new Date(), "PPP");
-
-    const statColors = [
-        "bg-blue-100 text-blue-700",
-        "bg-green-100 text-green-700",
-        "bg-yellow-100 text-yellow-700",
-        "bg-purple-100 text-purple-700",
-        "bg-red-100 text-red-700",
-    ];
-
-    const statsData = [
-        { label: "Total Products", value: stats?.totalProducts },
-        { label: "Reordered Products", value: stats?.reorderedProducts },
-        { label: "Low Stock Items", value: stats?.lowStockItems },
-        { label: "Average Daily Usage", value: stats?.averageDailyUsage },
-    ];
-
-    if (isLoading) return (
-        <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-            <p>Loading...</p>
-        </div>
-    );
-    if (error) return (
-        <div className="min-h-screen bg-gray-100 flex items-center justify-center text-red-500 text-sm">
-            Error loading inventory: {JSON.stringify(error)}
-        </div>
-    );
-
     return (
-        <div className="min-h-screen p-2 sm:p-4 bg-gray-100">
-            <div className="w-full sm:max-w-7xl mx-auto space-y-4">
-                {/* Overview Card */}
-                <div className="bg-white rounded-xl p-2 sm:p-4 overflow-hidden box-border max-w-full">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-2 sm:pb-4 gap-2">
-                        <h2 className="text-base sm:text-xl font-semibold text-gray-900 truncate">Inventory Overview</h2>
-                        <p className="text-xs sm:text-sm text-gray-500">As of {today}</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-                        {statsData.map((item, index) => (
-                            <div
-                                key={index}
-                                className={`p-2 sm:p-3 rounded-lg text-center font-medium max-w-full ${statColors[index % statColors.length]} hover:bg-gray-50 min-w-0`}
-                            >
-                                <p className="text-xs sm:text-sm truncate">{item.label}</p>
-                                <p className="text-sm sm:text-lg font-bold truncate">{item.value ?? "-"}</p>
-                            </div>
-                        ))}
-                    </div>
-
-                    {stats?.mostUsedItem && (
-                        <div className="mt-4 p-2 sm:p-3 bg-gray-100 rounded-lg shadow-sm border-l-4 border-green-500">
-                            <p className="text-gray-900 font-medium text-sm sm:text-base truncate">Most Used Item</p>
-                            <p className="text-gray-700 text-xs sm:text-sm mt-1 break-words">
-                                {stats.mostUsedItem?.productName} – Used {stats.mostUsedItem?.quantityUsed}{" "}
-                                {stats.mostUsedItem?.unitOfMeasurement}
-                            </p>
-                        </div>
-                    )}
-                </div>
-
-                {/* Search and Buttons Section */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
-                        <SearchBar
-                            placeholder="Find your favorite items..."
-                            borderRadius="12px"
-                            iconColor="#000"
-                            iconSize={15}
-                            shadow={false}
-                        />
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                        <StyledButton
-                            onClick={handleDownload}
-                            disabled={isFetching}
-                            style={{ padding: '6px 10px', fontWeight: 300 }}
-                            background="#fff"
-                            color="#000"
-                            width={{ base: '100%', sm: '150px' }}
-                            variant="outline"
-                            className={`flex items-center justify-center gap-1 text-xs sm:text-sm ${isFetching ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
-                                }`}
-                            aria-label="Export inventory as CSV"
-                        >
-                            <ExportCircle size={14} className="w-3 h-3 sm:w-4 sm:h-4 mr-1" color="#000" />
-                            {isFetching ? 'Downloading...' : 'Export (CSV)'}
-                        </StyledButton>
-                        <StyledButton
-                            onClick={() => setResupplyModalOpen(true)}
-                            style={{ padding: '6px 10px', fontWeight: 300 }}
-                            background="blue"
-                            color={theme.colors.secondary}
-                            width={{ base: '100%', sm: '150px' }}
-                            variant="outline"
-                            className="flex items-center justify-center gap-1 text-xs sm:text-sm"
-                            aria-label="Resupply inventory"
-                        >
-                            <Add size={14} className="w-3 h-3 sm:w-4 sm:h-4 mr-1" color="#fff" /> Resupply Inventory
-                        </StyledButton>
-                        <StyledButton
-                            onClick={() => setModalOpen(true)}
-                            style={{ padding: '6px 10px', fontWeight: 300 }}
-                            background={theme.colors.active}
-                            color={theme.colors.secondary}
-                            width={{ base: '100%', sm: '150px' }}
-                            variant="outline"
-                            className="flex items-center justify-center gap-1 text-xs sm:text-sm"
-                            aria-label="Request new supply"
-                        >
-                            <Add size={14} className="w-3 h-3 sm:w-4 sm:h-4 mr-1" color="#fff" /> Request New Supply
-                        </StyledButton>
-                    </div>
-                </div>
-
-                {/* Table Section */}
-                <div className="overflow-x-auto w-full">
-                    <Table
-                        selectable
-                        bordered
-                        columns={columns}
-                        data={getProcessedInventory(data)}
-                        pagination={{
-                            enabled: true,
-                            itemsPerPage: 10, // Test with smaller page size
-                          }}
-                    />
-                </div>
-
-                <NewSupplyRequestWizard isModalOpen={isModalOpen} setModalOpen={setModalOpen} />
-                <ResupplyRequestWizard isModalOpen={resupplyModalOpen} setModalOpen={setResupplyModalOpen} />
-            </div>
-        </div>
+      <span className={`px-2 py-1 rounded ${unitColors[unit] || "bg-gray-500 text-white"}`}>
+        {unit}
+      </span>
     );
+  };
+
+  // Define getProcessedInventory before useMemo
+  const getProcessedInventory = (data) => {
+    const items = data?.items || data || [];
+    if (!items.length) {
+      console.log("No inventory items available");
+      return [];
+    }
+    const processed = items.map(({ id, unitPrice, openingStock, closingStock, ...item }) => {
+      const inventoryId = id || `temp-id-${Math.random()}`;
+      if (!id) {
+        console.warn(`Item missing id, using fallback: ${inventoryId}`);
+      }
+      return {
+        ...item,
+        id: inventoryId,
+        inventoryId,
+        unitPrice: unitPrice != null ? moneyFormatter(unitPrice) : '$0.00',
+        rawUnitPrice: unitPrice ?? 0,
+        category: <CategoryTag category={item.category || 'Miscellaneous'} />,
+        rawCategory: item.category || 'Miscellaneous',
+        unitOfMeasurement: <UnitTag unit={item.unitOfMeasurement || 'unit'} />,
+        rawUnitOfMeasurement: item.unitOfMeasurement || 'unit',
+        dateAdded: item.dateAdded ? format(new Date(item.dateAdded), "MMM dd, yyyy") : 'N/A',
+      };
+    });
+    console.log("Processed inventory:", processed);
+    return processed;
+  };
+  const CategoryTag = ({ category }) => {
+    const categoryColors = {
+      Supplies: "bg-green-500 text-white",
+      Food: "bg-yellow-500 text-black",
+      Equipment: "bg-blue-500 text-white",
+      Beverages: "bg-red-500 text-white",
+      Miscellaneous: "bg-gray-500 text-white",
+      Spice: "bg-orange-500 text-white",
+      Grain: "bg-brown-500 text-white",
+    };
+    return (
+      <span className={`px-2 py-1 rounded ${categoryColors[category] || "bg-gray-500 text-white"}`}>
+        {category}
+      </span>
+    );
+  };
+
+  // Memoize processed inventory to avoid redundant computations
+  const processedInventory = useMemo(() => getProcessedInventory(data), [data]);
+
+  useEffect(() => {
+    console.log("Inventory data from API:", data);
+    console.log("Table props:", {
+      selectable: true,
+      bordered: true,
+      data: processedInventory,
+      columnsLength: columns.length,
+      selectedItemsLength: selectedItems.length,
+    });
+  }, [processedInventory, selectedItems]);
+
+  // Memoize selected items to ensure stable references
+  const memoizedSelectedItems = useMemo(() => {
+    const items = selectedItems.map((item, index) => ({
+      ...item,
+      id: item.id || `temp-id-${index}`,
+      inventoryId: item.id || `temp-id-${index}`,
+    }));
+    console.log("Memoized selectedItems:", items);
+    return items;
+  }, [selectedItems]);
+
+  // Handle selection changes with comparison to avoid unnecessary updates
+  const handleSelectionChange = (items: Record<string, any>[]) => {
+    if (
+      items.length !== selectedItems.length ||
+      !items.every((item, index) => item.id === selectedItems[index]?.id)
+    ) {
+      console.log("Table selection changed:", items);
+      setSelectedItems(items || []);
+    }
+  };
+
+  const handleDownload = async () => {
+    try {
+      await triggerDownload({ subdomain, format: 'csv' }).unwrap();
+      toast.success("Inventory export downloaded successfully", {
+        position: "top-right",
+      });
+    } catch (error) {
+      console.error("Download failed:", error);
+      toast.error("Failed to download inventory", { position: "top-right" });
+    }
+  };
+
+  const handleBulkUpdate = async (updates: {
+    inventoryId: string;
+    unitPrice?: number;
+    totalBaseQuantity?: number;
+    unitOfMeasurement?: string;
+  }[]) => {
+    try {
+      const payload = {
+        items: updates.map((update) => {
+          const originalItem = memoizedSelectedItems.find((item) => item.id === update.inventoryId);
+          return {
+            inventoryId: update.inventoryId,
+            productName: originalItem?.productName || 'Unknown',
+            unitPrice: update.unitPrice ?? originalItem?.unitPrice ?? 0,
+            unitOfMeasurement: update.unitOfMeasurement || originalItem?.unitOfMeasurement || 'unit',
+            totalBaseQuantity: update.totalBaseQuantity ?? originalItem?.totalBaseQuantity ?? 0,
+            category: 'supplies',
+          };
+        }),
+      };
+      console.log("Bulk update payload:", payload);
+      // const { category }
+      await bulkUpdateInventory({ subdomain, data: payload }).unwrap();
+      toast.success("Inventory updated successfully", { position: "top-right" });
+    } catch (error) {
+      console.error("Bulk update failed:", error);
+      toast.error("Failed to update inventory", { position: "top-right" });
+    }
+  };
+
+  const columns = [
+    { key: "productName", label: "Product Name", className: 'table-cell' },
+    { key: "unitPrice", label: "Unit Price", className: 'hidden lg:table-cell' },
+    { key: "quantityUsed", label: "Quantity Used", className: 'hidden lg:table-cell' },
+    { key: "unitOfMeasurement", label: "Unit", className: 'hidden lg:table-cell' },
+    { key: "totalBaseQuantity", label: "Total Base Quantity", className: 'hidden lg:table-cell' },
+    { key: "dateAdded", label: "Date Added", className: 'hidden lg:table-cell' },
+    { key: "category", label: "Category", className: 'table-cell' },
+  ];
+
+  const getRawSelectedItems = (selected) => {
+    const rawItems = (selected || []).map(item => ({
+      id: item.id,
+      inventoryId: item.id,
+      productName: item.productName,
+      unitPrice: item.rawUnitPrice,
+      totalBaseQuantity: item.totalBaseQuantity,
+      unitOfMeasurement: item.rawUnitOfMeasurement,
+      category: item.rawCategory,
+    }));
+    console.log("Raw selected items:", rawItems);
+    return rawItems;
+  };
+
+
+
+
+
+  const today = format(new Date(), "PPP");
+
+  const statColors = [
+    "bg-blue-100 text-blue-700",
+    "bg-green-100 text-green-700",
+    "bg-yellow-100 text-yellow-700",
+    "bg-purple-100 text-purple-700",
+    "bg-red-100 text-red-700",
+  ];
+
+  const statsData = [
+    { label: "Total Products", value: stats?.totalProducts },
+    { label: "Reordered Products", value: stats?.reorderedProducts },
+    { label: "Low Stock Items", value: stats?.lowStockItems },
+    { label: "Average Daily Usage", value: stats?.averageDailyUsage },
+  ];
+
+  if (isLoading) return (
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <p>Loading...</p>
+    </div>
+  );
+  if (error) return (
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center text-red-500 text-sm">
+      Error loading inventory: {JSON.stringify(error)}
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen p-2 sm:p-4 bg-gray-100">
+      <div className="w-full sm:max-w-7xl mx-auto space-y-4">
+        <div className="bg-white rounded-xl p-2 sm:p-4 overflow-hidden box-border max-w-full">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-2 sm:pb-4 gap-2">
+            <h2 className="text-base sm:text-xl font-semibold text-gray-900 truncate">Inventory Overview</h2>
+            <p className="text-xs sm:text-sm text-gray-500">As of {today}</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+            {statsData.map((item, index) => (
+              <div
+                key={index}
+                className={`p-2 sm:p-3 rounded-lg text-center font-medium max-w-full ${statColors[index % statColors.length]} hover:bg-gray-50 min-w-0`}
+              >
+                <p className="text-xs sm:text-sm truncate">{item.label}</p>
+                <p className="text-sm sm:text-lg font-bold truncate">{item.value ?? "-"}</p>
+              </div>
+            ))}
+          </div>
+          {stats?.mostUsedItem && (
+            <div className="mt-4 p-2 sm:p-3 bg-gray-100 rounded-lg shadow-sm border-l-4 border-green-500">
+              <p className="text-gray-900 font-medium text-sm sm:text-base truncate">Most Used Item</p>
+              <p className="text-gray-700 text-xs sm:text-sm mt-1 break-words">
+                {stats.mostUsedItem?.productName} – Used {stats.mostUsedItem?.quantityUsed}{" "}
+                {stats.mostUsedItem?.unitOfMeasurement}
+              </p>
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+            <SearchBar
+              placeholder="Find your favorite items..."
+              borderRadius="12px"
+              iconColor="#000"
+              iconSize={15}
+              shadow={false}
+            />
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <StyledButton
+              onClick={handleDownload}
+              disabled={isFetching}
+              style={{ padding: '6px 10px', fontWeight: 300 }}
+              background="#fff"
+              color="#000"
+              width={{ base: '100%', sm: '150px' }}
+              variant="outline"
+              className={`flex items-center justify-center gap-1 text-xs sm:text-sm ${isFetching ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+              aria-label="Export inventory as CSV"
+            >
+              <ExportCircle size={14} className="w-3 h-3 sm:w-4 sm:h-4 mr-1" color="#000" />
+              {isFetching ? 'Downloading...' : 'Export (CSV)'}
+            </StyledButton>
+            <StyledButton
+              onClick={() => setResupplyModalOpen(true)}
+              style={{ padding: '6px 10px', fontWeight: 300 }}
+              background="blue"
+              color={theme.colors.secondary}
+              width={{ base: '100%', sm: '150px' }}
+              variant="outline"
+              className="flex items-center justify-center gap-1 text-xs sm:text-sm"
+              aria-label="Resupply inventory"
+            >
+              <Add size={14} className="w-3 h-3 sm:w-4 sm:h-4 mr-1" color="#fff" /> Resupply Inventory
+            </StyledButton>
+            <StyledButton
+              onClick={() => setModalOpen(true)}
+              style={{ padding: '6px 10px', fontWeight: 300 }}
+              background={theme.colors.active}
+              color={theme.colors.secondary}
+              width={{ base: '100%', sm: '150px' }}
+              variant="outline"
+              className="flex items-center justify-center gap-1 text-xs sm:text-sm"
+              aria-label="Request new supply"
+            >
+              <Add size={14} className="w-3 h-3 sm:w-4 sm:h-4 mr-1" color="#fff" /> Request New Supply
+            </StyledButton>
+            <StyledButton
+              onClick={() => setBulkUpdateModalOpen(true)}
+              disabled={selectedItems.length === 0}
+              style={{ padding: '6px 10px', fontWeight: 300 }}
+              background={theme.colors.active}
+              color={theme.colors.secondary}
+              width={{ base: '100%', sm: '150px' }}
+              variant="outline"
+              className={`flex items-center justify-center gap-1 text-xs sm:text-sm ${selectedItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+              aria-label="Bulk update inventory"
+            >
+              <Add size={14} className="w-3 h-3 sm:w-4 sm:h-4 mr-1" color="#fff" /> Bulk Update
+            </StyledButton>
+          </div>
+        </div>
+        <div className="overflow-x-auto w-full">
+          <Table
+            selectable={true}
+            bordered={true}
+            columns={columns}
+            data={processedInventory}
+            onSelectionChange={handleSelectionChange}
+          />
+        </div>
+        <NewSupplyRequestWizard isModalOpen={isModalOpen} setModalOpen={setModalOpen} />
+        <ResupplyRequestWizard isModalOpen={resupplyModalOpen} setModalOpen={setResupplyModalOpen} />
+        <BulkUpdateModal
+          isOpen={isBulkUpdateModalOpen}
+          onClose={() => setBulkUpdateModalOpen(false)}
+          selectedItems={getRawSelectedItems(memoizedSelectedItems)}
+          onSubmit={handleBulkUpdate}
+        />
+      </div>
+    </div>
+  );
 };
 
-export default InventoryComponent;
+export default memo(InventoryComponent);

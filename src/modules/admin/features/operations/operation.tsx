@@ -10,43 +10,71 @@ import { useNavigate } from 'react-router-dom';
 
 const Operation = () => {
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const navigation = useNavigate();
-  const { data, isLoading } = useGetAllSupplyRequestQuery({ subdomain: 'yax' });
-  console.log(data, 'supplyRequests');
+  const { data, isLoading } = useGetAllSupplyRequestQuery({ subdomain: 'beta' });
 
   if (isLoading) {
-    return <div>loading..</div>;
+    return <div>Loading...</div>;
   }
 
+  // Prepare table data from grouped structure
+  const tableData = data?.flatMap((dateGroup) =>
+    dateGroup.restaurants.map((restaurant, restaurantIndex) => {
+      const statuses = restaurant.items.map((item) => item.status);
+      const uniqueStatuses = [...new Set(statuses)];
+      const statusSummary =
+        uniqueStatuses.length === 1 ? uniqueStatuses[0] : 'Mixed';
+
+      return {
+        id: `${dateGroup.date}-${restaurant.restaurant.id}-${restaurantIndex}`, // Unique ID for row
+        date: dateGroup.date,
+        restaurantName: restaurant.restaurant.name,
+        restaurantId: restaurant.restaurant.id,
+        itemCount: restaurant.items.length,
+        status: statusSummary,
+        items: restaurant.items, // For navigation to details
+      };
+    })
+  ) || [];
+
+  // Filter data based on search query
+  const filteredData = tableData.filter(
+    (row) =>
+      row.restaurantName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      row.date.includes(searchQuery) ||
+      row.status.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const columns = [
-    { key: 'productName', label: 'Product Name', sortable: true },
-    { key: 'quantity', label: 'Quantity', sortable: true },
-    { key: 'status', label: 'Status', sortable: true },
-    { key: 'requestMethod', label: 'Request Method', sortable: true },
     {
-      key: 'restaurant.name',
-      label: 'Restaurant',
+      key: 'date',
+      label: 'Date Placed',
       sortable: true,
-      render: (_, row) => <div className="flex gap-2">{row.restaurant?.name ?? '—'}</div>,
+      render: (_, row) => row.date,
+    },
+    // {
+    //   key: 'restaurantName',
+    //   label: 'Restaurant',
+    //   sortable: true,
+    // },
+    {
+      key: 'itemCount',
+      label: 'Count of Items',
+      sortable: true,
+      render: (_, row) => row.itemCount,
     },
     {
-      key: 'createdAt',
-      label: 'Date Created',
+      key: 'status',
+      label: 'Status',
       sortable: true,
-      render: (_, row) => {
-        const date = new Date(row.createdAt);
-        return date.toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-        });
-      },
+      render: (_, row) => row.status,
     },
   ];
 
-  // Handle row click to navigate to /data.id
+  // Handle row click to navigate to detailed view
   const handleRowClick = (row: Record<string, any>) => {
-    navigation(`/operations/${row.id}`);
+    navigation(`/operations/${row.date}/${row.restaurantId}`);
   };
 
   return (
@@ -67,6 +95,7 @@ const Operation = () => {
             placeholderColor="#bbb"
             iconColor="#ccc"
             iconSize={15}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
           <div className="ml-4">
             <StyledButton
@@ -92,39 +121,43 @@ const Operation = () => {
       </div>
 
       <div className="mt-10">
-        <Table
-          selectable
-          bordered
-          columns={columns}
-          data={data}
-          onRowClick={handleRowClick} // Pass the row click handler
-          actions={(row, index) => (
-            <div className="relative flex items-center gap-2">
-              <button
-                className="text-blue-500 ml-2"
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevents event bubbling to row click
-                  setOpenDropdown(openDropdown === index ? null : index);
-                }}
-              >
-                <More size="18" color={theme.colors.active} />
-              </button>
-              {openDropdown === index && (
-                <div className="absolute top-5 right-2 bg-white shadow-md rounded-md p-2 z-10 w-24">
-                  <button
-                    className="flex block w-full text-left px-4 py-2 hover:bg-gray-100"
-                    onClick={() => navigation(`/${row.id}`)}
-                  >
-                    <div className="mt-1 mr-1">
-                      <Eye size="15" color={theme.colors.active} />
-                    </div>
-                    view
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-        />
+        {filteredData.length > 0 ? (
+          <Table
+            selectable
+            bordered
+            columns={columns}
+            data={filteredData}
+            onRowClick={handleRowClick}
+            actions={(row, index) => (
+              <div className="relative flex items-center gap-2">
+                <button
+                  className="text-blue-500 ml-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenDropdown(openDropdown === index ? null : index);
+                  }}
+                >
+                  <More size="18" color={theme.colors.active} />
+                </button>
+                {openDropdown === index && (
+                  <div className="absolute top-5 right-2 bg-white shadow-md rounded-md p-2 z-10 w-24">
+                    <button
+                      className="flex block w-full text-left px-4 py-2 hover:bg-gray-100"
+                      onClick={() => navigation(`/operations/${row.date}/${row.restaurantId}`)}
+                    >
+                      <div className="mt-1 mr-1">
+                        <Eye size="15" color={theme.colors.active} />
+                      </div>
+                      View
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          />
+        ) : (
+          <div>No supply requests found.</div>
+        )}
       </div>
     </div>
   );

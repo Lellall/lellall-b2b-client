@@ -1,133 +1,98 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, memo } from 'react';
 import styled from 'styled-components';
-import ReactPaginate from 'react-paginate';
+import { debounce } from 'lodash';
 
 interface TableProps {
   columns: { key: string; label: string; render?: (value: any, row: any) => React.ReactNode; className?: string }[];
   data: Record<string, any>[];
   selectable?: boolean;
-  pagination?: {
-    enabled: boolean;
-    itemsPerPage: number;
-  };
-  onRowClick?: (row: Record<string, any>) => void; // Prop for row click
+  bordered?: boolean;
+  onSelectionChange?: (selectedRows: Record<string, any>[]) => void;
 }
 
-const TableContainer = styled.div`
+const TableContainer = styled.div<{ bordered?: boolean }>`
   width: 100%;
   overflow-x: auto;
   table {
     width: 100%;
-    min-width: 300px; /* Minimal width for two columns on mobile */
+    min-width: 300px;
     @media (min-width: 1024px) {
-      min-width: 600px; /* Wider table for desktop */
+      min-width: 600px;
     }
+    border-collapse: collapse;
+    ${({ bordered }) => bordered && `
+      border: 1px solid #e5e7eb;
+      th, td {
+        border: 1px solid #e5e7eb;
+      }
+    `}
   }
 `;
 
-const PaginationContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  padding: 12px 16px;
-  background: #fff;
-  border-top: 1px solid #e5e7eb;
-
-  .pagination {
-    display: flex;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    gap: 8px;
-  }
-
-  .pagination li {
-    display: inline-block;
-  }
-
-  .pagination a {
-    padding: 6px 12px;
-    font-size: 12px;
-    color: #1f2937;
-    background: #fff;
-    border: 1px solid #d1d5db;
-    border-radius: 4px;
-    cursor: pointer;
-    text-decoration: none;
-  }
-
-  .pagination .active a {
-    color: #fff;
-    background: #1f2937;
-    border-color: #1f2937;
-  }
-
-  .pagination .disabled a {
-    color: #9ca3af;
-    background: #f3f4f6;
-    cursor: not-allowed;
-  }
-
-  .pagination a:hover:not(.disabled) {
-    background: #f9fafb;
-  }
-`;
-
-const Table: React.FC<TableProps> = ({ columns, data, selectable, pagination, onRowClick }) => {
+const Table: React.FC<TableProps> = ({ columns, data = [], selectable, bordered, onSelectionChange }) => {
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [selectAll, setSelectAll] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0); // react-paginate uses 0-based indexing
 
-  const itemsPerPage = pagination?.enabled ? pagination.itemsPerPage : data.length;
-  const totalPages = Math.ceil(data.length / itemsPerPage);
+  useEffect(() => {
+    console.log("Table props:", { selectable, dataLength: data.length, columns });
+  }, [selectable, data, columns]);
+
+  // Memoize selected data to avoid creating new references
+  const selectedData = useMemo(() => {
+    return data.filter((row) => selectedRows.has(row.id)) || [];
+  }, [selectedRows, data]);
+
+  // Notify parent of selection changes
+  useEffect(() => {
+    if (onSelectionChange) {
+      console.log("Table onSelectionChange:", selectedData);
+      onSelectionChange(selectedData);
+    }
+  }, [selectedData, onSelectionChange]);
 
   const handleSort = (key: string) => {
     const newOrder = sortKey === key && sortOrder === 'asc' ? 'desc' : 'asc';
     setSortKey(key);
     setSortOrder(newOrder);
-    setCurrentPage(0); // Reset to first page on sort
   };
 
+  // Memoize sorted data to prevent unnecessary re-computations
   const sortedData = useMemo(() => {
     if (!sortKey) return data;
     return [...data].sort((a, b) => {
-      const aValue = a[sortKey];
-      const bValue = b[sortKey];
+      const aValue = a[sortKey] ?? '';
+      const bValue = b[sortKey] ?? '';
       if (typeof aValue === 'string' && typeof bValue === 'string') {
         return sortOrder === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
       }
-      return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+      return sortOrder === 'asc' ? (aValue - bValue) : (bValue - aValue);
     });
   }, [data, sortKey, sortOrder]);
 
-  const paginatedData = useMemo(() => {
-    if (!pagination?.enabled) return sortedData;
-    const startIndex = currentPage * itemsPerPage;
-    return sortedData.slice(startIndex, startIndex + itemsPerPage);
-  }, [sortedData, currentPage, itemsPerPage, pagination?.enabled]);
-
-  const handleRowSelect = (index: number) => {
-    const newSelectedRows = new Set(selectedRows);
-    newSelectedRows.has(index) ? newSelectedRows.delete(index) : newSelectedRows.add(index);
-    setSelectedRows(newSelectedRows);
-  };
+  // Debounce row selection to prevent rapid state updates
+  const handleRowSelect = useMemo(
+    () =>
+      debounce((id: string) => {
+        const newSelectedRows = new Set(selectedRows);
+        newSelectedRows.has(id) ? newSelectedRows.delete(id) : newSelectedRows.add(id);
+        setSelectedRows(newSelectedRows);
+        console.log("Row selected:", { id, selectedRows: Array.from(newSelectedRows) });
+      }, 100),
+    [selectedRows]
+  );
 
   const toggleSelectAll = () => {
-    const newSelectedRows = selectAll
-      ? new Set()
-      : new Set(paginatedData.map((_, index) => index));
-    setSelectedRows(newSelectedRows);
+    if (selectAll) {
+      setSelectedRows(new Set());
+    } else {
+      setSelectedRows(new Set(data.map((row) => row.id)));
+    }
     setSelectAll(!selectAll);
+    console.log("Toggle select all:", { selectAll: !selectAll });
   };
 
-  const handlePageChange = ({ selected }: { selected: number }) => {
-    setCurrentPage(selected);
-    setSelectedRows(new Set()); // Clear selection on page change
-    setSelectAll(false);
-  };
-
-  // Empty state rendering
   if (sortedData.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 bg-white rounded-lg">
@@ -155,7 +120,7 @@ const Table: React.FC<TableProps> = ({ columns, data, selectable, pagination, on
   }
 
   return (
-    <TableContainer className="relative w-full">
+    <TableContainer bordered={bordered} className="relative w-full">
       <table className="w-full bg-white table-auto">
         <thead>
           <tr>
@@ -172,9 +137,9 @@ const Table: React.FC<TableProps> = ({ columns, data, selectable, pagination, on
             {columns.map((col) => (
               <th
                 key={col.key}
-                className={`px-2 sm:px-4 py-2 sm:py-4 text-left text-[10px] sm:text-sm text-gray-700 font-light ${
-                  col.className || ''
-                } ${col.key === 'actions' ? 'w-20' : 'min-w-[80px] sm:min-w-[120px]'}`}
+                className={`px-2 sm:px-4 py-2 sm:py-4 text-left text-[10px] sm:text-sm text-gray-700 font-light ${col.className || ''} ${
+                  col.key === 'actions' ? 'w-20' : 'min-w-[80px] sm:min-w-[120px]'
+                }`}
                 onClick={() => col.key !== 'actions' && handleSort(col.key)}
               >
                 {col.label} {sortKey === col.key && col.key !== 'actions' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
@@ -183,60 +148,39 @@ const Table: React.FC<TableProps> = ({ columns, data, selectable, pagination, on
           </tr>
         </thead>
         <tbody>
-          {paginatedData.map((row, index) => (
+          {sortedData.map((row, index) => (
             <tr
-              key={row.id || index}
-              className={`transition-colors duration-200 cursor-pointer ${
+              key={row.id || `row-${index}`}
+              className={`transition-colors duration-200 ${
                 index % 2 === 0 ? 'bg-white hover:bg-gray-50' : 'bg-gray-100 hover:bg-gray-200'
               }`}
-              onClick={() => onRowClick && onRowClick(row)} // Handle row click
             >
               {selectable && (
                 <td className="px-2 sm:px-4 text-[10px] sm:text-sm py-2 sm:py-4 text-gray-900 font-light w-10">
                   <input
                     type="checkbox"
                     className="h-3 w-3 sm:h-4 sm:w-4 accent-green-900 focus:ring-green-500"
-                    checked={selectedRows.has(index)}
-                    onChange={() => handleRowSelect(index)}
+                    checked={selectedRows.has(row.id)}
+                    onChange={() => handleRowSelect(row.id)}
                   />
                 </td>
               )}
               {columns.map((col) => (
                 <td
                   key={col.key}
-                  className={`px-2 sm:px-4 text-[10px] sm:text-sm py-2 sm:py-4 text-gray-900 font-light ${
-                    col.className || ''
-                  } ${col.key === 'actions' ? 'w-20' : 'min-w-[80px] sm:min-w-[120px] truncate'}`}
+                  className={`px-2 sm:px-4 text-[10px] sm:text-sm py-2 sm:py-4 text-gray-900 font-light ${col.className || ''} ${
+                    col.key === 'actions' ? 'w-20' : 'min-w-[80px] sm:min-w-[120px] truncate'
+                  }`}
                 >
-                  {col.render ? col.render(row[col.key], row) : row[col.key]}
+                  {col.render ? col.render(row[col.key], row) : row[col.key] || 'N/A'}
                 </td>
               ))}
             </tr>
           ))}
         </tbody>
       </table>
-      {pagination?.enabled && (
-        <PaginationContainer>
-          <ReactPaginate
-            previousLabel="Previous"
-            nextLabel="Next"
-            breakLabel="..."
-            pageCount={totalPages}
-            marginPagesDisplayed={2}
-            pageRangeDisplayed={5}
-            onPageChange={handlePageChange}
-            containerClassName="pagination"
-            activeClassName="active"
-            disabledClassName="disabled"
-            pageClassName="page-item"
-            previousClassName="page-item"
-            nextClassName="page-item"
-            breakClassName="page-item"
-          />
-        </PaginationContainer>
-      )}
     </TableContainer>
   );
 };
 
-export default Table;
+export default memo(Table);

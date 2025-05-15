@@ -27,7 +27,7 @@ export const inventoryAApi = baseApi.injectEndpoints({
             query: (params) => ({
                 url: `${params.subdomain}/supply-request/all`,
                 method: "GET",
-                params: params.search ? { search: params.search } : undefined, // Add search query param if provided
+                params: params.search ? { search: params.search } : undefined,
                 credentials: "include",
             }),
             providesTags: ["MENU"]
@@ -254,6 +254,64 @@ export const inventoryAApi = baseApi.injectEndpoints({
                 }
             },
         }),
+        bulkUpdateInventory: builder.mutation({
+            query: ({ subdomain, data }) => ({
+                url: `/${subdomain}/inventory/bulk-update`,
+                method: "POST",
+                body: data,
+                credentials: "include",
+            }),
+            invalidatesTags: ["INVENTORY"],
+            async onQueryStarted(_args, { queryFulfilled }) {
+                try {
+                    await queryFulfilled;
+                    toast.success("Inventory items updated successfully", { position: "top-right" });
+                } catch (err) {
+                    ErrorHandler(err as any);
+                    toast.error("Failed to update inventory items", { position: "top-right" });
+                    throw err;
+                }
+            },
+        }),
+
+        deleteInventoryItem: builder.mutation({
+            query: ({ subdomain, inventoryId }) => ({
+                url: `/${subdomain}/inventory/${inventoryId}`,
+                method: "DELETE",
+                credentials: "include",
+            }),
+            invalidatesTags: ["INVENTORY"],
+            async onQueryStarted(_args, { queryFulfilled }) {
+                try {
+                    await queryFulfilled;
+                    toast.success("Inventory item deleted successfully", { position: "top-right" });
+                } catch (err) {
+                    ErrorHandler(err as any);
+                    toast.error("Failed to delete inventory item", { position: "top-right" });
+                    throw err;
+                }
+            },
+        }),
+
+        bulkDeleteInventory: builder.mutation({
+            query: ({ subdomain, data }) => ({
+                url: `/${subdomain}/inventory/bulk-delete`,
+                method: "POST",
+                body: data,
+                credentials: "include",
+            }),
+            invalidatesTags: ["INVENTORY"],
+            async onQueryStarted(_args, { queryFulfilled }) {
+                try {
+                    await queryFulfilled;
+                    toast.success("Inventory items deleted successfully", { position: "top-right" });
+                } catch (err) {
+                    ErrorHandler(err as any);
+                    toast.error("Failed to delete inventory items", { position: "top-right" });
+                    throw err;
+                }
+            },
+        }),
     }),
 });
 
@@ -271,5 +329,8 @@ export const {
     useUpdateUnitMutation,
     useDeleteUnitMutation,
     useGetAllSupplyRequestQuery,
-    useGetSupplyRequestByIdQuery
+    useGetSupplyRequestByIdQuery,
+    useBulkUpdateInventoryMutation,
+    useDeleteInventoryItemMutation,
+    useBulkDeleteInventoryMutation,
 } = inventoryAApi;
