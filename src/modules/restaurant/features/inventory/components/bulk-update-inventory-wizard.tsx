@@ -100,13 +100,6 @@ const TableContainer = styled.div`
         box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
       }
     }
-    select {
-      appearance: none;
-      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-      background-repeat: no-repeat;
-      background-position: right 0.75rem center;
-      background-size: 1em;
-    }
   }
 `;
 
@@ -128,15 +121,6 @@ interface BulkUpdateModalProps {
     unitOfMeasurement?: string;
   }[]) => void;
 }
-
-const UNIT_OPTIONS = [
-  { value: 'kg', label: 'Kilograms (kg)' },
-  { value: 'g', label: 'Grams (g)' },
-  { value: 'l', label: 'Liters (l)' },
-  { value: 'ml', label: 'Milliliters (ml)' },
-  { value: 'unit', label: 'Unit' },
-  { value: 'cup', label: 'Cup' },
-];
 
 const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({ isOpen, onClose, selectedItems = [], onSubmit }) => {
   const [updates, setUpdates] = useState<
@@ -232,7 +216,7 @@ const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({ isOpen, onClose, sele
     const hasInvalidValues = updates.some(update =>
       (update.unitPrice !== undefined && (isNaN(update.unitPrice) || update.unitPrice < 0)) ||
       (update.totalBaseQuantity !== undefined && (isNaN(update.totalBaseQuantity) || update.totalBaseQuantity < 0)) ||
-      !update.unitOfMeasurement
+      !update.unitOfMeasurement || update.unitOfMeasurement.trim() === ''
     );
 
     if (!hasChanges) {
@@ -242,7 +226,7 @@ const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({ isOpen, onClose, sele
     }
 
     if (hasInvalidValues) {
-      toast.error('Please ensure all fields contain valid positive numbers and a unit is selected');
+      toast.error('Please ensure all fields contain valid positive numbers and a unit is entered');
       setIsSubmitting(false);
       return;
     }
@@ -302,17 +286,13 @@ const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({ isOpen, onClose, sele
       render: (_: any, row: any) => {
         const update = updates.find(update => update.inventoryId === row.id) || {};
         return (
-          <select
-            value={update.unitOfMeasurement || 'unit'}
+          <input
+            type="text"
+            value={update.unitOfMeasurement || ''}
             onChange={(e) => handleChange(row.id, 'unitOfMeasurement', e.target.value)}
+            placeholder="Enter unit"
             aria-label="Unit of Measurement"
-          >
-            {UNIT_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          />
         );
       },
     },
