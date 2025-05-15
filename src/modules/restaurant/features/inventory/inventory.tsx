@@ -25,7 +25,7 @@ const InventoryComponent = () => {
     {
       subdomain,
       page: 1,
-      limit: 10,
+      limit: 100,
       pollingInterval: 0,
     },
     { skip: !subdomain } // Prevent query if subdomain is missing
