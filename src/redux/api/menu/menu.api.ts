@@ -104,6 +104,24 @@ export const menuApi = baseApi.injectEndpoints({
                 credentials: "include",
             }),
         }),
+        deleteMenuItem: builder.mutation<
+            { message: string; deletedMenuItemId: string },
+            { subdomain: string; menuItemId: string }
+        >({
+            query: ({ subdomain, menuItemId }) => ({
+                url: `/menus/${subdomain}/items/${menuItemId}`,
+                method: 'DELETE',
+                credentials: 'include',
+            }),
+            invalidatesTags: ['MENU'],
+        }),
+        deleteMenu: builder.mutation({
+            query: ({ subdomain, menuId }) => ({
+                url: `/menus/${subdomain}/${menuId}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: ['MENU', 'MENU'],
+        }),
     }),
 });
 
@@ -114,4 +132,6 @@ export const {
     useCreateMenuMutation,
     useAddMenuItemMutation,
     usePrepareMenuItemMutation,
+    useDeleteMenuItemMutation,
+    useDeleteMenuMutation
 } = menuApi;
