@@ -41,19 +41,24 @@ export const inventoryAApi = baseApi.injectEndpoints({
             providesTags: ["MENU"]
         }),
         getStockSheet: builder.query({
-            query: ({ subdomain, date }) => ({
-                url: `${subdomain}/inventory/stocksheet${date ? `?date=${date}` : ''}`,
-                method: "GET",
-                credentials: "include",
+            query: ({ subdomain, date, page = 1, limit = 10 }) => ({
+                url: `/${subdomain}/inventory/stocksheet`,
+                method: 'GET',
+                params: {
+                    date: date || undefined, // Avoid empty string in query string
+                    page,
+                    limit,
+                },
+                credentials: 'include',
             }),
-            providesTags: ["INVENTORY"],
+            providesTags: ['INVENTORY'],
             async onQueryStarted(_args, { queryFulfilled }) {
                 try {
                     await queryFulfilled;
                 } catch (err) {
                     ErrorHandler(err as any);
-                    toast.error("Failed to fetch stock sheet", {
-                        position: "top-right",
+                    toast.error('Failed to fetch stock sheet', {
+                        position: 'top-right',
                     });
                     throw err;
                 }

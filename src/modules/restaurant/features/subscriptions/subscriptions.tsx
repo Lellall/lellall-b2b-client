@@ -3,6 +3,7 @@ import subs from '@/assets/subs.svg';
 import { useState } from 'react';
 import LellallSwitch from '@/components/ui/switch.component';
 import PricingCard from './components/pricing-card';
+import { ColorRing } from 'react-loader-spinner';
 import { theme } from '@/theme/theme';
 import {
   useGetAllSubscriptionPlansQuery,
@@ -42,7 +43,7 @@ const ProviderCard = styled.div<{ isSelected: boolean }>`
   border-radius: 12px;
   border: 2px solid
     ${(props) =>
-      props.isSelected ? theme.colors.borderSelected : 'transparent'};
+    props.isSelected ? theme.colors.borderSelected : 'transparent'};
   background: ${(props) =>
     props.isSelected
       ? 'linear-gradient(45deg, #4A90E2, #50C878)'
@@ -132,13 +133,13 @@ const Subscriptions = () => {
 
   const filteredPlans = plans
     ? plans
-        .filter((plan) => plan.name !== 'Basic')
-        .map((plan) => ({
-          ...plan,
-          price: isChecked ? plan.price * 12 : plan.price,
-          billingCycle: isChecked ? 'Annually' : 'Monthly',
-          isCurrent: subscription?.plan?.id === plan.id && subscription?.status === 'ACTIVE',
-        }))
+      .filter((plan) => plan.name !== 'Basic')
+      .map((plan) => ({
+        ...plan,
+        price: isChecked ? plan.price * 12 : plan.price,
+        billingCycle: isChecked ? 'Annually' : 'Monthly',
+        isCurrent: subscription?.plan?.id === plan.id && subscription?.status === 'ACTIVE',
+      }))
     : [];
 
   const planFeatures = {
@@ -207,7 +208,16 @@ const Subscriptions = () => {
   if (isLoading) {
     return (
       <Cover>
-        <div className="mt-20 text-center text-[${theme.colors.accent}]">Loading subscription plans...</div>
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+          <ColorRing
+            height="80"
+            width="80"
+            radius="9"
+            color={theme.colors.active}
+            ariaLabel="three-dots-loading"
+            visible={true}
+          />
+        </div>
       </Cover>
     );
   }

@@ -55,7 +55,7 @@ const ResupplyRequestWizard = ({ isModalOpen, setModalOpen }) => {
     limit: 100
   });
 
-  const inventoryOptions = inventoryData?.map(item => ({
+  const inventoryOptions = inventoryData?.data?.map(item => ({
     value: item.id,
     label: item.productName,
     unitOfMeasurement: item.unitOfMeasurement,

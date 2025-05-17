@@ -9,11 +9,120 @@ import { StyledButton } from '@/components/button/button-lellall';
 import { Add, ExportCircle } from 'iconsax-react';
 import { theme } from '@/theme/theme';
 import { toast } from "react-toastify";
+import { ColorRing } from 'react-loader-spinner';
 import NewSupplyRequestWizard from "./request-supply";
 import ResupplyRequestWizard from "./resupply-items";
 import BulkUpdateModal from "./components/bulk-update-inventory-wizard";
 import { useState, useMemo, useEffect, memo } from "react";
 import { useBulkUpdateInventoryMutation } from "@/redux/api/inventory/inventory.api";
+import ReactPaginate from 'react-paginate'; // Import react-paginate
+
+// Optional: Add CSS for react-paginate (can be customized)
+const paginationStyles = `
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 24px;
+    padding: 12px;
+    list-style: none;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
+  }
+  .pagination li {
+    display: inline-flex;
+    align-items: center;
+  }
+  .pagination li a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #2d3748;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+  .pagination li a:hover:not(.disabled) {
+    background: #f7fafc;
+    border-color: ${theme.colors.active};
+    color: ${theme.colors.active};
+    transform: translateY(-1px);
+  }
+  .pagination li.active a {
+    background: ${theme.colors.active};
+    color: #ffffff;
+    border-color: ${theme.colors.active};
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  .pagination li.disabled a {
+    color: #a0aec0;
+    cursor: not-allowed;
+    background: #f7fafc;
+    border-color: #e2e8f0;
+    opacity: 0.6;
+  }
+  .pagination li.break a {
+    border: none;
+    background: transparent;
+    cursor: default;
+    font-size: 14px;
+    color: #2d3748;
+  }
+  .pagination li.previous a, .pagination li.next a {
+    font-weight: 600;
+    padding: 0 16px;
+    gap: 8px;
+  }
+  .pagination li.previous a::before, .pagination li.next a::after {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border: 2px solid currentColor;
+    border-top: none;
+    border-right: none;
+    transition: transform 0.2s ease;
+  }
+  .pagination li.previous a::before {
+    transform: rotate(45deg);
+    margin-right: 4px;
+  }
+  .pagination li.next a::after {
+    transform: rotate(-135deg);
+    margin-left: 4px;
+  }
+  .pagination li.previous a:hover::before, .pagination li.next a:hover::after {
+    transform: translateX(2px) rotate(-135deg); /* Smooth arrow animation */
+  }
+  .pagination li.previous a:hover::before {
+    transform: translateX(-2px) rotate(45deg);
+  }
+  @media (max-width: 640px) {
+    .pagination {
+      gap: 6px;
+      padding: 8px;
+    }
+    .pagination li a {
+      min-width: 32px;
+      height: 32px;
+      font-size: 12px;
+      padding: 0 8px;
+    }
+    .pagination li.previous a, .pagination li.next a {
+      padding: 0 12px;
+    }
+  }
+`;
 
 const InventoryComponent = () => {
   const { subdomain } = useSelector(selectAuth);
@@ -21,11 +130,14 @@ const InventoryComponent = () => {
   const [resupplyModalOpen, setResupplyModalOpen] = useState(false);
   const [isBulkUpdateModalOpen, setBulkUpdateModalOpen] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Record<string, any>[]>([]);
+  const [page, setPage] = useState(1); // Add page state
+  const limit = 10; // Set limit to match API default
+
   const { data, error, isLoading } = useGetInventoryQuery(
     {
       subdomain,
-      page: 1,
-      limit: 100,
+      page,
+      limit,
       pollingInterval: 0,
     },
     { skip: !subdomain } // Prevent query if subdomain is missing
@@ -57,9 +169,8 @@ const InventoryComponent = () => {
     );
   };
 
-  // Define getProcessedInventory before useMemo
   const getProcessedInventory = (data) => {
-    const items = data?.items || data || [];
+    const items = data?.data || []; // Access data array from API response
     if (!items.length) {
       console.log("No inventory items available");
       return [];
@@ -85,6 +196,7 @@ const InventoryComponent = () => {
     console.log("Processed inventory:", processed);
     return processed;
   };
+
   const CategoryTag = ({ category }) => {
     const categoryColors = {
       Supplies: "bg-green-500 text-white",
@@ -102,7 +214,6 @@ const InventoryComponent = () => {
     );
   };
 
-  // Memoize processed inventory to avoid redundant computations
   const processedInventory = useMemo(() => getProcessedInventory(data), [data]);
 
   useEffect(() => {
@@ -116,7 +227,6 @@ const InventoryComponent = () => {
     });
   }, [processedInventory, selectedItems]);
 
-  // Memoize selected items to ensure stable references
   const memoizedSelectedItems = useMemo(() => {
     const items = selectedItems.map((item, index) => ({
       ...item,
@@ -127,7 +237,6 @@ const InventoryComponent = () => {
     return items;
   }, [selectedItems]);
 
-  // Handle selection changes with comparison to avoid unnecessary updates
   const handleSelectionChange = (items: Record<string, any>[]) => {
     if (
       items.length !== selectedItems.length ||
@@ -163,15 +272,14 @@ const InventoryComponent = () => {
           return {
             inventoryId: update.inventoryId,
             productName: originalItem?.productName || 'Unknown',
-            unitPrice: update.unitPrice ?? originalItem?.unitPrice ?? 0,
-            unitOfMeasurement: update.unitOfMeasurement || originalItem?.unitOfMeasurement || 'unit',
+            unitPrice: update.unitPrice ?? originalItem?.rawUnitPrice ?? 0,
+            unitOfMeasurement: update.unitOfMeasurement || originalItem?.rawUnitOfMeasurement || 'unit',
             totalBaseQuantity: update.totalBaseQuantity ?? originalItem?.totalBaseQuantity ?? 0,
             category: 'supplies',
           };
         }),
       };
       console.log("Bulk update payload:", payload);
-      // const { category }
       await bulkUpdateInventory({ subdomain, data: payload }).unwrap();
       toast.success("Inventory updated successfully", { position: "top-right" });
     } catch (error) {
@@ -204,9 +312,10 @@ const InventoryComponent = () => {
     return rawItems;
   };
 
-
-
-
+  // Handle page change
+  const handlePageChange = ({ selected }) => {
+    setPage(selected + 1); // react-paginate uses 0-based index, API uses 1-based
+  };
 
   const today = format(new Date(), "PPP");
 
@@ -225,11 +334,20 @@ const InventoryComponent = () => {
     { label: "Average Daily Usage", value: stats?.averageDailyUsage },
   ];
 
-  if (isLoading) return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <p>Loading...</p>
-    </div>
-  );
+  if (isLoading) {
+    return (
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+            <ColorRing
+                height="80"
+                width="80"
+                radius="9"
+                color={theme.colors.active}
+                ariaLabel="three-dots-loading"
+                visible={true}
+            />
+        </div>
+    );
+}
   if (error) return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center text-red-500 text-sm">
       Error loading inventory: {JSON.stringify(error)}
@@ -238,6 +356,8 @@ const InventoryComponent = () => {
 
   return (
     <div className="min-h-screen p-2 sm:p-4 bg-gray-100">
+      {/* Inject pagination styles */}
+      <style>{paginationStyles}</style>
       <div className="w-full sm:max-w-7xl mx-auto space-y-4">
         <div className="bg-white rounded-xl p-2 sm:p-4 overflow-hidden box-border max-w-full">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-2 sm:pb-4 gap-2">
@@ -338,6 +458,23 @@ const InventoryComponent = () => {
             onSelectionChange={handleSelectionChange}
           />
         </div>
+        {/* Pagination Controls */}
+        {data?.pagination && (
+          <ReactPaginate
+            previousLabel={'← Previous'}
+            nextLabel={'Next →'}
+            pageCount={data.pagination.totalPages || 1}
+            onPageChange={handlePageChange}
+            containerClassName={'pagination'}
+            previousLinkClassName={'pagination__link'}
+            nextLinkClassName={'pagination__link'}
+            disabledClassName={'disabled'}
+            activeClassName={'active'}
+            pageClassName={'page-item'}
+            pageLinkClassName={'page-link'}
+            forcePage={page - 1} // Adjust for 0-based index
+          />
+        )}
         <NewSupplyRequestWizard isModalOpen={isModalOpen} setModalOpen={setModalOpen} />
         <ResupplyRequestWizard isModalOpen={resupplyModalOpen} setModalOpen={setResupplyModalOpen} />
         <BulkUpdateModal

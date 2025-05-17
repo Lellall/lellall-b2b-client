@@ -15,7 +15,8 @@ import {
   useDeleteUserMutation,
   useUpdateUserMutation,
 } from "@/redux/api/restaurant/restaurant.api";
-import { theme } from "@/theme/theme";
+import { ColorRing } from 'react-loader-spinner';
+import { theme } from '@/theme/theme';
 import { toast } from "react-toastify";
 
 // Table Component
@@ -372,7 +373,18 @@ function Staff() {
   ];
 
   if (isRestaurantLoading || isStatsLoading || isStaffLoading) {
-    return <div className="p-4 text-center">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <ColorRing
+          height="80"
+          width="80"
+          radius="9"
+          color={theme.colors.active}
+          ariaLabel="three-dots-loading"
+          visible={true}
+        />
+      </div>
+    )
   }
 
   if (restaurantError || statsError || staffError) {

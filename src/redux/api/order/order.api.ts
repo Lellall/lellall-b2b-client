@@ -4,11 +4,15 @@ import { toast } from "react-toastify";
 export const orderApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getOrders: builder.query({
-      query: (subdomain: string) => ({
-        url: `/orders/${subdomain}`,
-        method: "GET",
-        credentials: "include",
-      }),
+      query: ({ subdomain, page = 1, limit = 10, status }) => {
+        const url = `/orders/${subdomain}?page=${page}&limit=${limit}${status ? `&status=${status}` : ''}`;
+        console.log('getOrders Query URL:', url); // Debug log
+        return {
+          url,
+          method: "GET",
+          credentials: "include",
+        };
+      },
       async onQueryStarted(_args, { queryFulfilled }) {
         try {
           await queryFulfilled;
@@ -18,6 +22,10 @@ export const orderApi = baseApi.injectEndpoints({
         }
       },
       providesTags: ["MENU"],
+      transformResponse: (response: { data: any[]; meta: { total: number; page: number; limit: number; totalPages: number } }) => ({
+        orders: response.data,
+        meta: response.meta,
+      }),
     }),
     createOrders: builder.mutation({
       query: ({ subdomain, data }) => ({

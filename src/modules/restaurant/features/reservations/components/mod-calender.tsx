@@ -10,6 +10,9 @@ import { useGetReservationQuery, useCreateReservationMutation } from '@/redux/ap
 import { useGetAllMenuItemsQuery } from '@/redux/api/menu/menu.api';
 import { useSelector } from 'react-redux';
 import { selectAuth } from '@/redux/api/auth/auth.slice';
+import { ColorRing } from 'react-loader-spinner';
+import { theme } from '@/theme/theme';
+
 
 const localizer = momentLocalizer(moment);
 
@@ -686,8 +689,15 @@ export default function StyledCalendar() {
     };
 
     if (isLoadingReservations || isLoadingMenu) return (
-        <div className="min-h-screen flex items-center justify-center">
-            <p>Loading...</p>
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+            <ColorRing
+                height="80"
+                width="80"
+                radius="9"
+                color={theme.colors.active}
+                ariaLabel="three-dots-loading"
+                visible={true}
+            />
         </div>
     );
 
