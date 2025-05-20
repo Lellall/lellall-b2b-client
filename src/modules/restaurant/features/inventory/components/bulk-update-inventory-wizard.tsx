@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, memo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { StyledButton } from '@/components/button/button-lellall';
 import { theme } from '@/theme/theme';
@@ -28,8 +28,8 @@ const ModalContent = styled.div`
   background: linear-gradient(145deg, #ffffff, #f8fafc);
   padding: 32px;
   border-radius: 16px;
-  width: 90%;
-  max-width: 900px;
+  width: 95%; /* Increased from 90% for more space */
+  max-width: 1200px; /* Increased from 900px */
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
@@ -59,14 +59,15 @@ const TableContainer = styled.div`
   table {
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0;
+    border-spacing: 0 8px; /* Added vertical spacing between rows */
     border-radius: 8px;
     overflow: hidden;
     th, td {
       border-bottom: 1px solid #e5e7eb;
-      padding: 14px;
+      padding: 16px 20px; /* Increased padding for breathing room */
       text-align: left;
       font-size: 14px;
+      min-width: 120px; /* Added min-width to prevent cramping */
     }
     th {
       background: #f1f5f9;
@@ -88,6 +89,7 @@ const TableContainer = styled.div`
     }
     input, select {
       width: 100%;
+      max-width: 150px; /* Limit input width for better control */
       padding: 8px 12px;
       border: 1px solid #d1d5db;
       border-radius: 6px;
@@ -110,94 +112,87 @@ const ButtonContainer = styled.div`
   margin-top: 24px;
 `;
 
+interface UpdateItem {
+  inventoryId: string;
+  unitPrice?: number;
+  totalBaseQuantity?: number;
+  unitOfMeasurement?: string;
+  openingStock?: number;
+  closingStock?: number;
+  quantityUsed?: number;
+}
+
 interface BulkUpdateModalProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedItems?: Record<string, any>[];
-  onSubmit: (updates: {
-    inventoryId: string;
-    unitPrice?: number;
-    totalBaseQuantity?: number;
-    unitOfMeasurement?: string;
-  }[]) => void;
+  selectedItems?: {
+    id: string;
+    productName: string;
+    unitPrice: number;
+    totalBaseQuantity: number;
+    unitOfMeasurement: string;
+    openingStock: number;
+    closingStock: number;
+    quantityUsed: number;
+    category: string;
+  }[];
+  onSubmit: (updates: UpdateItem[]) => void;
 }
 
 const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({ isOpen, onClose, selectedItems = [], onSubmit }) => {
-  const [updates, setUpdates] = useState<
-    { inventoryId: string; unitPrice?: number; totalBaseQuantity?: number; unitOfMeasurement?: string }[]
-  >([]);
+  const [updates, setUpdates] = useState<UpdateItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Initialize updates only when selectedItems change
+  // Initialize updates
   useEffect(() => {
-    console.log("useEffect triggered with selectedItems:", selectedItems);
     if (selectedItems.length === 0) {
       setUpdates([]);
-      console.log("Cleared updates due to empty selectedItems");
       return;
     }
-    const newUpdates = selectedItems.map((item, index) => {
-      const inventoryId = item.id || `temp-id-${index}`;
-      if (!item.id) {
-        console.warn(`Item at index ${index} missing id, using fallback: ${inventoryId}`);
-      }
-      return {
-        inventoryId,
-        unitPrice: typeof item.unitPrice === 'number' ? item.unitPrice : 0,
-        totalBaseQuantity: typeof item.totalBaseQuantity === 'number' ? item.totalBaseQuantity : 0,
-        unitOfMeasurement: item.unitOfMeasurement || 'unit',
-      };
-    });
-    if (
-      updates.length !== newUpdates.length ||
-      !updates.every((update, i) =>
-        update.inventoryId === newUpdates[i].inventoryId &&
-        update.unitPrice === newUpdates[i].unitPrice &&
-        update.totalBaseQuantity === newUpdates[i].totalBaseQuantity &&
-        update.unitOfMeasurement === newUpdates[i].unitOfMeasurement
-      )
-    ) {
-      setUpdates(newUpdates);
-      console.log("Initialized updates:", newUpdates);
-    }
+    const newUpdates = selectedItems.map((item) => ({
+      inventoryId: item.id,
+      unitPrice: item.unitPrice,
+      totalBaseQuantity: item.totalBaseQuantity,
+      unitOfMeasurement: item.unitOfMeasurement,
+      openingStock: item.openingStock,
+      closingStock: item.closingStock,
+      quantityUsed: item.quantityUsed,
+    }));
+    setUpdates(newUpdates);
   }, [selectedItems]);
 
-  // Debounce input changes to prevent rapid state updates
-  const handleChange = useMemo(
-    () =>
-      debounce(
-        (
-          inventoryId: string,
-          field: 'unitPrice' | 'totalBaseQuantity' | 'unitOfMeasurement',
-          value: string
-        ) => {
-          console.log(`handleChange triggered: inventoryId=${inventoryId}, field=${field}, value=${value}`);
-          setUpdates((prev) => {
-            const newUpdates = prev.map((update) =>
-              update.inventoryId === inventoryId
-                ? {
-                    ...update,
-                    [field]: field === 'unitOfMeasurement'
+  // Debounced input change handler
+  const handleChange = useCallback(
+    debounce(
+      (
+        inventoryId: string,
+        field: keyof UpdateItem,
+        value: string
+      ) => {
+        setUpdates((prev) =>
+          prev.map((update) =>
+            update.inventoryId === inventoryId
+              ? {
+                  ...update,
+                  [field]:
+                    field === 'unitOfMeasurement'
                       ? value
                       : value === ''
                       ? undefined
                       : parseFloat(value),
-                  }
-                : update
-            );
-            console.log("Updated state:", newUpdates);
-            return newUpdates;
-          });
-        },
-        300
-      ),
+                }
+              : update
+          )
+        );
+      },
+      200
+    ),
     []
   );
 
-  const handleSubmit = async () => {
+  // Handle submit with validation
+  const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
-    console.log("Submitting updates:", updates);
-
     if (updates.length === 0) {
       toast.error('No items selected to update');
       setIsSubmitting(false);
@@ -205,18 +200,28 @@ const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({ isOpen, onClose, sele
     }
 
     const hasChanges = updates.some((update) => {
-      const original = selectedItems.find(item => item.id === update.inventoryId);
+      const original = selectedItems.find((item) => item.id === update.inventoryId);
+      console.log(original, 'original');
+      
       return (
         (update.unitPrice ?? 0) !== (original?.unitPrice ?? 0) ||
         (update.totalBaseQuantity ?? 0) !== (original?.totalBaseQuantity ?? 0) ||
-        update.unitOfMeasurement !== (original?.unitOfMeasurement || 'unit')
+        update.unitOfMeasurement !== (original?.unitOfMeasurement || 'unit') ||
+        (update.openingStock ?? 0) !== (original?.openingStock ?? 0) ||
+        (update.closingStock ?? 0) !== (original?.closingStock ?? 0) ||
+        (update.quantityUsed ?? 0) !== (original?.quantityUsed ?? 0)
       );
     });
 
-    const hasInvalidValues = updates.some(update =>
-      (update.unitPrice !== undefined && (isNaN(update.unitPrice) || update.unitPrice < 0)) ||
-      (update.totalBaseQuantity !== undefined && (isNaN(update.totalBaseQuantity) || update.totalBaseQuantity < 0)) ||
-      !update.unitOfMeasurement || update.unitOfMeasurement.trim() === ''
+    const hasInvalidValues = updates.some(
+      (update) =>
+        (update.unitPrice !== undefined && (isNaN(update.unitPrice) || update.unitPrice < 0)) ||
+        (update.totalBaseQuantity !== undefined && (isNaN(update.totalBaseQuantity) || update.totalBaseQuantity < 0)) ||
+        (update.openingStock !== undefined && (isNaN(update.openingStock) || update.openingStock < 0)) ||
+        (update.closingStock !== undefined && (isNaN(update.closingStock) || update.closingStock < 0)) ||
+        (update.quantityUsed !== undefined && (isNaN(update.quantityUsed) || update.quantityUsed < 0)) ||
+        !update.unitOfMeasurement ||
+        update.unitOfMeasurement.trim() === ''
     );
 
     if (!hasChanges) {
@@ -240,81 +245,141 @@ const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({ isOpen, onClose, sele
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [updates, selectedItems, onSubmit, onClose]);
 
-  const columns = [
-    { key: 'productName', label: 'Product Name', render: (value: any) => value || 'N/A' },
-    {
-      key: 'unitPrice',
-      label: 'Unit Price',
-      render: (_: any, row: any) => {
-        const update = updates.find(update => update.inventoryId === row.id) || {};
-        return (
-          <input
-            type="number"
-            value={update.unitPrice ?? ''}
-            onChange={(e) => handleChange(row.id, 'unitPrice', e.target.value)}
-            min="0"
-            step="0.01"
-            placeholder="Enter price"
-            aria-label="Unit Price"
-          />
-        );
+  // Table columns
+  const columns = useMemo(
+    () => [
+      { key: 'productName', label: 'Product Name', render: (value: any) => value || 'N/A' },
+      {
+        key: 'unitPrice',
+        label: 'Unit Price',
+        render: (_: any, row: any) => {
+          const update = updates.find((u) => u.inventoryId === row.id) || {};
+          return (
+            <input
+              type="number"
+              value={update.unitPrice ?? ''}
+              onChange={(e) => handleChange(row.id, 'unitPrice', e.target.value)}
+              min="0"
+              step="0.01"
+              placeholder="Enter price"
+              aria-label="Unit Price"
+            />
+          );
+        },
       },
-    },
-    {
-      key: 'totalBaseQuantity',
-      label: 'Quantity',
-      render: (_: any, row: any) => {
-        const update = updates.find(update => update.inventoryId === row.id) || {};
-        return (
-          <input
-            type="number"
-            value={update.totalBaseQuantity ?? ''}
-            onChange={(e) => handleChange(row.id, 'totalBaseQuantity', e.target.value)}
-            min="0"
-            step="1"
-            placeholder="Enter quantity"
-            aria-label="Total Base Quantity"
-          />
-        );
+      {
+        key: 'totalBaseQuantity',
+        label: 'Quantity',
+        render: (_: any, row: any) => {
+          const update = updates.find((u) => u.inventoryId === row.id) || {};
+          return (
+            <input
+              type="number"
+              value={update.totalBaseQuantity ?? ''}
+              onChange={(e) => handleChange(row.id, 'totalBaseQuantity', e.target.value)}
+              min="0"
+              step="1"
+              placeholder="Enter quantity"
+              aria-label="Total Base Quantity"
+            />
+          );
+        },
       },
-    },
-    {
-      key: 'unitOfMeasurement',
-      label: 'Unit',
-      render: (_: any, row: any) => {
-        const update = updates.find(update => update.inventoryId === row.id) || {};
-        return (
-          <input
-            type="text"
-            value={update.unitOfMeasurement || ''}
-            onChange={(e) => handleChange(row.id, 'unitOfMeasurement', e.target.value)}
-            placeholder="Enter unit"
-            aria-label="Unit of Measurement"
-          />
-        );
+      {
+        key: 'unitOfMeasurement',
+        label: 'Unit',
+        render: (_: any, row: any) => {
+          const update = updates.find((u) => u.inventoryId === row.id) || {};
+          return (
+            <input
+              type="text"
+              value={update.unitOfMeasurement || ''}
+              onChange={(e) => handleChange(row.id, 'unitOfMeasurement', e.target.value)}
+              placeholder="Enter unit"
+              aria-label="Unit of Measurement"
+            />
+          );
+        },
       },
-    },
-    {
-      key: 'category',
-      label: 'Category',
-      render: (value: any) => value || 'N/A',
-    },
-  ];
+      {
+        key: 'openingStock',
+        label: 'Opening Stock',
+        render: (_: any, row: any) => {
+          const update = updates.find((u) => u.inventoryId === row.id) || {};
+          return (
+            <input
+              type="number"
+              value={update.openingStock ?? ''}
+              onChange={(e) => handleChange(row.id, 'openingStock', e.target.value)}
+              min="0"
+              step="1"
+              placeholder="Enter opening stock"
+              aria-label="Opening Stock"
+            />
+          );
+        },
+      },
+      {
+        key: 'closingStock',
+        label: 'Closing Stock',
+        render: (_: any, row: any) => {
+          const update = updates.find((u) => u.inventoryId === row.id) || {};
+          return (
+            <input
+              type="number"
+              value={update.closingStock ?? ''}
+              onChange={(e) => handleChange(row.id, 'closingStock', e.target.value)}
+              min="0"
+              step="0.01"
+              placeholder="Enter closing stock"
+              aria-label="Closing Stock"
+            />
+          );
+        },
+      },
+      {
+        key: 'quantityUsed',
+        label: 'Quantity Used',
+        render: (_: any, row: any) => {
+          const update = updates.find((u) => u.inventoryId === row.id) || {};
+          return (
+            <input
+              type="number"
+              value={update.quantityUsed ?? ''}
+              onChange={(e) => handleChange(row.id, 'quantityUsed', e.target.value)}
+              min="0"
+              step="1"
+              placeholder="Enter quantity used"
+              aria-label="Quantity Used"
+            />
+          );
+        },
+      },
+      {
+        key: 'category',
+        label: 'Category',
+        render: (value: any) => value || 'N/A',
+      },
+    ],
+    [handleChange, updates]
+  );
 
-  // Memoize table rows to prevent unnecessary re-renders
-  const memoizedRows = useMemo(() => {
-    return selectedItems.map((item, index) => (
-      <tr key={item.id || `row-${index}`}>
-        {columns.map((col) => (
-          <td key={col.key}>
-            {col.render ? col.render(item[col.key], item) : item[col.key] || 'N/A'}
-          </td>
-        ))}
-      </tr>
-    ));
-  }, [selectedItems, updates]);
+  // Memoized table rows
+  const memoizedRows = useMemo(
+    () =>
+      selectedItems.map((item) => (
+        <tr key={item.id}>
+          {columns.map((col) => (
+            <td key={col.key}>
+              {col.render ? col.render(item[col.key], item) : item[col.key] || 'N/A'}
+            </td>
+          ))}
+        </tr>
+      )),
+    [selectedItems, columns]
+  );
 
   if (!isOpen) return null;
 

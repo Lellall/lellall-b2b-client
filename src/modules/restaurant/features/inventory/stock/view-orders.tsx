@@ -4,44 +4,32 @@ import { Add, Filter } from 'iconsax-react';
 import SearchBar from '@/components/search-bar/search-bar';
 import { useSelector } from 'react-redux';
 import { selectAuth } from '@/redux/api/auth/auth.slice';
-import { useGetOrdersQuery, useUpdateOrdersMutation } from '@/redux/api/order/order.api';
+import { useGetOrdersQuery, useUpdateOrdersMutation, useDeleteOrderMutation } from '@/redux/api/order/order.api';
 import { ColorRing } from 'react-loader-spinner';
 import Card from '../components/card';
 import { theme } from '@/theme/theme';
 import ReactPaginate from 'react-paginate';
+import { toast } from 'react-toastify';
 
 const KitchenView = () => {
   const { subdomain } = useSelector(selectAuth);
-  const [currentPage, setCurrentPage] = useState(0); // 0-based for react-paginate
+  const [currentPage, setCurrentPage] = useState(0);
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [expandedOrders, setExpandedOrders] = useState<string[]>([]);
-  const [statusFilter, setStatusFilter] = useState<string>(''); // Status filter state
+  const [statusFilter, setStatusFilter] = useState<string>('');
 
-  // Always call hooks at the top
   const { data, error, isLoading, isFetching } = useGetOrdersQuery(
     {
       subdomain,
-      page: currentPage + 1, // Convert to 1-based for backend
+      page: currentPage + 1,
       limit: 10,
-      status: statusFilter || undefined, // Pass status only if not empty
+      status: statusFilter || undefined,
     },
-    { skip: !subdomain }, // Skip query if subdomain is undefined
+    { skip: !subdomain },
   );
   const [updateOrderStatus] = useUpdateOrdersMutation();
+  const [deleteOrder] = useDeleteOrderMutation();
 
-  // Debugging logs
-  console.log('KitchenView Render:', {
-    subdomain,
-    currentPage,
-    statusFilter,
-    isLoading,
-    isFetching,
-    error,
-    data,
-    apiCall: `/orders/${subdomain}?page=${currentPage + 1}&limit=10${statusFilter ? `&status=${statusFilter}` : ''}`,
-  });
-
-  // Normalize data and meta
   const orders = data?.orders || [];
   const meta = data?.meta || { total: 0, page: 1, limit: 10, totalPages: 1 };
 
@@ -51,6 +39,15 @@ const KitchenView = () => {
       console.log(`Order ${orderId} updated to ${newStatus}`);
     } catch (err) {
       console.error('Failed to update order status:', err);
+    }
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    try {
+      await deleteOrder({ subdomain, orderId }).unwrap();
+      console.log(`Order ${orderId} deleted successfully`);
+    } catch (err) {
+      console.error('Failed to delete order:', err);
     }
   };
 
@@ -72,11 +69,10 @@ const KitchenView = () => {
   const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = e.target.value;
     setStatusFilter(newStatus);
-    setCurrentPage(0); // Reset to first page when filter changes
+    setCurrentPage(0);
     console.log('Status filter changed to:', newStatus);
   };
 
-  // Render loading state
   const renderLoading = () => (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
       <ColorRing
@@ -90,7 +86,6 @@ const KitchenView = () => {
     </div>
   );
 
-  // Render error state
   const renderError = () => (
     <div className="text-red-500 text-center">
       Error loading orders: {JSON.stringify(error)}
@@ -103,13 +98,10 @@ const KitchenView = () => {
     </div>
   );
 
-  // Render empty state
   const renderEmpty = () => <div className="text-center text-gray-500">No orders found</div>;
 
-  // Render main content
   const renderContent = () => (
     <div className="max-w-7xl mx-auto space-y-6">
-      {/* Header Section */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <SearchBar
@@ -119,7 +111,6 @@ const KitchenView = () => {
             iconSize={15}
             shadow={false}
           />
-          {/* Status Filter Dropdown */}
           <div className="flex items-center gap-2">
             <Filter size={20} color={theme.colors.active} />
             <select
@@ -138,7 +129,6 @@ const KitchenView = () => {
           </div>
         </div>
       </div>
-      {/* Orders Display */}
       {orders.length === 0 ? (
         renderEmpty()
       ) : viewMode === 'cards' ? (
@@ -147,11 +137,12 @@ const KitchenView = () => {
           expandedOrders={expandedOrders}
           toggleExpand={toggleExpand}
           handleStatusUpdate={handleStatusUpdate}
+          handleDeleteOrder={handleDeleteOrder}
+          subdomain={subdomain}
         />
       ) : (
-        renderTableView() // Ensure renderTableView has no conditional hooks
+        renderTableView() // Ensure renderTableView is defined
       )}
-      {/* Pagination */}
       {meta.totalPages > 1 && (
         <ReactPaginate
           previousLabel="Previous"
@@ -183,7 +174,6 @@ const KitchenView = () => {
   );
 };
 
-// Pagination styles (unchanged)
 const paginationStyles = `
   .pagination {
     display: flex;

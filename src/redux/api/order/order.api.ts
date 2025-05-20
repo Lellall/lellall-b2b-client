@@ -1,3 +1,4 @@
+import { ErrorHandler } from "@/utils/error-handler";
 import { baseApi } from "../../api/baseApi";
 import { toast } from "react-toastify";
 
@@ -138,11 +139,49 @@ export const orderApi = baseApi.injectEndpoints({
       },
       providesTags: ["MENU"],
     }),
+    deleteOrder: builder.mutation({
+      query: ({ subdomain, orderId }) => ({
+        url: `/orders/${subdomain}/${orderId}`,
+        method: "DELETE",
+        credentials: "include",
+      }),
+      invalidatesTags: ["MENU"],
+      async onQueryStarted(_args, { queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          toast.success("Order item deleted successfully", { position: "top-right" });
+        } catch (err) {
+          ErrorHandler(err as any);
+          toast.error("Failed to delete Order item", { position: "top-right" });
+          throw err;
+        }
+      },
+    }),
+    updateOrderItems: builder.mutation({
+      query: ({ subdomain, orderId, data }) => ({
+        url: `/orders/${subdomain}/${orderId}/items`,
+        method: "PATCH",
+        body: data,
+        credentials: "include",
+      }),
+      invalidatesTags: ["MENU"],
+      async onQueryStarted(_args, { queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          toast.success("Order items updated successfully", { position: "top-right" });
+        } catch (err) {
+          ErrorHandler(err as any);
+          toast.error("Failed to update order items", { position: "top-right" });
+          throw err;
+        }
+      },
+    }),
   }),
 });
 
 export const {
   useGetOrdersQuery,
+  useDeleteOrderMutation,
   useCreateOrdersMutation,
   useUpdateOrdersMutation,
   useGetReceiptTextMutationMutation,
@@ -155,4 +194,5 @@ export const {
   useGetStockStatsQuery,
   useGetDailySalesRevenueQuery,
   useGetDailySoldItemsQuery,
+  useUpdateOrderItemsMutation
 } = orderApi;

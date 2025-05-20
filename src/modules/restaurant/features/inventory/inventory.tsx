@@ -132,6 +132,7 @@ const InventoryComponent = () => {
   const [selectedItems, setSelectedItems] = useState<Record<string, any>[]>([]);
   const [page, setPage] = useState(1); // Add page state
   const limit = 10; // Set limit to match API default
+  console.log(selectedItems, 'selectedItems')
 
   const { data, error, isLoading } = useGetInventoryQuery(
     {
@@ -175,7 +176,7 @@ const InventoryComponent = () => {
       console.log("No inventory items available");
       return [];
     }
-    const processed = items.map(({ id, unitPrice, openingStock, closingStock, ...item }) => {
+    const processed = items.map(({ id, unitPrice, openingStock, closingStock, quantityUsed, ...item }) => {
       const inventoryId = id || `temp-id-${Math.random()}`;
       if (!id) {
         console.warn(`Item missing id, using fallback: ${inventoryId}`);
@@ -191,6 +192,9 @@ const InventoryComponent = () => {
         unitOfMeasurement: <UnitTag unit={item.unitOfMeasurement || 'unit'} />,
         rawUnitOfMeasurement: item.unitOfMeasurement || 'unit',
         dateAdded: item.dateAdded ? format(new Date(item.dateAdded), "MMM dd, yyyy") : 'N/A',
+        openingStock,
+        closingStock,
+        quantityUsed
       };
     });
     console.log("Processed inventory:", processed);
@@ -276,6 +280,9 @@ const InventoryComponent = () => {
             unitOfMeasurement: update.unitOfMeasurement || originalItem?.rawUnitOfMeasurement || 'unit',
             totalBaseQuantity: update.totalBaseQuantity ?? originalItem?.totalBaseQuantity ?? 0,
             category: 'supplies',
+            openingStock: update.openingStock || originalItem?.openingStock,
+            closingStock:  update.closingStock || originalItem?.closingStock,
+            quantityUsed:  update.quantityUsed || originalItem?.quantityUsed,
           };
         }),
       };
@@ -307,6 +314,9 @@ const InventoryComponent = () => {
       totalBaseQuantity: item.totalBaseQuantity,
       unitOfMeasurement: item.rawUnitOfMeasurement,
       category: item.rawCategory,
+      openingStock: item?.openingStock,
+      closingStock: item?.closingStock,
+      quantityUsed: item?.quantityUsed,
     }));
     console.log("Raw selected items:", rawItems);
     return rawItems;
@@ -336,18 +346,18 @@ const InventoryComponent = () => {
 
   if (isLoading) {
     return (
-        <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-            <ColorRing
-                height="80"
-                width="80"
-                radius="9"
-                color={theme.colors.active}
-                ariaLabel="three-dots-loading"
-                visible={true}
-            />
-        </div>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <ColorRing
+          height="80"
+          width="80"
+          radius="9"
+          color={theme.colors.active}
+          ariaLabel="three-dots-loading"
+          visible={true}
+        />
+      </div>
     );
-}
+  }
   if (error) return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center text-red-500 text-sm">
       Error loading inventory: {JSON.stringify(error)}
