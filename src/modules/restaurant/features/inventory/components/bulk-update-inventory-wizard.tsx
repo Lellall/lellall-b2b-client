@@ -28,8 +28,8 @@ const ModalContent = styled.div`
   background: linear-gradient(145deg, #ffffff, #f8fafc);
   padding: 32px;
   border-radius: 16px;
-  width: 95%; /* Increased from 90% for more space */
-  max-width: 1200px; /* Increased from 900px */
+  width: 95%;
+  max-width: 1200px;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
@@ -59,15 +59,15 @@ const TableContainer = styled.div`
   table {
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0 8px; /* Added vertical spacing between rows */
+    border-spacing: 0 8px;
     border-radius: 8px;
     overflow: hidden;
     th, td {
       border-bottom: 1px solid #e5e7eb;
-      padding: 16px 20px; /* Increased padding for breathing room */
+      padding: 16px 20px;
       text-align: left;
       font-size: 14px;
-      min-width: 120px; /* Added min-width to prevent cramping */
+      min-width: 120px;
     }
     th {
       background: #f1f5f9;
@@ -89,7 +89,7 @@ const TableContainer = styled.div`
     }
     input, select {
       width: 100%;
-      max-width: 150px; /* Limit input width for better control */
+      max-width: 150px;
       padding: 8px 12px;
       border: 1px solid #d1d5db;
       border-radius: 6px;
@@ -164,11 +164,7 @@ const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({ isOpen, onClose, sele
   // Debounced input change handler
   const handleChange = useCallback(
     debounce(
-      (
-        inventoryId: string,
-        field: keyof UpdateItem,
-        value: string
-      ) => {
+      (inventoryId: string, field: keyof UpdateItem, value: string) => {
         setUpdates((prev) =>
           prev.map((update) =>
             update.inventoryId === inventoryId
@@ -179,6 +175,8 @@ const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({ isOpen, onClose, sele
                       ? value
                       : value === ''
                       ? undefined
+                      : field === 'quantityUsed' || field === 'openingStock' || field === 'totalBaseQuantity'
+                      ? parseInt(value, 10)
                       : parseFloat(value),
                 }
               : update
@@ -199,14 +197,16 @@ const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({ isOpen, onClose, sele
       return;
     }
 
+    console.log('Updates:', updates); // Debug log to inspect updates array
+
     const hasChanges = updates.some((update) => {
       const original = selectedItems.find((item) => item.id === update.inventoryId);
-      console.log(original, 'original');
-      
+      console.log('Update vs Original:', { update, original }); // Debug log to compare
       return (
         (update.unitPrice ?? 0) !== (original?.unitPrice ?? 0) ||
         (update.totalBaseQuantity ?? 0) !== (original?.totalBaseQuantity ?? 0) ||
-        update.unitOfMeasurement !== (original?.unitOfMeasurement || 'unit') ||
+        ((update.unitOfMeasurement ?? original?.unitOfMeasurement) || 'unit') !==
+          ((original?.unitOfMeasurement) || 'unit') ||
         (update.openingStock ?? 0) !== (original?.openingStock ?? 0) ||
         (update.closingStock ?? 0) !== (original?.closingStock ?? 0) ||
         (update.quantityUsed ?? 0) !== (original?.quantityUsed ?? 0)
@@ -217,9 +217,9 @@ const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({ isOpen, onClose, sele
       (update) =>
         (update.unitPrice !== undefined && (isNaN(update.unitPrice) || update.unitPrice < 0)) ||
         (update.totalBaseQuantity !== undefined && (isNaN(update.totalBaseQuantity) || update.totalBaseQuantity < 0)) ||
-        (update.openingStock !== undefined && (isNaN(update.openingStock) ?? update.openingStock < 0)) ||
-        (update.closingStock !== undefined && (isNaN(update.closingStock) ?? update.closingStock < 0)) ||
-        (update.quantityUsed !== undefined && (isNaN(update.quantityUsed) ?? update.quantityUsed < 0)) ||
+        (update.openingStock !== undefined && (isNaN(update.openingStock) || update.openingStock < 0)) ||
+        (update.closingStock !== undefined && (isNaN(update.closingStock) || update.closingStock < 0)) ||
+        (update.quantityUsed !== undefined && (isNaN(update.quantityUsed) || update.quantityUsed < 0)) ||
         !update.unitOfMeasurement ||
         update.unitOfMeasurement.trim() === ''
     );
@@ -259,7 +259,7 @@ const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({ isOpen, onClose, sele
           return (
             <input
               type="number"
-              value={update.unitPrice ?? ''}
+              value={update.unitPrice !== undefined ? update.unitPrice : ''}
               onChange={(e) => handleChange(row.id, 'unitPrice', e.target.value)}
               min="0"
               step="0.01"
@@ -277,7 +277,7 @@ const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({ isOpen, onClose, sele
           return (
             <input
               type="number"
-              value={update.totalBaseQuantity ?? ''}
+              value={update.totalBaseQuantity !== undefined ? update.totalBaseQuantity : ''}
               onChange={(e) => handleChange(row.id, 'totalBaseQuantity', e.target.value)}
               min="0"
               step="1"
@@ -311,7 +311,7 @@ const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({ isOpen, onClose, sele
           return (
             <input
               type="number"
-              value={update.openingStock ?? ''}
+              value={update.openingStock !== undefined ? update.openingStock : ''}
               onChange={(e) => handleChange(row.id, 'openingStock', e.target.value)}
               min="0"
               step="1"
@@ -329,7 +329,7 @@ const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({ isOpen, onClose, sele
           return (
             <input
               type="number"
-              value={update.closingStock ?? ''}
+              value={update.closingStock !== undefined ? update.closingStock : ''}
               onChange={(e) => handleChange(row.id, 'closingStock', e.target.value)}
               min="0"
               step="0.01"
@@ -347,7 +347,7 @@ const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({ isOpen, onClose, sele
           return (
             <input
               type="number"
-              value={update.quantityUsed ?? ''}
+              value={update.quantityUsed !== undefined ? update.quantityUsed : ''}
               onChange={(e) => handleChange(row.id, 'quantityUsed', e.target.value)}
               min="0"
               step="1"

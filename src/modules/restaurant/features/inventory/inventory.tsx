@@ -15,7 +15,7 @@ import ResupplyRequestWizard from "./resupply-items";
 import BulkUpdateModal from "./components/bulk-update-inventory-wizard";
 import { useState, useMemo, useEffect, memo } from "react";
 import { useBulkUpdateInventoryMutation } from "@/redux/api/inventory/inventory.api";
-import ReactPaginate from 'react-paginate'; // Import react-paginate
+import ReactPaginate from 'react-paginate';
 
 // Optional: Add CSS for react-paginate (can be customized)
 const paginationStyles = `
@@ -124,24 +124,35 @@ const paginationStyles = `
   }
 `;
 
+interface InventoryItem {
+  id: string;
+  inventoryId: string;
+  productName: string;
+  unitPrice: string;
+  rawUnitPrice: number;
+  totalBaseQuantity: number;
+  unitOfMeasurement: JSX.Element;
+  rawUnitOfMeasurement: string;
+  category: JSX.Element;
+  rawCategory: string;
+  dateAdded: string;
+  openingStock: number;
+  closingStock: number;
+  quantityUsed: number;
+}
+
 const InventoryComponent = () => {
   const { subdomain } = useSelector(selectAuth);
   const [isModalOpen, setModalOpen] = useState(false);
   const [resupplyModalOpen, setResupplyModalOpen] = useState(false);
   const [isBulkUpdateModalOpen, setBulkUpdateModalOpen] = useState(false);
-  const [selectedItems, setSelectedItems] = useState<Record<string, any>[]>([]);
-  const [page, setPage] = useState(1); // Add page state
-  const limit = 10; // Set limit to match API default
-  console.log(selectedItems, 'selectedItems')
+  const [selectedItems, setSelectedItems] = useState<InventoryItem[]>([]);
+  const [page, setPage] = useState(1);
+  const limit = 10;
 
   const { data, error, isLoading } = useGetInventoryQuery(
-    {
-      subdomain,
-      page,
-      limit,
-      pollingInterval: 0,
-    },
-    { skip: !subdomain } // Prevent query if subdomain is missing
+    { subdomain, page, limit, pollingInterval: 0 },
+    { skip: !subdomain }
   );
 
   const period = 'monthly';
@@ -149,7 +160,7 @@ const InventoryComponent = () => {
   const [triggerDownload, { isFetching }] = useLazyDownloadInventoryExportQuery();
   const [bulkUpdateInventory, { isLoading: isBulkUpdating }] = useBulkUpdateInventoryMutation();
 
-  const UnitTag = ({ unit }) => {
+  const UnitTag = ({ unit }: { unit: string }) => {
     const unitColors = {
       loaves: "bg-blue-500 text-white",
       liters: "bg-yellow-500 text-black",
@@ -170,13 +181,30 @@ const InventoryComponent = () => {
     );
   };
 
-  const getProcessedInventory = (data) => {
-    const items = data?.data || []; // Access data array from API response
+  const CategoryTag = ({ category }: { category: string }) => {
+    const categoryColors = {
+      Supplies: "bg-green-500 text-white",
+      Food: "bg-yellow-500 text-black",
+      Equipment: "bg-blue-500 text-white",
+      Beverages: "bg-red-500 text-white",
+      Miscellaneous: "bg-gray-500 text-white",
+      Spice: "bg-orange-500 text-white",
+      Grain: "bg-brown-500 text-white",
+    };
+    return (
+      <span className={`px-2 py-1 rounded ${categoryColors[category] || "bg-gray-500 text-white"}`}>
+        {category}
+      </span>
+    );
+  };
+
+  const getProcessedInventory = (data: any): InventoryItem[] => {
+    const items = data?.data || [];
     if (!items.length) {
       console.log("No inventory items available");
       return [];
     }
-    const processed = items.map(({ id, unitPrice, openingStock, closingStock, quantityUsed, ...item }) => {
+    const processed = items.map(({ id, unitPrice, openingStock, closingStock, quantityUsed, ...item }: any) => {
       const inventoryId = id || `temp-id-${Math.random()}`;
       if (!id) {
         console.warn(`Item missing id, using fallback: ${inventoryId}`);
@@ -194,42 +222,14 @@ const InventoryComponent = () => {
         dateAdded: item.dateAdded ? format(new Date(item.dateAdded), "MMM dd, yyyy") : 'N/A',
         openingStock,
         closingStock,
-        quantityUsed
+        quantityUsed,
       };
     });
     console.log("Processed inventory:", processed);
     return processed;
   };
 
-  const CategoryTag = ({ category }) => {
-    const categoryColors = {
-      Supplies: "bg-green-500 text-white",
-      Food: "bg-yellow-500 text-black",
-      Equipment: "bg-blue-500 text-white",
-      Beverages: "bg-red-500 text-white",
-      Miscellaneous: "bg-gray-500 text-white",
-      Spice: "bg-orange-500 text-white",
-      Grain: "bg-brown-500 text-white",
-    };
-    return (
-      <span className={`px-2 py-1 rounded ${categoryColors[category] || "bg-gray-500 text-white"}`}>
-        {category}
-      </span>
-    );
-  };
-
   const processedInventory = useMemo(() => getProcessedInventory(data), [data]);
-
-  useEffect(() => {
-    console.log("Inventory data from API:", data);
-    console.log("Table props:", {
-      selectable: true,
-      bordered: true,
-      data: processedInventory,
-      columnsLength: columns.length,
-      selectedItemsLength: selectedItems.length,
-    });
-  }, [processedInventory, selectedItems]);
 
   const memoizedSelectedItems = useMemo(() => {
     const items = selectedItems.map((item, index) => ({
@@ -241,7 +241,25 @@ const InventoryComponent = () => {
     return items;
   }, [selectedItems]);
 
-  const handleSelectionChange = (items: Record<string, any>[]) => {
+  // Memoize raw selected items to ensure stable prop for BulkUpdateModal
+  const rawSelectedItems = useMemo(() => {
+    const rawItems = memoizedSelectedItems.map(item => ({
+      id: item.id,
+      inventoryId: item.id,
+      productName: item.productName,
+      unitPrice: item.rawUnitPrice,
+      totalBaseQuantity: item.totalBaseQuantity,
+      unitOfMeasurement: item.rawUnitOfMeasurement,
+      category: item.rawCategory,
+      openingStock: item?.openingStock,
+      closingStock: item?.closingStock,
+      quantityUsed: item?.quantityUsed,
+    }));
+    console.log("Raw selected items:", rawItems);
+    return rawItems;
+  }, [memoizedSelectedItems]);
+
+  const handleSelectionChange = (items: InventoryItem[]) => {
     if (
       items.length !== selectedItems.length ||
       !items.every((item, index) => item.id === selectedItems[index]?.id)
@@ -268,6 +286,9 @@ const InventoryComponent = () => {
     unitPrice?: number;
     totalBaseQuantity?: number;
     unitOfMeasurement?: string;
+    openingStock?: number;
+    closingStock?: number;
+    quantityUsed?: number;
   }[]) => {
     try {
       const payload = {
@@ -275,14 +296,14 @@ const InventoryComponent = () => {
           const originalItem = memoizedSelectedItems.find((item) => item.id === update.inventoryId);
           return {
             inventoryId: update.inventoryId,
-            productName: originalItem?.productName ?? 'Unknown',
+            productName: originalItem?.productName || 'Unknown',
             unitPrice: update.unitPrice ?? originalItem?.rawUnitPrice ?? 0,
-            unitOfMeasurement: update.unitOfMeasurement ?? originalItem?.rawUnitOfMeasurement || 'unit',
+            unitOfMeasurement: update.unitOfMeasurement || originalItem?.rawUnitOfMeasurement || 'unit',
             totalBaseQuantity: update.totalBaseQuantity ?? originalItem?.totalBaseQuantity ?? 0,
-            category: 'supplies',
-            openingStock: update.openingStock ?? originalItem?.openingStock,
-            closingStock:  update.closingStock ?? originalItem?.closingStock,
-            quantityUsed:  update.quantityUsed ?? originalItem?.quantityUsed,
+            category: originalItem?.rawCategory || 'supplies',
+            openingStock: update.openingStock ?? originalItem?.openingStock ?? 0,
+            closingStock: update.closingStock ?? originalItem?.closingStock ?? 0,
+            quantityUsed: update.quantityUsed ?? originalItem?.quantityUsed ?? 0,
           };
         }),
       };
@@ -305,26 +326,8 @@ const InventoryComponent = () => {
     { key: "category", label: "Category", className: 'table-cell' },
   ];
 
-  const getRawSelectedItems = (selected) => {
-    const rawItems = (selected || []).map(item => ({
-      id: item.id,
-      inventoryId: item.id,
-      productName: item.productName,
-      unitPrice: item.rawUnitPrice,
-      totalBaseQuantity: item.totalBaseQuantity,
-      unitOfMeasurement: item.rawUnitOfMeasurement,
-      category: item.rawCategory,
-      openingStock: item?.openingStock,
-      closingStock: item?.closingStock,
-      quantityUsed: item?.quantityUsed,
-    }));
-    console.log("Raw selected items:", rawItems);
-    return rawItems;
-  };
-
-  // Handle page change
-  const handlePageChange = ({ selected }) => {
-    setPage(selected + 1); // react-paginate uses 0-based index, API uses 1-based
+  const handlePageChange = ({ selected }: { selected: number }) => {
+    setPage(selected + 1);
   };
 
   const today = format(new Date(), "PPP");
@@ -344,6 +347,17 @@ const InventoryComponent = () => {
     { label: "Average Daily Usage", value: stats?.averageDailyUsage },
   ];
 
+  useEffect(() => {
+    console.log("Inventory data from API:", data);
+    console.log("Table props:", {
+      selectable: true,
+      bordered: true,
+      data: processedInventory,
+      columnsLength: columns.length,
+      selectedItemsLength: selectedItems.length,
+    });
+  }, [processedInventory, selectedItems]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -358,15 +372,17 @@ const InventoryComponent = () => {
       </div>
     );
   }
-  if (error) return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center text-red-500 text-sm">
-      Error loading inventory: {JSON.stringify(error)}
-    </div>
-  );
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center text-red-500 text-sm">
+        Error loading inventory: {JSON.stringify(error)}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-2 sm:p-4 bg-gray-100">
-      {/* Inject pagination styles */}
       <style>{paginationStyles}</style>
       <div className="w-full sm:max-w-7xl mx-auto space-y-4">
         <div className="bg-white rounded-xl p-2 sm:p-4 overflow-hidden box-border max-w-full">
@@ -468,7 +484,6 @@ const InventoryComponent = () => {
             onSelectionChange={handleSelectionChange}
           />
         </div>
-        {/* Pagination Controls */}
         {data?.pagination && (
           <ReactPaginate
             previousLabel={'← Previous'}
@@ -482,7 +497,7 @@ const InventoryComponent = () => {
             activeClassName={'active'}
             pageClassName={'page-item'}
             pageLinkClassName={'page-link'}
-            forcePage={page - 1} // Adjust for 0-based index
+            forcePage={page - 1}
           />
         )}
         <NewSupplyRequestWizard isModalOpen={isModalOpen} setModalOpen={setModalOpen} />
@@ -490,7 +505,7 @@ const InventoryComponent = () => {
         <BulkUpdateModal
           isOpen={isBulkUpdateModalOpen}
           onClose={() => setBulkUpdateModalOpen(false)}
-          selectedItems={getRawSelectedItems(memoizedSelectedItems)}
+          selectedItems={rawSelectedItems}
           onSubmit={handleBulkUpdate}
         />
       </div>
