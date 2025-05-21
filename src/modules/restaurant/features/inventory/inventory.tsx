@@ -275,14 +275,14 @@ const InventoryComponent = () => {
           const originalItem = memoizedSelectedItems.find((item) => item.id === update.inventoryId);
           return {
             inventoryId: update.inventoryId,
-            productName: originalItem?.productName || 'Unknown',
+            productName: originalItem?.productName ?? 'Unknown',
             unitPrice: update.unitPrice ?? originalItem?.rawUnitPrice ?? 0,
-            unitOfMeasurement: update.unitOfMeasurement || originalItem?.rawUnitOfMeasurement || 'unit',
+            unitOfMeasurement: update.unitOfMeasurement ?? originalItem?.rawUnitOfMeasurement || 'unit',
             totalBaseQuantity: update.totalBaseQuantity ?? originalItem?.totalBaseQuantity ?? 0,
             category: 'supplies',
-            openingStock: update.openingStock || originalItem?.openingStock,
-            closingStock:  update.closingStock || originalItem?.closingStock,
-            quantityUsed:  update.quantityUsed || originalItem?.quantityUsed,
+            openingStock: update.openingStock ?? originalItem?.openingStock,
+            closingStock:  update.closingStock ?? originalItem?.closingStock,
+            quantityUsed:  update.quantityUsed ?? originalItem?.quantityUsed,
           };
         }),
       };

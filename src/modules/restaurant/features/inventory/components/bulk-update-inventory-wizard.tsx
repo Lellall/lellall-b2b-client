@@ -217,9 +217,9 @@ const BulkUpdateModal: React.FC<BulkUpdateModalProps> = ({ isOpen, onClose, sele
       (update) =>
         (update.unitPrice !== undefined && (isNaN(update.unitPrice) || update.unitPrice < 0)) ||
         (update.totalBaseQuantity !== undefined && (isNaN(update.totalBaseQuantity) || update.totalBaseQuantity < 0)) ||
-        (update.openingStock !== undefined && (isNaN(update.openingStock) || update.openingStock < 0)) ||
-        (update.closingStock !== undefined && (isNaN(update.closingStock) || update.closingStock < 0)) ||
-        (update.quantityUsed !== undefined && (isNaN(update.quantityUsed) || update.quantityUsed < 0)) ||
+        (update.openingStock !== undefined && (isNaN(update.openingStock) ?? update.openingStock < 0)) ||
+        (update.closingStock !== undefined && (isNaN(update.closingStock) ?? update.closingStock < 0)) ||
+        (update.quantityUsed !== undefined && (isNaN(update.quantityUsed) ?? update.quantityUsed < 0)) ||
         !update.unitOfMeasurement ||
         update.unitOfMeasurement.trim() === ''
     );
