@@ -16,6 +16,7 @@ interface SearchBarProps {
   placeholderColor?: string;
   iconColor?: string;
   iconSize?: number;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; // Add onChange prop
 }
 
 const SearchContainer = styled.div<SearchBarProps>`
@@ -86,6 +87,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   placeholderColor,
   iconColor,
   iconSize = 20,
+  onChange,
 }) => {
   return (
     <SearchContainer
@@ -103,6 +105,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         color={color}
         inputPadding={inputPadding}
         placeholderColor={placeholderColor}
+        onChange={onChange} // Pass onChange to input
       />
       <IconWrapper iconColor={iconColor}>
         <SearchNormal1 size={iconSize} />

@@ -17,7 +17,7 @@ import { useState, useMemo, useEffect, memo } from "react";
 import { useBulkUpdateInventoryMutation } from "@/redux/api/inventory/inventory.api";
 import ReactPaginate from 'react-paginate';
 
-// Optional: Add CSS for react-paginate (can be customized)
+// Optional: Add CSS for react-paginate (unchanged)
 const paginationStyles = `
   .pagination {
     display: flex;
@@ -148,10 +148,11 @@ const InventoryComponent = () => {
   const [isBulkUpdateModalOpen, setBulkUpdateModalOpen] = useState(false);
   const [selectedItems, setSelectedItems] = useState<InventoryItem[]>([]);
   const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState(''); // New state for search term
   const limit = 10;
 
   const { data, error, isLoading } = useGetInventoryQuery(
-    { subdomain, page, limit, pollingInterval: 0 },
+    { subdomain, page, limit, search: searchTerm, pollingInterval: 0 }, // Pass search term
     { skip: !subdomain }
   );
 
@@ -330,6 +331,13 @@ const InventoryComponent = () => {
     setPage(selected + 1);
   };
 
+  // Handle search input change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newSearchTerm = e.target.value;
+    setSearchTerm(newSearchTerm);
+    setPage(1); // Reset to first page when search term changes
+  };
+
   const today = format(new Date(), "PPP");
 
   const statColors = [
@@ -419,7 +427,9 @@ const InventoryComponent = () => {
               iconColor="#000"
               iconSize={15}
               shadow={false}
+              onChange={handleSearchChange} // Add onChange handler
             />
+            {/* <input type="search" name="search" id=""  onChange={handleSearchChange} /> */}
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <StyledButton
@@ -486,8 +496,8 @@ const InventoryComponent = () => {
         </div>
         {data?.pagination && (
           <ReactPaginate
-            previousLabel={'← Previous'}
-            nextLabel={'Next →'}
+            // previousLabel={'← Previous'}
+            // nextLabel={'Next →'}
             pageCount={data.pagination.totalPages || 1}
             onPageChange={handlePageChange}
             containerClassName={'pagination'}

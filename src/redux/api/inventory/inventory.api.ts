@@ -66,7 +66,7 @@ export const inventoryAApi = baseApi.injectEndpoints({
         }),
         getInventory: builder.query({
             query: (param) => ({
-                url: `${param.subdomain}/inventory?page=${param.page}&limit=${param.limit}`,
+                url: `${param.subdomain}/inventory?page=${param.page}&limit=${param.limit}${param.search ? `&search=${encodeURIComponent(param.search)}` : ''}`,
                 method: "GET",
                 credentials: "include",
             }),
