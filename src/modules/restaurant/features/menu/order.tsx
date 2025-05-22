@@ -1,14 +1,13 @@
 import { Button } from "@/components/ui/button";
-import React, { useState } from "react";
-import { Plus } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { Add, MinusCirlce, Send, Trash } from "iconsax-react";
 import OrderCard from "./components/order-card";
 import SearchBar from "@/components/search-bar/search-bar";
-import { Add, MinusCirlce, Send, Receipt, Edit, Trash } from "iconsax-react"; // Added Trash icon
 import { useCreateOrdersMutation, useUpdateOrdersMutation } from "@/redux/api/order/order.api";
 import { useGetAllMenuItemsQuery } from "@/redux/api/menu/menu.api";
-import { useSelector } from 'react-redux';
-import { selectAuth } from '@/redux/api/auth/auth.slice';
-import { ColorRing } from 'react-loader-spinner';
+import { useSelector } from "react-redux";
+import { selectAuth } from "@/redux/api/auth/auth.slice";
+import { ColorRing } from "react-loader-spinner";
 
 interface MenuItem {
   id: string;
@@ -16,6 +15,9 @@ interface MenuItem {
   description: string;
   price: number;
   status: string;
+  menu: {
+    name: string;
+  };
 }
 
 const Orders = () => {
@@ -25,12 +27,28 @@ const Orders = () => {
   const [tableNumber, setTableNumber] = useState("01");
   const [specialNote, setSpecialNote] = useState("");
   const [createdOrders, setCreatedOrders] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState("All"); // State for active tab
 
   const { subdomain, user } = useSelector(selectAuth);
-
   const { data: menuItems = [], isLoading: isLoadingMenu, error: menuError } = useGetAllMenuItemsQuery({ subdomain });
   const [createOrders, { isLoading: isCreating }] = useCreateOrdersMutation();
   const [updateOrderStatus] = useUpdateOrdersMutation();
+
+  // Categorize menu items by menu.name
+  const categorizeMenuItems = (items) => {
+    const categories = items.reduce((acc, item) => {
+      const category = item.menu?.name || "Other";
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(item);
+      return acc;
+    }, {});
+    return { All: items, ...categories }; // Include "All" tab with all items
+  };
+
+  // Memoize categorized items to avoid recomputing
+  const categorizedItems = useMemo(() => categorizeMenuItems(menuItems), [menuItems]);
 
   const generateDarkColorFromId = (id: string) => {
     if (!id) return "bg-gray-700";
@@ -52,7 +70,6 @@ const Orders = () => {
     });
   };
 
-  // New function to remove an item from the order
   const removeItem = (itemId: string) => {
     setOrder((prev) => {
       const { [itemId]: _, ...rest } = prev;
@@ -186,19 +203,35 @@ const Orders = () => {
 
         {/* Main Content */}
         <div className="flex flex-col gap-6">
+          {/* Tabs for Menu Categories */}
+          <div className="flex flex-wrap gap-2 border-b border-gray-200">
+            {Object.keys(categorizedItems).map((category) => (
+              <Button
+                key={category}
+                variant={activeTab === category ? "default" : "ghost"}
+                className={`text-xs sm:text-sm px-3 py-1 sm:px-4 sm:py-2 transition-all ${
+                  activeTab === category ? "bg-[#05431E] text-white border-b-2 border-[#04391A]" : "text-gray-600 hover:bg-gray-100"
+                }`}
+                onClick={() => setActiveTab(category)}
+              >
+                {category}
+              </Button>
+            ))}
+          </div>
+
           {/* Items Grid */}
           <div>
             <div className="flex justify-between items-center mb-4">
               <h1 className="text-lg sm:text-xl font-bold text-gray-800">Take Order</h1>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-[60vh] sm:max-h-[70vh] overflow-y-auto">
-              {menuItems.map((item: MenuItem) => (
+              {categorizedItems[activeTab].map((item: MenuItem) => (
                 <div
                   key={item.id}
                   className={`p-2 sm:p-3 rounded-lg ${generateDarkColorFromId(item.id)} text-white transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:brightness-110`}
                 >
                   <div className="flex flex-col space-y-1">
-                    <h3 className="text-xs sm:text-sm font-semibold truncate ">{item.name}</h3>
+                    <h3 className="text-xs sm:text-sm font-semibold truncate">{item.name}</h3>
                     <p className="text-[10px] sm:text-xs font-medium">₦{item.price.toLocaleString()}</p>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-1">
@@ -257,7 +290,6 @@ const Orders = () => {
                     </div>
                   </div>
                 ))}
-                {/* Special Note Input */}
                 <div className="mt-3">
                   <textarea
                     value={specialNote}
@@ -354,12 +386,12 @@ const Orders = () => {
                   </li>
                 ))}
               </ul>
-              < button
+              <Button
                 onClick={() => setReceipt(null)}
                 className="mt-4 bg-[#05431E] text-white hover:bg-[#04391A] w-full text-xs sm:text-sm"
               >
                 Close
-              </button>
+              </Button>
             </div>
           </div>
         )}

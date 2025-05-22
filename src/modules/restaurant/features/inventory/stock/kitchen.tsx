@@ -24,6 +24,13 @@ const Kitchen = () => {
   const [counters, setCounters] = useState({});
   const [menuModal, setMenuModal] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [itemToEdit, setItemToEdit] = useState(undefined);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleEditClick = (item) => {
+    setItemToEdit(item);
+    setIsModalOpen(true);
+  };
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
     type: null, // 'menu' or 'menuItem'
@@ -37,7 +44,7 @@ const Kitchen = () => {
   const [deleteMenu, { isLoading: isDeletingMenu }] = useDeleteMenuMutation();
 
   // Debug: Log items to verify data
-  console.log('Menu items:', items);
+  console.log('Menu items:', isModalOpen);
 
   const generateColorFromId = (id) => {
     if (!id) return 'bg-gray-200';
@@ -285,14 +292,36 @@ const Kitchen = () => {
                         <h3 className="font-semibold text-sm text-white drop-shadow-md leading-tight flex-1 pr-2">
                           {item.name}
                         </h3>
-                        <button
-                          onClick={() => openConfirmModal('menuItem', item.id, item.name)}
-                          disabled={isDeletingItem}
-                          className="text-white hover:text-red-300 transition-colors duration-200"
-                          title="Delete Item"
-                        >
-                          <Trash size="20" />
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEditClick(item)}
+                            className="text-white hover:text-blue-300 transition-colors duration-200"
+                            title="Edit Item"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="20"
+                              height="20"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => openConfirmModal('menuItem', item.id, item.name)}
+                            disabled={isDeletingItem}
+                            className="text-white hover:text-red-300 transition-colors duration-200"
+                            title="Delete Item"
+                          >
+                            <Trash size="20" />
+                          </button>
+                        </div>
                       </div>
                       <div className="flex items-center justify-between">
                         <p className="text-lg font-medium text-white drop-shadow-md">
@@ -318,6 +347,9 @@ const Kitchen = () => {
       </Modal>
       <Modal variant="wizard" width="800px" isOpen={modalOpen} onClose={() => setModalOpen(false)}>
         <MenuItemForm subdomain={subdomain} setModalOpen={setModalOpen} />
+      </Modal>
+      <Modal variant="wizard" width="800px" isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <MenuItemForm setModalOpen={() => setIsModalOpen(false)} itemToEdit={itemToEdit} />
       </Modal>
       <Modal isOpen={confirmModal.isOpen} onClose={closeConfirmModal}>
         <div className="p-6">

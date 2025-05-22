@@ -19,7 +19,7 @@ type MenuItemResponse = {
     description?: string;
     price: number;
     status: string;
-    inventoryItems: any[];
+    inventoryItems: { inventoryId: string; quantity: number }[];
 };
 
 type CreateMenuDto = {
@@ -31,6 +31,16 @@ type AddMenuItemDto = {
     description?: string;
     price: number;
     inventoryItems: { inventoryId: string; quantity: number }[];
+};
+
+type BulkEditMenuItemDto = {
+    items: {
+        menuItemId: string;
+        name: string;
+        description?: string;
+        price: number;
+        inventoryItems?: { inventoryId: string; quantity: number }[];
+    }[];
 };
 
 type PrepareMenuItemResponse = {
@@ -45,10 +55,10 @@ export const menuApi = baseApi.injectEndpoints({
             query: (params) => ({
                 url: `/menus/${params.subdomain}`,
                 method: "GET",
-                params: params.search ? { search: params.search } : undefined, // Add search query param if provided
+                params: params.search ? { search: params.search } : undefined,
                 credentials: "include",
             }),
-            providesTags: ["MENU"]
+            providesTags: ["MENU"],
         }),
 
         getMenuItems: builder.query<MenuItemResponse[], { subdomain: string; menuId: string }>({
@@ -57,7 +67,7 @@ export const menuApi = baseApi.injectEndpoints({
                 method: "GET",
                 credentials: "include",
             }),
-            providesTags: ["MENU"]
+            providesTags: ["MENU"],
         }),
 
         getAllMenuItems: builder.query<MenuItemResponse[], { subdomain: string; search?: string }>({
@@ -67,7 +77,7 @@ export const menuApi = baseApi.injectEndpoints({
                 params: params.search ? { search: params.search } : undefined,
                 credentials: "include",
             }),
-            providesTags: ["MENU"]
+            providesTags: ["MENU"],
         }),
 
         createMenu: builder.mutation<MenuResponse, { subdomain: string; data: CreateMenuDto }>({
@@ -77,7 +87,7 @@ export const menuApi = baseApi.injectEndpoints({
                 body: data,
                 credentials: "include",
             }),
-            invalidatesTags: ["MENU"]
+            invalidatesTags: ["MENU"],
         }),
 
         addMenuItem: builder.mutation<
@@ -90,7 +100,20 @@ export const menuApi = baseApi.injectEndpoints({
                 body: data,
                 credentials: "include",
             }),
-            invalidatesTags: ["MENU"]
+            invalidatesTags: ["MENU"],
+        }),
+
+        bulkEditMenuItem: builder.mutation<
+            { message: string; updatedItems: MenuItemResponse[] },
+            { subdomain: string; menuId: string; data: BulkEditMenuItemDto }
+        >({
+            query: ({ subdomain, menuId, data }) => ({
+                url: `/menus/${subdomain}/${menuId}/items/bulk-edit`,
+                method: "POST",
+                body: data,
+                credentials: "include",
+            }),
+            invalidatesTags: ["MENU"],
         }),
 
         prepareMenuItem: builder.mutation<
@@ -104,23 +127,25 @@ export const menuApi = baseApi.injectEndpoints({
                 credentials: "include",
             }),
         }),
+
         deleteMenuItem: builder.mutation<
             { message: string; deletedMenuItemId: string },
             { subdomain: string; menuItemId: string }
         >({
             query: ({ subdomain, menuItemId }) => ({
                 url: `/menus/${subdomain}/items/${menuItemId}`,
-                method: 'DELETE',
-                credentials: 'include',
+                method: "DELETE",
+                credentials: "include",
             }),
-            invalidatesTags: ['MENU'],
+            invalidatesTags: ["MENU"],
         }),
+
         deleteMenu: builder.mutation({
             query: ({ subdomain, menuId }) => ({
                 url: `/menus/${subdomain}/${menuId}`,
-                method: 'DELETE',
+                method: "DELETE",
             }),
-            invalidatesTags: ['MENU', 'MENU'],
+            invalidatesTags: ["MENU"],
         }),
     }),
 });
@@ -131,7 +156,8 @@ export const {
     useGetAllMenuItemsQuery,
     useCreateMenuMutation,
     useAddMenuItemMutation,
+    useBulkEditMenuItemMutation,
     usePrepareMenuItemMutation,
     useDeleteMenuItemMutation,
-    useDeleteMenuMutation
+    useDeleteMenuMutation,
 } = menuApi;
