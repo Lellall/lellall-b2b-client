@@ -6,12 +6,6 @@ const Receipt = ({ orderData, reactToPrintFn }) => {
   const componentRef = useRef();
   console.log(orderData);
 
-  // Calculate total price
-  const totalPrice = orderData.orderItems.reduce(
-    (sum, item) => sum + item.quantity * item.menuItem.price,
-    0
-  );
-
   // Format date
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString('en-US', {
@@ -55,7 +49,6 @@ const Receipt = ({ orderData, reactToPrintFn }) => {
             <p>
               <span className="font-semibold">Status:</span> {orderData.status}
             </p>
-            {/* Add specialNote display */}
             {orderData.specialNote && (
               <p>
                 <span className="font-semibold">Special Note:</span> {orderData.specialNote}
@@ -85,8 +78,14 @@ const Receipt = ({ orderData, reactToPrintFn }) => {
           </table>
           <hr className="border-gray-300 my-1" />
           <div className="text-left">
+            <p>
+              <span className="font-semibold">Subtotal:</span> ₦{orderData.subtotal.toFixed(2)}
+            </p>
+            <p>
+              <span className="font-semibold">VAT (7.5%):</span> ₦{orderData.vatTax.toFixed(2)}
+            </p>
             <p className="font-semibold">
-              Total: ₦{totalPrice.toFixed(2)}
+              <span className="font-semibold">Total:</span> ₦{orderData.total.toFixed(2)}
             </p>
             <p className="mt-1">Thank you for dining with us!</p>
           </div>

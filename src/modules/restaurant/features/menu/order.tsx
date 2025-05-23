@@ -27,14 +27,13 @@ const Orders = () => {
   const [tableNumber, setTableNumber] = useState("01");
   const [specialNote, setSpecialNote] = useState("");
   const [createdOrders, setCreatedOrders] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState("All"); // State for active tab
+  const [activeTab, setActiveTab] = useState("All");
 
   const { subdomain, user } = useSelector(selectAuth);
   const { data: menuItems = [], isLoading: isLoadingMenu, error: menuError } = useGetAllMenuItemsQuery({ subdomain });
   const [createOrders, { isLoading: isCreating }] = useCreateOrdersMutation();
   const [updateOrderStatus] = useUpdateOrdersMutation();
 
-  // Categorize menu items by menu.name
   const categorizeMenuItems = (items) => {
     const categories = items.reduce((acc, item) => {
       const category = item.menu?.name || "Other";
@@ -44,10 +43,9 @@ const Orders = () => {
       acc[category].push(item);
       return acc;
     }, {});
-    return { All: items, ...categories }; // Include "All" tab with all items
+    return { All: items, ...categories };
   };
 
-  // Memoize categorized items to avoid recomputing
   const categorizedItems = useMemo(() => categorizeMenuItems(menuItems), [menuItems]);
 
   const generateDarkColorFromId = (id: string) => {
@@ -79,8 +77,14 @@ const Orders = () => {
 
   const calculateTotal = () => {
     const subtotal = Object.values(order).reduce((acc: number, { quantity, price }: any) => acc + quantity * price, 0);
-    const tax = 100;
-    return { subtotal, tax, total: subtotal + tax };
+    const vatRate = 0.075; // 7.5% VAT
+    const vatTax = subtotal * vatRate;
+    const total = subtotal + vatTax;
+    return {
+      subtotal: Number(subtotal.toFixed(2)),
+      vatTax: Number(vatTax.toFixed(2)),
+      total: Number(total.toFixed(2)),
+    };
   };
 
   const sendOrderToKitchen = async () => {
@@ -95,6 +99,7 @@ const Orders = () => {
 
     try {
       const response = await createOrders({ subdomain, data: orderData }).unwrap();
+      const { subtotal, vatTax, total } = calculateTotal();
       setCreatedOrders((prev) => [
         ...prev,
         {
@@ -102,7 +107,9 @@ const Orders = () => {
           orderNumber: response.id.slice(0, 8),
           items: orderData.items,
           timestamp: new Date().toISOString(),
-          total: calculateTotal().total,
+          subtotal,
+          vatTax,
+          total,
           status: "PENDING",
           specialNote,
         },
@@ -117,17 +124,17 @@ const Orders = () => {
   };
 
   const generateReceipt = () => {
-    const { subtotal, tax, total } = calculateTotal();
+    const { subtotal, vatTax, total } = calculateTotal();
     const receiptData = {
       table: `Table ${tableNumber}`,
       items: Object.entries(order).map(([id, { quantity, price, name }]: [string, any]) => ({
         id,
         name,
         quantity,
-        subtotal: quantity * price,
+        subtotal: Number((quantity * price).toFixed(2)),
       })),
       subtotal,
-      tax,
+      vatTax,
       total,
       date: new Date().toLocaleString(),
       specialNote,
@@ -158,7 +165,7 @@ const Orders = () => {
     );
   }
 
-  const { subtotal, tax, total } = calculateTotal();
+  const { subtotal, vatTax, total } = calculateTotal();
 
   return (
     <div className="min-h-screen p-4 bg-gray-100">
@@ -306,8 +313,8 @@ const Orders = () => {
                   <p className="text-xs sm:text-sm">₦{subtotal.toLocaleString()}</p>
                 </div>
                 <div className="flex justify-between mt-2">
-                  <p className="text-xs sm:text-sm">Tax</p>
-                  <p className="text-xs sm:text-sm">₦{tax.toLocaleString()}</p>
+                  <p className="text-xs sm:text-sm">VAT (7.5%)</p>
+                  <p className="text-xs sm:text-sm">₦{vatTax.toLocaleString()}</p>
                 </div>
                 <div className="mt-3 mb-3 border-t border-[#05431E] border-t-[0.5px] border-dashed" />
                 <div className="flex justify-between">
@@ -336,6 +343,13 @@ const Orders = () => {
                     </>
                   )}
                 </Button>
+                <Button
+                  onClick={generateReceipt}
+                  disabled={!Object.keys(order).length}
+                  className="bg-[#05431E] text-white px-3 py-2 rounded-lg hover:bg-[#04391A] text-xs sm:text-sm transition-all disabled:bg-gray-400"
+                >
+                  Generate Receipt
+                </Button>
               </div>
             </div>
 
@@ -353,7 +367,9 @@ const Orders = () => {
                       qty: item.quantity.toString(),
                       price: `₦${(menuItems.find((i: MenuItem) => i.id === item.menuItemId)?.price * item.quantity).toLocaleString()}`,
                     }))}
-                    subtotal={`₦${(createdOrder.total - 100).toLocaleString()}`}
+                    subtotal={`₦${createdOrder.subtotal.toLocaleString()}`}
+                    vatTax={`₦${createdOrder.vatTax.toLocaleString()}`} // Add VAT to OrderCard
+                    total={`₦${createdOrder.total.toLocaleString()}`}
                     status={createdOrder.status}
                     subdomain={subdomain}
                     id={createdOrder.id}
@@ -386,6 +402,20 @@ const Orders = () => {
                   </li>
                 ))}
               </ul>
+              <div className="border-t border-gray-200 pt-2">
+                <div className="flex justify-between text-[10px] sm:text-sm text-gray-700">
+                  <span>Subtotal</span>
+                  <span>₦{receipt.subtotal.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-[10px] sm:text-sm text-gray-700 mt-1">
+                  <span>VAT (7.5%)</span>
+                  <span>₦{receipt.vatTax.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-[10px] sm:text-sm font-semibold text-gray-800 mt-1">
+                  <span>Total</span>
+                  <span>₦{receipt.total.toLocaleString()}</span>
+                </div>
+              </div>
               <Button
                 onClick={() => setReceipt(null)}
                 className="mt-4 bg-[#05431E] text-white hover:bg-[#04391A] w-full text-xs sm:text-sm"

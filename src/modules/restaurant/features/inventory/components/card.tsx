@@ -1,4 +1,3 @@
-// src/components/CardItem.tsx
 import React, { useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import ReceiptPDF from '../../menu/ReceiptPDF';
@@ -14,6 +13,7 @@ const CardItem = ({ order, expandedOrders, toggleExpand, handleStatusUpdate, han
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [updateOrderItems, { isLoading: isUpdating }] = useUpdateOrderItemsMutation();
+
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
@@ -40,29 +40,38 @@ const CardItem = ({ order, expandedOrders, toggleExpand, handleStatusUpdate, han
   return (
     <div className="bg-white rounded-lg p-3 sm:p-4 flex flex-col hover:bg-gray-50 transition-all duration-300">
       <div className="flex justify-between items-center mb-2">
-        <span className="text-xs sm:text-sm font-semibold text-gray-800">
+        <span className="text-xs sm:text-sm NOT_FOUND sm:text-sm font-semibold text-gray-800">
           #{order.id.substring(0, 6)}
         </span>
         <span
-          className={`text-[10px] sm:text-xs px-2 py-1 rounded-full ${order.status === 'PENDING'
-            ? 'bg-yellow-100 text-yellow-800'
-            : order.status === 'PREPARING'
+          className={`text-[10px] sm:text-xs px-2 py-1 rounded-full ${
+            order.status === 'PENDING'
+              ? 'bg-yellow-100 text-yellow-800'
+              : order.status === 'PREPARING'
               ? 'bg-blue-100 text-blue-800'
               : order.status === 'SERVED'
-                ? 'bg-green-100 text-green-800'
-                : 'bg-red-100 text-red-800'
-            }`}
+              ? 'bg-green-100 text-green-800'
+              : 'bg-red-100 text-red-800'
+          }`}
         >
           {order.status}
         </span>
         <div ref={contentRef}>
-          <ReceiptPDF orderData={order} reactToPrintFn={reactToPrintFn} />
+          <ReceiptPDF
+            orderData={{
+              ...order,
+              subtotal: order.subtotal,
+              vatTax: order.vatTax,
+              total: order.total,
+            }}
+            reactToPrintFn={reactToPrintFn}
+          />
         </div>
       </div>
       <p className="text-[10px] sm:text-xs text-gray-600 mb-2">
         {new Date(order.createdAt).toLocaleString()}
       </p>
-      <div className="text-xs sm:text-sm text-gray-900">
+      <div className="text-xs sm:text-sm sm:text-gray-900">
         <button
           onClick={() => toggleExpand(order.id)}
           className="flex items-center text-[#05431E] hover:underline mb-1 focus:outline-none text-[10px] sm:text-sm"
@@ -105,11 +114,20 @@ const CardItem = ({ order, expandedOrders, toggleExpand, handleStatusUpdate, han
         )}
       </div>
       <div className="mt-3 sm:mt-4">
-        <p className="text-xs sm:text-sm font-semibold text-gray-800">
-          ₦{order.orderItems
-            .reduce((acc, item) => acc + item.menuItem.price * item.quantity, 0)
-            .toLocaleString()}
-        </p>
+        <div className="text-xs sm:text-sm text-gray-800">
+          <div className="flex justify-between">
+            <span>Subtotal</span>
+            <span>₦{order.subtotal.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between mt-1">
+            <span>VAT (7.5%)</span>
+            <span>₦{order.vatTax.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between mt-1 font-semibold">
+            <span>Total</span>
+            <span>₦{order.total.toLocaleString()}</span>
+          </div>
+        </div>
         <select
           value={order.status}
           onChange={(e) => handleStatusUpdate(order.id, e.target.value)}
@@ -123,11 +141,10 @@ const CardItem = ({ order, expandedOrders, toggleExpand, handleStatusUpdate, han
         <div className="flex gap-2 mt-2">
           <button
             onClick={() => setIsEditModalOpen(true)}
-            disabled={isUpdating || order.status !== 'PENDING'} // Optional: Restrict to PENDING
-            className={`flex-1 flex justify-center items-center ${isUpdating || order.status !== 'PENDING'
-              ? 'bg-gray-300'
-              : 'bg-blue-500 hover:bg-blue-600'
-              } text-white rounded-md p-1 text-[10px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            disabled={isUpdating || order.status !== 'PENDING'}
+            className={`flex-1 flex justify-center items-center ${
+              isUpdating || order.status !== 'PENDING' ? 'bg-gray-300' : 'bg-blue-500 hover:bg-blue-600'
+            } text-white rounded-md p-1 text-[10px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-blue-500`}
             aria-label={`Edit order ${order.id}`}
           >
             <Edit size={16} color="#FFFFFF" />
@@ -135,8 +152,9 @@ const CardItem = ({ order, expandedOrders, toggleExpand, handleStatusUpdate, han
           <button
             onClick={() => setIsModalOpen(true)}
             disabled={isDeleting || order.status !== 'PENDING'}
-            className={`flex-1 flex justify-center items-center ${isDeleting || order.status !== 'PENDING' ? 'bg-red-300' : 'bg-red-500 hover:bg-red-600'
-              } text-white rounded-md p-1 text-[10px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-red-500`}
+            className={`flex-1 flex justify-center items-center ${
+              isDeleting || order.status !== 'PENDING' ? 'bg-red-300' : 'bg-red-500 hover:bg-red-600'
+            } text-white rounded-md p-1 text-[10px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-red-500`}
             aria-label={`Delete order ${order.id}`}
           >
             <Trash size={16} color="#FFFFFF" />
