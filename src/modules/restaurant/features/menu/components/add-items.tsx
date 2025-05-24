@@ -6,6 +6,7 @@ import { selectAuth } from '@/redux/api/auth/auth.slice';
 import { useGetMenusQuery, useAddMenuItemMutation, useBulkEditMenuItemMutation } from '@/redux/api/menu/menu.api';
 import { toast } from 'react-toastify';
 import { ColorRing } from 'react-loader-spinner';
+import Select from 'react-select'; // Added import
 
 type MenuItem = {
   id: string;
@@ -22,7 +23,7 @@ type FormData = {
   price: number;
   inventoryItems: { inventoryId: string; quantity: number }[];
   menuId: string;
-  newMenuId: string; // Changed to non-optional for consistency
+  newMenuId: string;
 };
 
 type MenuItemFormProps = {
@@ -52,21 +53,21 @@ const MenuItemForm = ({ setModalOpen, itemToEdit }: MenuItemFormProps) => {
   const { control, handleSubmit, formState: { errors }, reset, setValue } = useForm<FormData>({
     defaultValues: isEditing
       ? {
-          name: itemToEdit.name,
-          description: itemToEdit.description || '',
-          price: itemToEdit.price,
-          inventoryItems: itemToEdit.inventoryItems,
-          menuId: itemToEdit.menuId,
-          newMenuId: itemToEdit.menuId, // Default to current menuId
-        }
+        name: itemToEdit.name,
+        description: itemToEdit.description || '',
+        price: itemToEdit.price,
+        inventoryItems: itemToEdit.inventoryItems,
+        menuId: itemToEdit.menuId,
+        newMenuId: itemToEdit.menuId,
+      }
       : {
-          name: '',
-          description: '',
-          price: 0,
-          inventoryItems: [],
-          menuId: '',
-          newMenuId: '',
-        },
+        name: '',
+        description: '',
+        price: 0,
+        inventoryItems: [],
+        menuId: '',
+        newMenuId: '',
+      },
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -118,7 +119,7 @@ const MenuItemForm = ({ setModalOpen, itemToEdit }: MenuItemFormProps) => {
                 name: data.name,
                 description: data.description,
                 price: Number(data.price),
-                newMenuId: data.newMenuId || undefined, // Send undefined if empty
+                newMenuId: data.newMenuId || undefined,
                 inventoryItems: data.inventoryItems.map(item => ({
                   inventoryId: item.inventoryId,
                   quantity: Number(item.quantity),
@@ -190,9 +191,8 @@ const MenuItemForm = ({ setModalOpen, itemToEdit }: MenuItemFormProps) => {
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
                 <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-                    step === 1 ? 'text-white' : 'bg-gray-200 text-gray-600'
-                  }`}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${step === 1 ? 'text-white' : 'bg-gray-200 text-gray-600'
+                    }`}
                   style={{ backgroundColor: step === 1 ? primaryColor : undefined }}
                 >
                   1
@@ -206,9 +206,8 @@ const MenuItemForm = ({ setModalOpen, itemToEdit }: MenuItemFormProps) => {
               </div>
               <div className="flex items-center gap-2">
                 <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-                    step === 2 ? 'text-white' : 'bg-gray-200 text-gray-600'
-                  }`}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${step === 2 ? 'text-white' : 'bg-gray-200 text-gray-600'
+                    }`}
                   style={{ backgroundColor: step === 2 ? primaryColor : undefined }}
                 >
                   2
@@ -244,9 +243,8 @@ const MenuItemForm = ({ setModalOpen, itemToEdit }: MenuItemFormProps) => {
                       <input
                         {...field}
                         placeholder="e.g., Grilled Chicken"
-                        className={`w-full px-2 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 transition-colors duration-200 ${
-                          errors.name ? 'border-red-400' : 'border-gray-300'
-                        }`}
+                        className={`w-full px-2 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 transition-colors duration-200 ${errors.name ? 'border-red-400' : 'border-gray-300'
+                          }`}
                         style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
                       />
                       {errors.name && <p className="mt-1 text-[10px] text-red-500">{errors.name.message}</p>}
@@ -317,9 +315,8 @@ const MenuItemForm = ({ setModalOpen, itemToEdit }: MenuItemFormProps) => {
                         {...field}
                         placeholder="e.g., Juicy grilled chicken breast"
                         rows={isMobile ? 3 : 2}
-                        className={`w-full px-2 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 transition-colors duration-200 ${
-                          errors.description ? 'border-red-400' : 'border-gray-300'
-                        }`}
+                        className={`w-full px-2 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 transition-colors duration-200 ${errors.description ? 'border-red-400' : 'border-gray-300'
+                          }`}
                         style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
                       />
                       {errors.description && <p className="mt-1 text-[10px] text-red-500">{errors.description.message}</p>}
@@ -341,9 +338,8 @@ const MenuItemForm = ({ setModalOpen, itemToEdit }: MenuItemFormProps) => {
                         type="number"
                         step="0.01"
                         placeholder="e.g., 12.99"
-                        className={`w-full px-2 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 transition-colors duration-200 ${
-                          errors.price ? 'border-red-400' : 'border-gray-300'
-                        }`}
+                        className={`w-full px-2 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 transition-colors duration-200 ${errors.price ? 'border-red-400' : 'border-gray-300'
+                          }`}
                         style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
                         onChange={e => field.onChange(parseFloat(e.target.value))}
                       />
@@ -375,20 +371,102 @@ const MenuItemForm = ({ setModalOpen, itemToEdit }: MenuItemFormProps) => {
                           name={`inventoryItems.${index}.inventoryId`}
                           control={control}
                           rules={{ required: 'Item is required' }}
-                          render={({ field }) => (
-                            <select
-                              {...field}
-                              className={`w-full px-2 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 bg-white border-gray-300 transition-colors duration-200 ${isMobile ? '' : 'flex-1'}`}
-                              style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
-                            >
-                              <option value="">Select item</option>
-                              {inventoryOptions.map(option => (
-                                <option key={option.value} value={option.value} className="text-sm">
-                                  {option.label}
-                                </option>
-                              ))}
-                            </select>
-                          )}
+                          render={({ field }) => {
+                            // Debug logs
+                            console.log('Field value:', field.value);
+                            console.log('Inventory options:', inventoryOptions);
+
+                            // Define option type for TypeScript (if using TypeScript)
+                            type OptionType = { value: string; label: string };
+
+                            // Ensure options include placeholder
+                            const selectOptions: OptionType[] = [
+                              { value: '', label: 'Select item' },
+                              ...inventoryOptions,
+                            ];
+
+                            // Find the selected option or default to placeholder
+                            const selectedValue = selectOptions.find(option => option.value === field.value) || selectOptions[0];
+
+                            return (
+                              <div className="relative w-full">
+                                <Select
+                                  options={selectOptions}
+                                  value={selectedValue}
+                                  onChange={(selectedOption: OptionType | null) => {
+                                    console.log('Selected option:', selectedOption);
+                                    field.onChange(selectedOption ? selectedOption.value : '');
+                                  }}
+                                  placeholder="Select item"
+                                  isSearchable
+                                  isOptionDisabled={(option) => option.value === ''} // Disable placeholder option
+                                  className={`w-full text-sm ${isMobile ? '' : 'flex-1'}`}
+                                  styles={{
+                                    control: (provided) => ({
+                                      ...provided,
+                                      borderColor: errors.inventoryItems?.[index]?.inventoryId ? '#f87171' : '#d1d5db',
+                                      borderRadius: '0.375rem',
+                                      padding: '0.25rem 0.5rem',
+                                      fontSize: '0.875rem',
+                                      lineHeight: '1.25rem',
+                                      boxShadow: 'none',
+                                      minHeight: '38px',
+                                      width: '100%', // Ensure control takes full width
+                                      '&:hover': {
+                                        borderColor: errors.inventoryItems?.[index]?.inventoryId ? '#f87171' : '#9ca3af',
+                                      },
+                                      '&:focus-within': {
+                                        borderColor: primaryColor,
+                                        boxShadow: `0 0 0 2px ${primaryColor}`,
+                                      },
+                                    }),
+                                    menu: (provided) => ({
+                                      ...provided,
+                                      zIndex: 9999,
+                                      width: '100%', // Match control width
+                                      minWidth: '100%', // Ensure minimum width matches control
+                                      maxWidth: '100%', // Prevent menu from exceeding control width
+                                      maxHeight: '200px',
+                                      overflowY: 'auto',
+                                      borderRadius: '0.375rem',
+                                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                                    }),
+                                    option: (provided, state) => ({
+                                      ...provided,
+                                      fontSize: '0.875rem',
+                                      backgroundColor: state.isSelected ? primaryColor : state.isFocused ? '#f3f4f6' : 'white',
+                                      color: state.isSelected ? 'white' : '#1f2937',
+                                      whiteSpace: 'normal', // Allow text wrapping for long labels
+                                      wordBreak: 'break-word', // Break long words
+                                      padding: '8px 12px',
+                                      '&:hover': {
+                                        backgroundColor: state.isSelected ? primaryColor : '#f3f4f6',
+                                      },
+                                    }),
+                                    singleValue: (provided) => ({
+                                      ...provided,
+                                      color: '#1f2937',
+                                      whiteSpace: 'normal', // Allow wrapping in selected value
+                                      wordBreak: 'break-word',
+                                    }),
+                                    placeholder: (provided) => ({
+                                      ...provided,
+                                      color: '#9ca3af',
+                                    }),
+                                    menuPortal: (provided) => ({
+                                      ...provided,
+                                      zIndex: 9999, // Ensure dropdown is above all elements
+                                    }),
+                                  }}
+                                  menuPortalTarget={document.body} // Render dropdown in body to avoid clipping
+                                  menuPlacement="auto" // Adjust placement to prevent off-screen rendering
+                                />
+                                {errors.inventoryItems?.[index]?.inventoryId && (
+                                  <p className="mt-1 text-[10px] text-red-500">{errors.inventoryItems[index].inventoryId.message}</p>
+                                )}
+                              </div>
+                            );
+                          }}
                         />
                         <div className="flex items-center gap-2">
                           <Controller
@@ -420,7 +498,7 @@ const MenuItemForm = ({ setModalOpen, itemToEdit }: MenuItemFormProps) => {
                   </div>
                   <button
                     type="button"
-                    onClick={() => append({ inventoryId: '', quantity: 0.5 })}
+                    onClick={() => append({ inventoryId: '', quantity: 1 })}
                     className="flex items-center gap-1 px-3 py-1 text-sm border rounded-md hover:bg-gray-50 transition-colors"
                     style={{ color: primaryColor, borderColor: primaryColor }}
                   >
@@ -444,9 +522,8 @@ const MenuItemForm = ({ setModalOpen, itemToEdit }: MenuItemFormProps) => {
                   <button
                     type="submit"
                     disabled={isSubmittingAdd || isSubmittingEdit}
-                    className={`px-4 ${isMobile ? 'py-2' : 'py-1.5'} text-sm text-white rounded-md hover:bg-[#043818] focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200 ${
-                      isSubmittingAdd || isSubmittingEdit ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
+                    className={`px-4 ${isMobile ? 'py-2' : 'py-1.5'} text-sm text-white rounded-md hover:bg-[#043818] focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200 ${isSubmittingAdd || isSubmittingEdit ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
                     style={{ backgroundColor: primaryColor, '--tw-ring-color': primaryColor } as React.CSSProperties}
                   >
                     {(isSubmittingAdd || isSubmittingEdit) ? (
