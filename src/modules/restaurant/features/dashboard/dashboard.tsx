@@ -1,4 +1,3 @@
-import React from 'react';
 import styled from 'styled-components';
 import PieChartCard from '@/components/ui/pie-chart-card';
 import SalesBreakdownCard from '@/components/ui/sales-breakdown';
@@ -10,10 +9,13 @@ import {
   useGetInventoryStatsQuery,
 } from '@/redux/api/order/order.api';
 import { useGetReservationByStatsQuery } from '@/redux/api/reservations/reservations.api';
+import { useGetLowStockInventoryQuery } from '@/redux/api/inventory/inventory.api'; // Import the new hook
 import { useSelector } from 'react-redux';
 import { ColorRing } from 'react-loader-spinner';
 import useWindowSize from '@/hooks/use-window-size';
 import DailySalesDashboard from './daily-sales';
+import LowInventoryWarning from '../layout/low-inventory';
+import { useNavigate } from 'react-router-dom';
 
 const DashboardContainer = styled.div`
   padding: 16px;
@@ -69,20 +71,21 @@ const salesTableColumns = [
   },
 ];
 
-const salesTableData = [
-  { orderId: 'ORD001', date: '2025-04-18', amount: 150.75 },
-  { orderId: 'ORD002', date: '2025-04-17', amount: 89.50 },
-  { orderId: 'ORD003', date: '2025-04-16', amount: 200.00 },
-];
 
 const Dashboard = () => {
   const { subdomain } = useSelector(selectAuth);
   const { width } = useWindowSize();
-
+  const navigation = useNavigate()
   const { data: salesStats, isLoading: isSalesLoading } = useGetSalesStatsQuery(subdomain);
   const { data: revenueData, isLoading: isRevenueLoading } = useGetMonthlyRevenueBreakdownQuery(subdomain);
   const { data: inventoryStats, isLoading: isInventoryLoading } = useGetInventoryStatsQuery(subdomain);
   const { data: reservationStats, isLoading: isReservationsLoading } = useGetReservationByStatsQuery(subdomain);
+  // Fetch low stock inventory
+  const { data: lowStockData, isLoading: isLowStockLoading } = useGetLowStockInventoryQuery({
+    subdomain,
+    page: 1,
+    limit: 10, // Fetch a reasonable number of items to check if there are any low stock items
+  });
 
   const monthlyExpensesData = [
     { label: 'Food Items', percentage: 60, color: '#99FF99' },
@@ -106,7 +109,7 @@ const Dashboard = () => {
 
   const salesData = revenueData ?? [];
 
-  const isAnyLoading = isSalesLoading || isRevenueLoading || isInventoryLoading || isReservationsLoading;
+  const isAnyLoading = isSalesLoading || isRevenueLoading || isInventoryLoading || isReservationsLoading || isLowStockLoading;
 
   if (isAnyLoading) {
     return (
@@ -116,11 +119,16 @@ const Dashboard = () => {
     );
   }
 
+  // Check if there are any low stock items
+  const hasLowStockItems = lowStockData?.data?.length > 0;
+
   // Mobile View (for screens < 640px)
   if (width < 640) {
     return (
       <DashboardContainer>
         <MobileViewContainer>
+          {/* Conditionally render LowInventoryWarning */}
+          {hasLowStockItems && <LowInventoryWarning />}
           {/* Sales Cards */}
           <SalesCard
             title="Weekly Sales"
@@ -164,7 +172,7 @@ const Dashboard = () => {
             />
           </PieChartContainer>
           {/* Daily Sales Dashboard */}
-          <DailySalesDashboard subdomain={subdomain}/>
+          <DailySalesDashboard subdomain={subdomain} />
         </MobileViewContainer>
       </DashboardContainer>
     );
@@ -173,6 +181,8 @@ const Dashboard = () => {
   // Default Desktop/Tablet View
   return (
     <DashboardContainer>
+      {/* Conditionally render LowInventoryWarning */}
+      {hasLowStockItems && <LowInventoryWarning navigation={navigation} />}
       <SalesCardGrid>
         <SalesCard
           title="Weekly Sales"

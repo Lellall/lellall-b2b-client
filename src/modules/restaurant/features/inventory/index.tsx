@@ -5,18 +5,27 @@ import StatCard from "./components/stat-card";
 import ProductsTable from "./components/products-table";
 import { NewOrderDialog } from "./components/add-product-dialog";
 import { RequestSupplyDialog } from "./components/request-supply-dialog";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import StockSheet from "./stock/stock-sheet";
 import Kitchen from "./stock/kitchen";
 import Orders from "../menu/order";
 import InventoryComponent from "./inventory";
 import KitchenView from "./stock/view-orders";
+import TemplateList from "./template-list";
+import { useSearchParams } from "react-router-dom";
 
 const Inventory = () => {
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('tab-1');
   const openTab = (tab: string) => {
     setActiveTab(tab);
   };
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam); // ✅ Use string directly
+    }
+  }, [searchParams])
   return (
     <>
       <div className="flex mb-4 border-b border-gray-200">
@@ -44,6 +53,12 @@ const Inventory = () => {
         >
           Inventory
         </button>
+        <button
+          className={`py-2 px-4 text-xs  text-center text-gray-600 hover:text-gray-800 focus:outline-none ${activeTab === 'tab-5' ? 'border-b-2 border-green-900 text-green-900' : ''}`}
+          onClick={() => openTab('tab-5')}
+        >
+          Templates
+        </button>
       </div>
       <div className="pt-4">
         {activeTab === 'tab-1' && <div>
@@ -56,7 +71,10 @@ const Inventory = () => {
           <Kitchen />
         </div>}
         {activeTab === 'tab-4' && <div>
-        <InventoryComponent />
+          <InventoryComponent />
+        </div>}
+        {activeTab === 'tab-5' && <div>
+          <TemplateList />
         </div>}
       </div>
     </>
