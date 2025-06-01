@@ -44,7 +44,7 @@ const MenuItemForm = ({ setModalOpen, itemToEdit }: MenuItemFormProps) => {
   const [addMenuItem, { isLoading: isSubmittingAdd, error: submitAddError }] = useAddMenuItemMutation();
   const [bulkEditMenuItem, { isLoading: isSubmittingEdit, error: submitEditError }] = useBulkEditMenuItemMutation();
   const { data: inventoryData, isLoading: isInventoryLoading, error: inventoryError } = useGetInventoryQuery(
-    { subdomain, page: 1, limit: 50 },
+    { subdomain, page: 1, limit: 500 },
     { skip: !subdomain }
   );
 
