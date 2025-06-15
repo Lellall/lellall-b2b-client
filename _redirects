@@ -1,1 +1,3 @@
 /* /index.html 200
+/api/*  https://api.lellall.com/:splat  200
+/api-b2b/*  https://api-b2b-prod.lellall.com/api/:splat  200
