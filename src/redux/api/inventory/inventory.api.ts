@@ -1,6 +1,24 @@
 import { baseApi } from '../../api/baseApi';
 import { toast } from 'react-toastify';
 import { ErrorHandler } from '@/utils/error-handler';
+import base64 from 'base-64'
+
+export function generateDownloadLinkElement(config: { filename: string; href: string }) {
+  const el = document.createElement("a");
+  el.setAttribute("style", "display:none");
+  el.setAttribute("target", "_blank");
+  el.setAttribute("href", config.href);
+  el.setAttribute("download", config.filename);
+  return el;
+}
+
+export function fileDownloader(data: any, type: string, filename: string) {
+  const blob = new Blob([data], { type });
+  const href = URL.createObjectURL(blob);
+  const a = generateDownloadLinkElement({ filename, href });
+  a.click();
+  URL.revokeObjectURL(href);
+}
 interface LowStockInventoryResponse {
   data: Array<{
     id: string;
@@ -23,6 +41,32 @@ interface LowStockInventoryResponse {
     nextPage: number | null;
     prevPage: number | null;
   };
+}
+
+interface GenerateInvoiceResponse {
+  invoice: {
+    id: string;
+    restaurantId: string;
+    orderId?: string;
+    customerName?: string;
+    customerEmail?: string;
+    totalAmount: number;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    invoiceItems: Array<{
+      id: string;
+      invoiceId: string;
+      itemName: string;
+      description?: string;
+      quantity: number;
+      unitPrice: number;
+      totalPrice: number;
+      createdAt: string;
+      updatedAt: string;
+    }>;
+  };
+  pdfPath: string;
 }
 
 export const inventoryAApi = baseApi.injectEndpoints({
@@ -56,7 +100,7 @@ export const inventoryAApi = baseApi.injectEndpoints({
     }),
     getSupplyRequestById: builder.query({
       query: (params) => ({
-        url: `${params.subdomain}/supply-request/${params.id}`,
+        url: `${params.subdomain}/supply-request/date/${params.date}/restaurant/${params.restaurantId}/user/${params.userId}`,
         method: 'GET',
         credentials: 'include',
       }),
@@ -416,7 +460,6 @@ export const inventoryAApi = baseApi.injectEndpoints({
         }
       },
     }),
-    // New endpoint for low stock inventory
     getLowStockInventory: builder.query<LowStockInventoryResponse, { subdomain: string; page?: number; limit?: number; search?: string }>({
       query: ({ subdomain, page = 1, limit = 10, search }) => ({
         url: `${subdomain}/inventory/low-stock?page=${page}&limit=${limit}${search ? `&search=${encodeURIComponent(search)}` : ''}`,
@@ -434,6 +477,29 @@ export const inventoryAApi = baseApi.injectEndpoints({
         }
       },
     }),
+    generateInvoice: builder.mutation<void, { subdomain: string; data: any }>({
+      query: ({ subdomain, data }) => ({
+        url: `/invoices`,
+        method: 'POST',
+        body: data,
+        responseHandler: async (response) => response.blob(), // get binary blob
+      }),
+      // transformResponse: async (blob: Blob) => {
+      //   const fileURL = URL.createObjectURL(blob);
+
+      //   const link = document.createElement('a');
+      //   link.href = fileURL;
+      //   link.download = 'invoice.pdf'; // optional: use dynamic name
+      //   document.body.appendChild(link);
+      //   link.click();
+      //   document.body.removeChild(link);
+      //   URL.revokeObjectURL(fileURL); // cleanup
+
+      //   return; // mutation returns void
+      // },
+      invalidatesTags: ['INVENTORY'],
+    }),
+
   }),
 });
 
@@ -460,6 +526,7 @@ export const {
   useApplySupplyRequestTemplateMutation,
   useDeleteSupplyRequestTemplateMutation,
   useGetLowStockInventoryQuery,
+  useGenerateInvoiceMutation,
 } = inventoryAApi;
 
 interface ApplySupplyRequestTemplateDto {

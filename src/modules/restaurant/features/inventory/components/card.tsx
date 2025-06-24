@@ -1,18 +1,74 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import ReceiptPDF from '../../menu/ReceiptPDF';
 import { ArrowSquareDown, ArrowSquareUp, Trash, Edit } from 'iconsax-react';
 import ConfirmationModal from './confirmation-modal';
-import { useUpdateOrderItemsMutation } from '@/redux/api/order/order.api';
+import { useGetBankDetailsQuery, useUpdateOrderItemsMutation } from '@/redux/api/order/order.api';
 import EditOrderItemsModal from './edit-modal';
+import { toast } from 'react-toastify';
 
-const CardItem = ({ order, expandedOrders, toggleExpand, handleStatusUpdate, handleDeleteOrder, subdomain }) => {
+// Define TypeScript interfaces for props
+interface Order {
+  id: string;
+  status: 'PENDING' | 'PREPARING' | 'SERVED' | 'CANCELLED';
+  createdAt: string;
+  orderItems: Array<{
+    id: string;
+    quantity: number;
+    menuItem: { name: string; price: number };
+  }>;
+  subtotal: number;
+  vatTax: number;
+  serviceFee: number;
+  total: number;
+  specialNote?: string;
+  waiter?: { firstName: string; lastName: string };
+  restaurantId: string;
+}
+
+interface CardItemProps {
+  order: Order;
+  expandedOrders: string[];
+  toggleExpand: (orderId: string) => void;
+  handleStatusUpdate: (orderId: string, status: string) => void;
+  handleDeleteOrder: (orderId: string) => Promise<void>;
+  subdomain: string;
+  restaurantId: string;
+}
+
+interface CardProps {
+  orders: Order[];
+  expandedOrders: string[];
+  toggleExpand: (orderId: string) => void;
+  handleDeleteOrder: (orderId: string) => Promise<void>;
+  handleStatusUpdate: (orderId: string, status: string) => void;
+  subdomain: string;
+}
+
+const CardItem: React.FC<CardItemProps> = ({
+  order,
+  expandedOrders,
+  toggleExpand,
+  handleStatusUpdate,
+  handleDeleteOrder,
+  subdomain,
+  restaurantId,
+}) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const reactToPrintFn = useReactToPrint({ contentRef });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [updateOrderItems, { isLoading: isUpdating }] = useUpdateOrderItemsMutation();
+  const {
+    data: bankDetails,
+    isLoading: isBankDetailsLoading,
+    error: bankDetailsError,
+    refetch,
+  } = useGetBankDetailsQuery(restaurantId);
+
+  // Log for debugging
+  console.log({ restaurantId, bankDetails, isBankDetailsLoading, bankDetailsError }, 'Bank Details Query');
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -24,23 +80,38 @@ const CardItem = ({ order, expandedOrders, toggleExpand, handleStatusUpdate, han
     }
   };
 
-  const handleEditOrderItems = async (items: { orderItemId: string; quantity?: number; menuItemId?: string }[]) => {
+  const handleEditOrderItems = async (items: { orderItemId?: string; menuItemId: string; quantity: number }[]) => {
     try {
+      console.log('Received items in handleEditOrderItems:', items); // Debug log
       await updateOrderItems({
         subdomain,
         orderId: order.id,
         data: { items },
       }).unwrap();
+      console.log('Order items updated successfully:', items); // Debug log
+      setIsEditModalOpen(false);
+      toast.success('Order items updated successfully', { position: 'top-right' });
     } catch (err) {
       console.error('Failed to update order items:', err);
+      toast.error('Failed to update order items', { position: 'top-right' });
       throw err;
     }
   };
 
+  // Handle loading and error states
+  if (isBankDetailsLoading) {
+    return <div className="text-xs sm:text-sm text-gray-600">Loading bank details...</div>;
+  }
+
+  if (bankDetailsError) {
+    console.error('Error fetching bank details:', bankDetailsError);
+    return <div className="text-xs sm:text-sm text-red-600">Error loading bank details</div>;
+  }
+
   return (
     <div className="bg-white rounded-lg p-3 sm:p-4 flex flex-col hover:bg-gray-50 transition-all duration-300">
       <div className="flex justify-between items-center mb-2">
-        <span className="text-xs sm:text-sm NOT_FOUND sm:text-sm font-semibold text-gray-800">
+        <span className="text-xs sm:text-sm font-semibold text-gray-800">
           #{order.id.substring(0, 6)}
         </span>
         <span
@@ -56,22 +127,27 @@ const CardItem = ({ order, expandedOrders, toggleExpand, handleStatusUpdate, han
         >
           {order.status}
         </span>
-        <div ref={contentRef}>
-          <ReceiptPDF
-            orderData={{
-              ...order,
-              subtotal: order.subtotal,
-              vatTax: order.vatTax,
-              total: order.total,
-            }}
-            reactToPrintFn={reactToPrintFn}
-          />
-        </div>
+        {/* Only render ReceiptPDF if bankDetails is available */}
+        {!isBankDetailsLoading && (
+          <div ref={contentRef}>
+            <ReceiptPDF
+              orderData={{
+                ...order,
+                subtotal: order.subtotal,
+                vatTax: order.vatTax,
+                serviceFee: order.serviceFee,
+                total: order.total,
+              }}
+              reactToPrintFn={reactToPrintFn}
+              bankDetails={bankDetails}
+            />
+          </div>
+        )}
       </div>
       <p className="text-[10px] sm:text-xs text-gray-600 mb-2">
         {new Date(order.createdAt).toLocaleString()}
       </p>
-      <div className="text-xs sm:text-sm sm:text-gray-900">
+      <div className="text-xs sm:text-sm text-gray-900">
         <button
           onClick={() => toggleExpand(order.id)}
           className="flex items-center text-[#05431E] hover:underline mb-1 focus:outline-none text-[10px] sm:text-sm"
@@ -115,13 +191,17 @@ const CardItem = ({ order, expandedOrders, toggleExpand, handleStatusUpdate, han
       </div>
       <div className="mt-3 sm:mt-4">
         <div className="text-xs sm:text-sm text-gray-800">
-          <div className="flex justify-between">
+          <div className="flex justify-between text-xs">
             <span>Subtotal</span>
             <span>₦{order.subtotal.toLocaleString()}</span>
           </div>
-          <div className="flex justify-between mt-1">
+          <div className="flex justify-between mt-1 text-xs">
             <span>VAT (7.5%)</span>
             <span>₦{order.vatTax.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between mt-1 text-xs">
+            <span>Service Fee (10%)</span>
+            <span>₦{order.serviceFee.toLocaleString()}</span>
           </div>
           <div className="flex justify-between mt-1 font-semibold">
             <span>Total</span>
@@ -179,7 +259,14 @@ const CardItem = ({ order, expandedOrders, toggleExpand, handleStatusUpdate, han
   );
 };
 
-const Card = ({ orders, expandedOrders, toggleExpand, handleStatusUpdate, handleDeleteOrder, subdomain }) => {
+const Card: React.FC<CardProps> = ({
+  orders,
+  expandedOrders,
+  toggleExpand,
+  handleDeleteOrder,
+  handleStatusUpdate,
+  subdomain,
+}) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
       {orders.map((order) => (
@@ -191,6 +278,7 @@ const Card = ({ orders, expandedOrders, toggleExpand, handleStatusUpdate, handle
           handleStatusUpdate={handleStatusUpdate}
           handleDeleteOrder={handleDeleteOrder}
           subdomain={subdomain}
+          restaurantId={order.restaurantId}
         />
       ))}
     </div>

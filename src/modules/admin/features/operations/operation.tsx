@@ -70,6 +70,22 @@ const Operation = () => {
       sortable: true,
       render: (_, row) => row.status,
     },
+    {
+      key: 'actions',
+      label: 'Actions',
+      sortable: true,
+      render: (_, row) => (
+        <button
+          className="flex block w-full text-left px-4 py-2 hover:bg-gray-100"
+          onClick={() => navigation(`/operations/${row.date}/${row.restaurantId}`)}
+        >
+          <div className="mt-1 mr-1">
+            <Eye size="15" color={theme.colors.active} />
+          </div>
+          View
+        </button>
+      )
+    },
   ];
 
   // Handle row click to navigate to detailed view

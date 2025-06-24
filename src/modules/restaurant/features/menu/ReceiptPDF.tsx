@@ -1,10 +1,11 @@
 import React, { useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Receipt as Btn } from 'iconsax-react';
+import { useGetBankDetailsQuery } from '@/redux/api/order/order.api';
 
-const Receipt = ({ orderData, reactToPrintFn }) => {
-  const componentRef = useRef();
-  console.log(orderData);
+const Receipt = ({ orderData, reactToPrintFn, bankDetails }) => {
+  const componentRef = useRef<HTMLDivElement>(null);
+  // const { data: bankDetails, isLoading: isBankDetailsLoading, error: bankDetailsError } = useGetBankDetailsQuery(restaurantId);
 
   // Format date
   const formatDate = (dateString) => {
@@ -38,13 +39,28 @@ const Receipt = ({ orderData, reactToPrintFn }) => {
       >
         <div className="w-full p-3 bg-white font-sans text-xs leading-tight">
           <h2 className="text-sm font-bold text-center mb-2">Payment Receipt</h2>
+          {/* Bank Details Section */}
+          {/* {isBankDetailsLoading ? (
+            <p className="text-center text-gray-500">Loading bank details...</p>
+          ) : bankDetailsError ? (
+            <p className="text-center text-red-500">Bank details unavailable</p>
+          ) : bankDetails ? (
+            
+          ) : null} */}
+          <div className="mb-2 text-center">
+            <p className="font-semibold">Bank Details</p>
+            <p>Bank Name: {bankDetails?.bankName}</p>
+            <p>Account Number: {bankDetails?.accountNumber}</p>
+            <p>Account Name: {bankDetails?.accountName}</p>
+          </div>
+          <hr className="border-gray-300 my-1" />
           <div className="mb-2">
             <p>
               <span className="font-semibold">Date:</span> {formatDate(orderData.createdAt)}
             </p>
             <p>
-              <span className="font-semibold">Waiter:</span> {orderData.waiter.firstName}{' '}
-              {orderData.waiter.lastName}
+              <span className="font-semibold">Waiter:</span> {orderData.waiter?.firstName || 'N/A'}{' '}
+              {orderData.waiter?.lastName || ''}
             </p>
             <p>
               <span className="font-semibold">Status:</span> {orderData.status}

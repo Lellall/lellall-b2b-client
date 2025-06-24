@@ -176,6 +176,23 @@ export const orderApi = baseApi.injectEndpoints({
         }
       },
     }),
+    getBankDetails: builder.query({
+      query: (id: string) => ({
+        url: `/restaurants/${id}/bank-details`,
+        method: "GET",
+        credentials: "include",
+      }),
+      async onQueryStarted(_args, { queryFulfilled }) {
+        try {
+          await queryFulfilled;
+        } catch (err) {
+          console.error("Failed to fetch bank details:", err);
+          toast.error("Failed to fetch bank details", { position: "top-right" });
+        }
+      },
+      providesTags: ["MENU"],
+      transformResponse: (response) => response,
+    }),
   }),
 });
 
@@ -194,5 +211,6 @@ export const {
   useGetStockStatsQuery,
   useGetDailySalesRevenueQuery,
   useGetDailySoldItemsQuery,
-  useUpdateOrderItemsMutation
+  useUpdateOrderItemsMutation,
+  useGetBankDetailsQuery
 } = orderApi;

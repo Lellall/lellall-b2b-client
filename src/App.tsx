@@ -105,7 +105,7 @@ const App = () => {
       <Route path="shops" element={<AdminShops />} />
       <Route path="settings" element={<AdminSettings />} /> */}
       <Route path="operations" element={<Operations />} />
-      <Route path="operations/:id" element={<ViewOrderOperations />} />
+      <Route path="operations/:date/:id" element={<ViewOrderOperations />} />
     </>
   );
 

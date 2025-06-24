@@ -15,8 +15,10 @@ type ListCardProps = {
   showSearch?: boolean;
   showDelete?: boolean;
   headerBgColor?: string;
+  selectedItems?: Item[]; // Prop to receive selected items from parent
   onDelete?: (name: string) => void;
-  onSelect?: (item: Item) => void; // New prop for item selection
+  onSelect?: (item: Item) => void; // Callback for item selection
+  onToggleAll?: () => void; // Callback for selecting all items
 };
 
 const ListCard: React.FC<ListCardProps> = ({
@@ -25,29 +27,22 @@ const ListCard: React.FC<ListCardProps> = ({
   showSearch = false,
   showDelete = false,
   headerBgColor = 'bg-green-900',
+  selectedItems = [], // Default to empty array
   onDelete,
   onSelect,
+  onToggleAll,
 }) => {
   const [search, setSearch] = useState<string>('');
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
   const toggleItem = (item: Item) => {
     if (onSelect) {
-      // If onSelect is provided, call it instead of managing internal state
-      onSelect(item);
-    } else {
-      // Fallback to internal selection state (for cases where onSelect is not used)
-      setSelectedItems((prev) =>
-        prev.includes(item.name) ? prev.filter((name) => name !== item.name) : [...prev, item.name]
-      );
+      onSelect(item); // Delegate selection/deselection to parent
     }
   };
 
-  const toggleAll = () => {
-    if (selectedItems.length === items.length) {
-      setSelectedItems([]);
-    } else {
-      setSelectedItems(items.map((item) => item.name));
+  const handleToggleAll = () => {
+    if (onToggleAll) {
+      onToggleAll(); // Call parent to select all items
     }
   };
 
@@ -73,8 +68,8 @@ const ListCard: React.FC<ListCardProps> = ({
         </div>
       )}
       <div className="divide-y max-h-60 overflow-y-auto">
-        {!showDelete && !onSelect && (
-          <div className="p-3 flex items-center gap-3 cursor-pointer" onClick={toggleAll}>
+        {!showDelete && (
+          <div className="p-3 flex items-center gap-3 cursor-pointer" onClick={handleToggleAll}>
             <Checkbox checked={selectedItems.length === items.length} />
             <span>All Items</span>
           </div>
@@ -91,7 +86,7 @@ const ListCard: React.FC<ListCardProps> = ({
                 />
               ) : (
                 <Checkbox
-                  checked={selectedItems.includes(item.name)}
+                  checked={selectedItems.some((selected) => selected.name === item.name)}
                   onClick={() => toggleItem(item)}
                 />
               )}

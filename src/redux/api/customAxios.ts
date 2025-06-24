@@ -38,7 +38,8 @@ const endpointsRequiringToken = [
   "user-stats",
   "units",
   "^/restaurants/user/[a-fA-F0-9-]{36}$",
-  "^/subscription-plans/pay/[a-fA-F0-9-]{36}$"
+  "^/subscription-plans/pay/[a-fA-F0-9-]{36}$",
+  "bank-details"
 ];
 
 const endpointsWithoutToken = ["/auth/login", "/auth/register", "/auth/refresh-token"];

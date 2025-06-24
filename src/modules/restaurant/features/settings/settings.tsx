@@ -129,7 +129,7 @@ const Settings = () => {
                   {user.firstName} {user.lastName}
                 </div>
                 <div className="text-xs sm:text-sm font-light text-green-800">
-                  {user.role === "ADMIN" ? "Manager" : "Super Administrator"}
+                  {user.role}
                 </div>
               </div>
             </div>

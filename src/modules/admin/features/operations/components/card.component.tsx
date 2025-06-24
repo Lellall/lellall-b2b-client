@@ -15,6 +15,8 @@ interface CardProps {
     email: string;
     address: string;
     status: "Pending" | "Completed" | "Cancelled";
+    setIsModalOpen: any;
+    selectedItems: any
 }
 
 const OrderCard: React.FC<CardProps> = ({
@@ -27,6 +29,8 @@ const OrderCard: React.FC<CardProps> = ({
     email,
     address,
     status,
+    setIsModalOpen,
+    selectedItems
 }) => {
     const statusColors = {
         Pending: "bg-yellow-500",
@@ -41,8 +45,15 @@ const OrderCard: React.FC<CardProps> = ({
                     <span className="text-black text-sm">{restaurantName}</span>
                     <p className="text-gray-500 text-sm font-light mb-1 mt-1">{customerType}</p>
                 </div>
-                <button className="bg-orange-400 flex p-2 rounded-lg text-xs text-white" >
-                    • {status} <div className="ml-1 mt-1"><IoChevronDownSharp /></div>
+                <button
+                    onClick={() => setIsModalOpen(true)}
+                    disabled={selectedItems.length === 0}
+                    className={`px-4 py-2 rounded ${selectedItems.length === 0
+                        ? 'bg-gray-300 cursor-not-allowed'
+                        : 'bg-green-600 text-white hover:bg-green-700'
+                        }`}
+                >
+                    Generate Invoice
                 </button>
             </div>
             <div className="grid grid-cols-4 gap-4">
@@ -56,7 +67,7 @@ const OrderCard: React.FC<CardProps> = ({
                 </div>
                 <div className="flex flex-col">
                     <span className="text-black text-sm flex">{agentName} <div className="ml-1 mt-1"><IoChevronDownSharp /></div></span>
-                    <p className="text-gray-500 text-sm font-light mb-1 mt-1">Agent Assigned </p>
+                    <p className="text-gray-500 text-sm font-light mb-1 mt-1">Approved By </p>
                 </div>
             </div>
             <div className="flex justify-start gap-6 mt-4">

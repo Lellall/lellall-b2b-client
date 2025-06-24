@@ -11,6 +11,7 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
   WAITER: [
     { to: '/menu', icon: Element2, text: 'Menu' },
     { to: '/settings', icon: Setting, text: 'Settings' },
+    { to: '/inventory', icon: ArchiveBox, text: 'Inventory & Stock' },
   ],
   ADMIN: [
     { to: '/', icon: Home, text: 'Dashboard', end: true },
@@ -23,6 +24,7 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
     { to: '/verify-payment', icon: null, text: '' },
   ],
   MANAGER: [
+    { to: '/', icon: Home, text: 'Dashboard', end: true },
     { to: '/menu', icon: Element2, text: 'Menu' },
     { to: '/inventory', icon: ArchiveBox, text: 'Inventory & Stock' },
     { to: '/reservations', icon: Calendar2, text: 'Reservations' },
