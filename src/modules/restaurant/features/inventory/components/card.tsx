@@ -196,11 +196,11 @@ const CardItem: React.FC<CardItemProps> = ({
             <span>₦{order.subtotal.toLocaleString()}</span>
           </div>
           <div className="flex justify-between mt-1 text-xs">
-            <span>VAT (7.5%)</span>
+            <span>VAT</span>
             <span>₦{order.vatTax.toLocaleString()}</span>
           </div>
           <div className="flex justify-between mt-1 text-xs">
-            <span>Service Fee (10%)</span>
+            <span>Service Fee</span>
             <span>₦{order.serviceFee.toLocaleString()}</span>
           </div>
           <div className="flex justify-between mt-1 font-semibold">

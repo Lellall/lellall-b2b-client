@@ -98,7 +98,10 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails }) => {
               <span className="font-semibold">Subtotal:</span> ₦{orderData.subtotal.toFixed(2)}
             </p>
             <p>
-              <span className="font-semibold">VAT (7.5%):</span> ₦{orderData.vatTax.toFixed(2)}
+              <span className="font-semibold">VAT:</span> ₦{orderData.vatTax.toFixed(2)}
+            </p>
+            <p>
+              <span className="font-semibold">Service Fee:</span> ₦{orderData.serviceFee.toFixed(2)}
             </p>
             <p className="font-semibold">
               <span className="font-semibold">Total:</span> ₦{orderData.total.toFixed(2)}

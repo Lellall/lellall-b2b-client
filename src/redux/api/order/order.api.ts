@@ -193,6 +193,33 @@ export const orderApi = baseApi.injectEndpoints({
       providesTags: ["MENU"],
       transformResponse: (response) => response,
     }),
+    downloadDailySoldItemsCsv: builder.query<string, { subdomain: string; date: string }>({
+      query: ({ subdomain, date }) => ({
+        url: `/orders/${subdomain}/daily-sold-items/${date}?format=csv`,
+        method: 'GET',
+        credentials: 'include',
+        responseHandler: (response) => response.text(),
+      }),
+      async onQueryStarted(_args, { queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `daily-sold-items-${_args.subdomain}-${_args.date}.csv`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        } catch (err) {
+          console.error('Failed to download CSV:', err);
+          toast.error('Failed to download CSV', { position: 'top-right' });
+          throw err;
+        }
+      },
+      providesTags: ['MENU'],
+    }),
   }),
 });
 
@@ -212,5 +239,6 @@ export const {
   useGetDailySalesRevenueQuery,
   useGetDailySoldItemsQuery,
   useUpdateOrderItemsMutation,
-  useGetBankDetailsQuery
+  useGetBankDetailsQuery,
+  useLazyDownloadDailySoldItemsCsvQuery
 } = orderApi;
