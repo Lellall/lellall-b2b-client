@@ -24,6 +24,7 @@ interface Order {
   specialNote?: string;
   waiter?: { firstName: string; lastName: string };
   restaurantId: string;
+  paymentType?: string; // Add paymentType to Order interface
 }
 
 interface CardItemProps {
@@ -137,9 +138,11 @@ const CardItem: React.FC<CardItemProps> = ({
                 vatTax: order.vatTax,
                 serviceFee: order.serviceFee,
                 total: order.total,
+                paymentType: order.paymentType, // Include paymentType in ReceiptPDF
               }}
               reactToPrintFn={reactToPrintFn}
               bankDetails={bankDetails}
+              subdomain={subdomain}
             />
           </div>
         )}
@@ -147,6 +150,11 @@ const CardItem: React.FC<CardItemProps> = ({
       <p className="text-[10px] sm:text-xs text-gray-600 mb-2">
         {new Date(order.createdAt).toLocaleString()}
       </p>
+      {order.paymentType && (
+        <p className="text-[10px] sm:text-xs text-gray-600 mb-2">
+          Payment Type: {order.paymentType}
+        </p>
+      )}
       <div className="text-xs sm:text-sm text-gray-900">
         <button
           onClick={() => toggleExpand(order.id)}

@@ -3,7 +3,7 @@ import { useReactToPrint } from 'react-to-print';
 import { Receipt as Btn } from 'iconsax-react';
 import { useGetBankDetailsQuery } from '@/redux/api/order/order.api';
 
-const Receipt = ({ orderData, reactToPrintFn, bankDetails }) => {
+const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain }) => {
   const componentRef = useRef<HTMLDivElement>(null);
   // const { data: bankDetails, isLoading: isBankDetailsLoading, error: bankDetailsError } = useGetBankDetailsQuery(restaurantId);
 
@@ -38,7 +38,20 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails }) => {
         className="invisible h-0 w-0 overflow-hidden print:visible print:h-auto print:w-full"
       >
         <div className="w-full p-3 bg-white font-sans text-xs leading-tight">
-          <h2 className="text-sm font-bold text-center mb-2">Payment Receipt</h2>
+          <div className="w-full p-3 bg-white font-sans text-xs leading-tight">
+            <div className="text-center mb-4">
+              <div className="inline-block">
+                <h1 className="text-[30px] font-extrabold tracking-widest leading-tight italic" style={{ fontFamily: 'Arial, sans-serif', color: '#000000' }}>
+                  {subdomain}'s
+                </h1>
+                <p className="text-[10px] font-semibold tracking-[0.15em] text-black">
+                  RESTAURANT
+                </p>
+              </div>
+            </div>
+          </div>
+
+
           {/* Bank Details Section */}
           {/* {isBankDetailsLoading ? (
             <p className="text-center text-gray-500">Loading bank details...</p>
@@ -47,11 +60,12 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails }) => {
           ) : bankDetails ? (
             
           ) : null} */}
-          <div className="mb-2 text-center">
+          <div className="mb-2 text-right">
             <p className="font-semibold">Bank Details</p>
             <p>Bank Name: {bankDetails?.bankName}</p>
             <p>Account Number: {bankDetails?.accountNumber}</p>
             <p>Account Name: {bankDetails?.accountName}</p>
+            <p>Payment Type: {orderData.paymentType}</p>
           </div>
           <hr className="border-gray-300 my-1" />
           <div className="mb-2">

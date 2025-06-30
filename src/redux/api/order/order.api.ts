@@ -107,38 +107,6 @@ export const orderApi = baseApi.injectEndpoints({
       }),
       providesTags: ["MENU", "INVENTORY"],
     }),
-    getDailySalesRevenue: builder.query({
-      query: ({ subdomain, date }: { subdomain: string; date: string }) => ({
-        url: `/orders/${subdomain}/daily-revenue/${date}`,
-        method: "GET",
-        credentials: "include",
-      }),
-      async onQueryStarted(_args, { queryFulfilled }) {
-        try {
-          await queryFulfilled;
-        } catch (err) {
-          console.error("Failed to fetch daily sales revenue:", err);
-          toast.error("Failed to fetch daily sales revenue", { position: "top-right" });
-        }
-      },
-      providesTags: ["MENU"],
-    }),
-    getDailySoldItems: builder.query({
-      query: ({ subdomain, date }: { subdomain: string; date: string }) => ({
-        url: `/orders/${subdomain}/daily-sold-items/${date}`,
-        method: "GET",
-        credentials: "include",
-      }),
-      async onQueryStarted(_args, { queryFulfilled }) {
-        try {
-          await queryFulfilled;
-        } catch (err) {
-          console.error("Failed to fetch daily sold items:", err);
-          toast.error("Failed to fetch daily sold items", { position: "top-right" });
-        }
-      },
-      providesTags: ["MENU"],
-    }),
     deleteOrder: builder.mutation({
       query: ({ subdomain, orderId }) => ({
         url: `/orders/${subdomain}/${orderId}`,
@@ -193,21 +161,108 @@ export const orderApi = baseApi.injectEndpoints({
       providesTags: ["MENU"],
       transformResponse: (response) => response,
     }),
-    downloadDailySoldItemsCsv: builder.query<string, { subdomain: string; date: string }>({
-      query: ({ subdomain, date }) => ({
-        url: `/orders/${subdomain}/daily-sold-items/${date}?format=csv`,
-        method: 'GET',
-        credentials: 'include',
-        responseHandler: (response) => response.text(),
-      }),
+    getDailySalesRevenue: builder.query<
+      { startDate: string; endDate: string; timeRange: string; revenue: string },
+      { subdomain: string; startDate: string; endDate?: string; startTime?: string; endTime?: string }
+    >({
+      query: ({ subdomain, startDate, endDate, startTime, endTime }) => {
+        if (!startDate || isNaN(new Date(startDate).getTime())) {
+          throw new Error('Invalid start date');
+        }
+
+        const queryParams = new URLSearchParams();
+        if (startTime) queryParams.set('startTime', startTime);
+        if (endTime) queryParams.set('endTime', endTime);
+
+        const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+
+        return {
+          url: `/orders/${subdomain}/daily-revenue/${startDate}${endDate ? `/${endDate}` : ''}${queryString}`,
+          method: "GET",
+          credentials: "include",
+        };
+      },
       async onQueryStarted(_args, { queryFulfilled }) {
+        try {
+          await queryFulfilled;
+        } catch (err) {
+          console.error("Failed to fetch daily sales revenue:", err);
+          toast.error("Failed to fetch daily sales revenue", { position: "top-right" });
+        }
+      },
+      providesTags: ["MENU"],
+    }),
+
+    getDailySoldItems: builder.query<
+      {
+        startDate: string;
+        endDate: string;
+        timeRange: string;
+        items: { name: string; quantity: number; total: string }[];
+      },
+      { subdomain: string; startDate: string; endDate?: string; startTime?: string; endTime?: string }
+    >({
+      query: ({ subdomain, startDate, endDate, startTime, endTime }) => {
+        if (!startDate || isNaN(new Date(startDate).getTime())) {
+          throw new Error('Invalid start date');
+        }
+
+        const queryParams = new URLSearchParams();
+        if (startTime) queryParams.set('startTime', startTime);
+        if (endTime) queryParams.set('endTime', endTime);
+        queryParams.set('format', 'json');
+
+        return {
+          url: `/orders/${subdomain}/daily-sold-items/${startDate}${endDate ? `/${endDate}` : ''}?${queryParams.toString()}`,
+          method: 'GET',
+          credentials: 'include',
+        };
+      },
+      async onQueryStarted(_args, { queryFulfilled }) {
+        try {
+          await queryFulfilled;
+        } catch (err) {
+          console.error('Failed to fetch daily sold items:', err);
+          toast.error('Failed to fetch daily sold items', { position: 'top-right' });
+        }
+      },
+      providesTags: ['MENU'],
+    }),
+
+    downloadDailySoldItemsCsv: builder.query<
+      string,
+      { subdomain: string; startDate: string; endDate?: string; startTime?: string; endTime?: string }
+    >({
+      query: ({ subdomain, startDate, endDate, startTime, endTime }) => {
+        if (!startDate || isNaN(new Date(startDate).getTime())) {
+          throw new Error('Invalid start date');
+        }
+
+        const queryParams = new URLSearchParams();
+        queryParams.set('format', 'csv');
+        if (startTime) queryParams.set('startTime', startTime);
+        if (endTime) queryParams.set('endTime', endTime);
+
+        return {
+          url: `/orders/${subdomain}/daily-sold-items/${startDate}${endDate ? `/${endDate}` : ''}?${queryParams.toString()}`,
+          method: 'GET',
+          credentials: 'include',
+          responseHandler: (response) => response.text(),
+        };
+      },
+      async onQueryStarted({ subdomain, startDate, endDate, startTime, endTime }, { queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
           const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
           const url = window.URL.createObjectURL(blob);
           const link = document.createElement('a');
+
+          const safeEndDate = endDate || new Date(new Date(startDate).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          const timeSuffix = startTime && endTime ? `_${startTime}-${endTime}` : '';
+
           link.href = url;
-          link.download = `daily-sold-items-${_args.subdomain}-${_args.date}.csv`;
+          link.download = `sold-items-${subdomain}-${startDate}_to_${safeEndDate}${timeSuffix}.csv`;
+
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
@@ -215,7 +270,6 @@ export const orderApi = baseApi.injectEndpoints({
         } catch (err) {
           console.error('Failed to download CSV:', err);
           toast.error('Failed to download CSV', { position: 'top-right' });
-          throw err;
         }
       },
       providesTags: ['MENU'],

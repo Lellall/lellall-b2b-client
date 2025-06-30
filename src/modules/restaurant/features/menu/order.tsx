@@ -26,6 +26,7 @@ const Orders = () => {
   const [receipt, setReceipt] = useState(null);
   const [tableNumber, setTableNumber] = useState("01");
   const [specialNote, setSpecialNote] = useState("");
+  const [paymentType, setPaymentType] = useState<string | null>(null); // State for paymentType
   const [createdOrders, setCreatedOrders] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("All");
 
@@ -78,16 +79,24 @@ const Orders = () => {
   const calculateTotal = () => {
     const subtotal = Object.values(order).reduce((acc: number, { quantity, price }: any) => acc + quantity * price, 0);
     const vatRate = 0.075; // 7.5% VAT
+    const serviceFeeRate = 0.10; // 10% service fee
     const vatTax = subtotal * vatRate;
-    const total = subtotal + vatTax;
+    const serviceFee = subtotal * serviceFeeRate;
+    const total = subtotal + vatTax + serviceFee;
     return {
       subtotal: Number(subtotal.toFixed(2)),
       vatTax: Number(vatTax.toFixed(2)),
+      serviceFee: Number(serviceFee.toFixed(2)),
       total: Number(total.toFixed(2)),
     };
   };
 
   const sendOrderToKitchen = async () => {
+    if (!paymentType) {
+      alert("Please select a payment type.");
+      return;
+    }
+
     const orderData = {
       waiterId: user?.id,
       items: Object.entries(order).map(([id, { quantity }]: [string, any]) => ({
@@ -95,11 +104,12 @@ const Orders = () => {
         quantity,
       })),
       specialNote,
+      paymentType, // Include paymentType in the payload
     };
 
     try {
       const response = await createOrders({ subdomain, data: orderData }).unwrap();
-      const { subtotal, vatTax, total } = calculateTotal();
+      const { subtotal, vatTax, serviceFee, total } = calculateTotal();
       setCreatedOrders((prev) => [
         ...prev,
         {
@@ -109,14 +119,17 @@ const Orders = () => {
           timestamp: new Date().toISOString(),
           subtotal,
           vatTax,
+          serviceFee,
           total,
           status: "PENDING",
           specialNote,
+          paymentType, // Include paymentType in createdOrders
         },
       ]);
       setOrderSent(true);
       setOrder({});
       setSpecialNote("");
+      setPaymentType(null); // Reset paymentType after submission
     } catch (error) {
       console.error("Failed to send order:", error);
       alert("Failed to send order. Try again.");
@@ -124,7 +137,7 @@ const Orders = () => {
   };
 
   const generateReceipt = () => {
-    const { subtotal, vatTax, total } = calculateTotal();
+    const { subtotal, vatTax, serviceFee, total } = calculateTotal();
     const receiptData = {
       table: `Table ${tableNumber}`,
       items: Object.entries(order).map(([id, { quantity, price, name }]: [string, any]) => ({
@@ -135,9 +148,11 @@ const Orders = () => {
       })),
       subtotal,
       vatTax,
+      serviceFee,
       total,
       date: new Date().toLocaleString(),
       specialNote,
+      paymentType, // Include paymentType in receipt
     };
     setReceipt(receiptData);
   };
@@ -165,49 +180,11 @@ const Orders = () => {
     );
   }
 
-  const { subtotal, vatTax, total } = calculateTotal();
+  const { subtotal, vatTax, serviceFee, total } = calculateTotal();
 
   return (
     <div className="min-h-screen p-4 bg-gray-100">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header Section */}
-        <div className="flex flex-col gap-4 mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <SearchBar
-              placeholder="Search Items"
-              width="300px"
-              height="42px"
-              border="1px solid #fff"
-              borderRadius="10px"
-              backgroundColor="#ffffff"
-              shadow={false}
-              fontSize="11px"
-              color="#444"
-              inputPadding="10px"
-              placeholderColor="#bbb"
-              iconColor="#ccc"
-              iconSize={15}
-            />
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant="default"
-                className="bg-[#05431E] text-white hover:bg-[#04391A] text-xs sm:text-sm px-3 py-1 sm:px-4 sm:py-2"
-              >
-                All
-              </Button>
-              <Button variant="ghost" className="text-xs sm:text-sm px-3 py-1 sm:px-4 sm:py-2">
-                In Process
-              </Button>
-              <Button variant="ghost" className="text-xs sm:text-sm px-3 py-1 sm:px-4 sm:py-2">
-                Completed
-              </Button>
-              <Button variant="ghost" className="text-xs sm:text-sm px-3 py-1 sm:px-4 sm:py-2">
-                Cancelled
-              </Button>
-            </div>
-          </div>
-        </div>
-
         {/* Main Content */}
         <div className="flex flex-col gap-6">
           {/* Tabs for Menu Categories */}
@@ -216,9 +193,8 @@ const Orders = () => {
               <Button
                 key={category}
                 variant={activeTab === category ? "default" : "ghost"}
-                className={`text-xs sm:text-sm px-3 py-1 sm:px-4 sm:py-2 transition-all ${
-                  activeTab === category ? "bg-[#05431E] text-white border-b-2 border-[#04391A]" : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`text-xs sm:text-sm px-3 py-1 sm:px-4 sm:py-2 transition-all ${activeTab === category ? "bg-[#05431E] text-white border-b-2 border-[#04391A]" : "text-gray-600 hover:bg-gray-100"
+                  }`}
                 onClick={() => setActiveTab(category)}
               >
                 {category}
@@ -316,6 +292,10 @@ const Orders = () => {
                   <p className="text-xs sm:text-sm">VAT (7.5%)</p>
                   <p className="text-xs sm:text-sm">₦{vatTax.toLocaleString()}</p>
                 </div>
+                <div className="flex justify-between mt-2">
+                  <p className="text-xs sm:text-sm">Service Fee (10%)</p>
+                  <p className="text-xs sm:text-sm">₦{serviceFee.toLocaleString()}</p>
+                </div>
                 <div className="mt-3 mb-3 border-t border-[#05431E] border-t-[0.5px] border-dashed" />
                 <div className="flex justify-between">
                   <p className="text-xs sm:text-sm font-semibold">Total</p>
@@ -325,7 +305,7 @@ const Orders = () => {
               <div className="flex my-4 sm:my-5 flex-col sm:flex-row justify-between gap-2">
                 <Button
                   onClick={sendOrderToKitchen}
-                  disabled={!Object.keys(order).length || isCreating}
+                  disabled={!Object.keys(order).length || isCreating || !paymentType}
                   className="flex items-center bg-[#05431E] text-white px-3 py-2 rounded-lg hover:bg-[#04391A] text-xs sm:text-sm transition-all disabled:bg-gray-400 justify-center"
                 >
                   {isCreating ? (
@@ -343,13 +323,23 @@ const Orders = () => {
                     </>
                   )}
                 </Button>
-                <Button
-                  onClick={generateReceipt}
-                  disabled={!Object.keys(order).length}
-                  className="bg-[#05431E] text-white px-3 py-2 rounded-lg hover:bg-[#04391A] text-xs sm:text-sm transition-all disabled:bg-gray-400"
-                >
-                  Generate Receipt
-                </Button>
+                <div className="mb-3 w-1/2">
+                  <label htmlFor="paymentType" className="text-xs sm:text-sm font-medium text-gray-700 mr-2">
+                    Select Payment Type:
+                  </label>
+                  <select
+                    id="paymentType"
+                    value={paymentType || ""}
+                    onChange={(e) => setPaymentType(e.target.value || null)}
+                    className="w-1/2 p-2 rounded-lg bg-[#FAFBFF] text-[10px] sm:text-xs border border-gray-200 focus:outline-none focus:border-[#05431E]"
+                  >
+                    <option value="">Select Payment Type</option>
+                    <option value="CASH">Cash</option>
+                    <option value="TRANSFER">Transfer</option>
+                    <option value="CARD">Card</option>
+                    <option value="ONLINE">Online</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -368,12 +358,14 @@ const Orders = () => {
                       price: `₦${(menuItems.find((i: MenuItem) => i.id === item.menuItemId)?.price * item.quantity).toLocaleString()}`,
                     }))}
                     subtotal={`₦${createdOrder.subtotal.toLocaleString()}`}
-                    vatTax={`₦${createdOrder.vatTax.toLocaleString()}`} // Add VAT to OrderCard
+                    vatTax={`₦${createdOrder.vatTax.toLocaleString()}`}
+                    serviceFee={`₦${createdOrder.serviceFee.toLocaleString()}`}
                     total={`₦${createdOrder.total.toLocaleString()}`}
                     status={createdOrder.status}
                     subdomain={subdomain}
                     id={createdOrder.id}
                     specialNote={createdOrder.specialNote}
+                    paymentType={createdOrder.paymentType} // Pass paymentType to OrderCard
                   />
                 ))}
               </div>
@@ -390,6 +382,9 @@ const Orders = () => {
               <p className="text-[10px] sm:text-xs text-gray-600 mb-2">{receipt.table}</p>
               {receipt.specialNote && (
                 <p className="text-[10px] sm:text-xs text-gray-600 mb-2">Note: {receipt.specialNote}</p>
+              )}
+              {receipt.paymentType && (
+                <p className="text-[10px] sm:text-xs text-gray-600 mb-2">Payment Type: {receipt.paymentType}</p>
               )}
               <ul className="space-y-1 mb-2 max-h-32 sm:max-h-40 overflow-y-auto">
                 {receipt.items.map((item: any) => (
@@ -410,6 +405,10 @@ const Orders = () => {
                 <div className="flex justify-between text-[10px] sm:text-sm text-gray-700 mt-1">
                   <span>VAT (7.5%)</span>
                   <span>₦{receipt.vatTax.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-[10px] sm:text-sm text-gray-700 mt-1">
+                  <span>Service Fee (10%)</span>
+                  <span>₦{receipt.serviceFee.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-[10px] sm:text-sm font-semibold text-gray-800 mt-1">
                   <span>Total</span>
