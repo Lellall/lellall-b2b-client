@@ -5,9 +5,6 @@ import { useGetBankDetailsQuery } from '@/redux/api/order/order.api';
 
 const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain }) => {
   const componentRef = useRef<HTMLDivElement>(null);
-  // const { data: bankDetails, isLoading: isBankDetailsLoading, error: bankDetailsError } = useGetBankDetailsQuery(restaurantId);
-
-  // Format date
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString('en-US', {
       dateStyle: 'medium',
@@ -17,7 +14,6 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain }) => {
 
   return (
     <div>
-      {/* Inline style tag to ensure the media query is applied */}
       <style>
         {`
           @media print {
@@ -38,28 +34,16 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain }) => {
         className="invisible h-0 w-0 overflow-hidden print:visible print:h-auto print:w-full"
       >
         <div className="w-full p-3 bg-white font-sans text-xs leading-tight">
-          <div className="w-full p-3 bg-white font-sans text-xs leading-tight">
-            <div className="text-center mb-4">
-              <div className="inline-block">
-                <h1 className="text-[30px] font-extrabold tracking-widest leading-tight italic" style={{ fontFamily: 'Arial, sans-serif', color: '#000000' }}>
-                  {subdomain}'s
-                </h1>
-                <p className="text-[10px] font-semibold tracking-[0.15em] text-black">
-                  RESTAURANT
-                </p>
-              </div>
+          <div className="text-center mb-4">
+            <div className="inline-block">
+              <h1 className="text-[30px] font-extrabold tracking-widest leading-tight italic" style={{ fontFamily: 'Arial, sans-serif', color: '#000000' }}>
+                {subdomain}'s
+              </h1>
+              <p className="text-[10px] font-semibold tracking-[0.15em] text-black">
+                RESTAURANT
+              </p>
             </div>
           </div>
-
-
-          {/* Bank Details Section */}
-          {/* {isBankDetailsLoading ? (
-            <p className="text-center text-gray-500">Loading bank details...</p>
-          ) : bankDetailsError ? (
-            <p className="text-center text-red-500">Bank details unavailable</p>
-          ) : bankDetails ? (
-            
-          ) : null} */}
           <div className="mb-2 text-right">
             <p className="font-semibold">Bank Details</p>
             <p>Bank Name: {bankDetails?.bankName}</p>
@@ -114,9 +98,11 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain }) => {
             <p>
               <span className="font-semibold">VAT:</span> ₦{orderData.vatTax.toFixed(2)}
             </p>
-            <p>
-              <span className="font-semibold">Service Fee:</span> ₦{orderData.serviceFee.toFixed(2)}
-            </p>
+            {subdomain !== "355" && (
+              <p>
+                <span className="font-semibold">Service Fee:</span> ₦{orderData.serviceFee.toFixed(2)}
+              </p>
+            )}
             <p className="font-semibold">
               <span className="font-semibold">Total:</span> ₦{orderData.total.toFixed(2)}
             </p>

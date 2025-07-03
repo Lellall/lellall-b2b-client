@@ -7,7 +7,6 @@ import { useGetBankDetailsQuery, useUpdateOrderItemsMutation } from '@/redux/api
 import EditOrderItemsModal from './edit-modal';
 import { toast } from 'react-toastify';
 
-// Define TypeScript interfaces for props
 interface Order {
   id: string;
   status: 'PENDING' | 'PREPARING' | 'SERVED' | 'CANCELLED';
@@ -24,7 +23,7 @@ interface Order {
   specialNote?: string;
   waiter?: { firstName: string; lastName: string };
   restaurantId: string;
-  paymentType?: string; // Add paymentType to Order interface
+  paymentType?: string;
 }
 
 interface CardItemProps {
@@ -68,7 +67,6 @@ const CardItem: React.FC<CardItemProps> = ({
     refetch,
   } = useGetBankDetailsQuery(restaurantId);
 
-  // Log for debugging
   console.log({ restaurantId, bankDetails, isBankDetailsLoading, bankDetailsError }, 'Bank Details Query');
 
   const handleDelete = async () => {
@@ -83,13 +81,13 @@ const CardItem: React.FC<CardItemProps> = ({
 
   const handleEditOrderItems = async (items: { orderItemId?: string; menuItemId: string; quantity: number }[]) => {
     try {
-      console.log('Received items in handleEditOrderItems:', items); // Debug log
+      console.log('Received items in handleEditOrderItems:', items);
       await updateOrderItems({
         subdomain,
         orderId: order.id,
         data: { items },
       }).unwrap();
-      console.log('Order items updated successfully:', items); // Debug log
+      console.log('Order items updated successfully:', items);
       setIsEditModalOpen(false);
       toast.success('Order items updated successfully', { position: 'top-right' });
     } catch (err) {
@@ -99,7 +97,6 @@ const CardItem: React.FC<CardItemProps> = ({
     }
   };
 
-  // Handle loading and error states
   if (isBankDetailsLoading) {
     return <div className="text-xs sm:text-sm text-gray-600">Loading bank details...</div>;
   }
@@ -128,7 +125,6 @@ const CardItem: React.FC<CardItemProps> = ({
         >
           {order.status}
         </span>
-        {/* Only render ReceiptPDF if bankDetails is available */}
         {!isBankDetailsLoading && (
           <div ref={contentRef}>
             <ReceiptPDF
@@ -138,7 +134,7 @@ const CardItem: React.FC<CardItemProps> = ({
                 vatTax: order.vatTax,
                 serviceFee: order.serviceFee,
                 total: order.total,
-                paymentType: order.paymentType, // Include paymentType in ReceiptPDF
+                paymentType: order.paymentType,
               }}
               reactToPrintFn={reactToPrintFn}
               bankDetails={bankDetails}
@@ -207,10 +203,12 @@ const CardItem: React.FC<CardItemProps> = ({
             <span>VAT</span>
             <span>₦{order.vatTax.toLocaleString()}</span>
           </div>
-          <div className="flex justify-between mt-1 text-xs">
-            <span>Service Fee</span>
-            <span>₦{order.serviceFee.toLocaleString()}</span>
-          </div>
+          {subdomain !== "355" && (
+            <div className="flex justify-between mt-1 text-xs">
+              <span>Service Fee</span>
+              <span>₦{order.serviceFee.toLocaleString()}</span>
+            </div>
+          )}
           <div className="flex justify-between mt-1 font-semibold">
             <span>Total</span>
             <span>₦{order.total.toLocaleString()}</span>

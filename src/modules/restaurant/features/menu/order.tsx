@@ -26,7 +26,7 @@ const Orders = () => {
   const [receipt, setReceipt] = useState(null);
   const [tableNumber, setTableNumber] = useState("01");
   const [specialNote, setSpecialNote] = useState("");
-  const [paymentType, setPaymentType] = useState<string | null>(null); // State for paymentType
+  const [paymentType, setPaymentType] = useState<string | null>(null);
   const [createdOrders, setCreatedOrders] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("All");
 
@@ -79,9 +79,9 @@ const Orders = () => {
   const calculateTotal = () => {
     const subtotal = Object.values(order).reduce((acc: number, { quantity, price }: any) => acc + quantity * price, 0);
     const vatRate = 0.075; // 7.5% VAT
-    const serviceFeeRate = 0.10; // 10% service fee
+    const serviceFeeRate = subdomain === "355" ? 0 : 0.10; // 0% service fee for subdomain 355
     const vatTax = subtotal * vatRate;
-    const serviceFee = subtotal * serviceFeeRate;
+    const serviceFee = subdomain === "355" ? 0 : subtotal * serviceFeeRate;
     const total = subtotal + vatTax + serviceFee;
     return {
       subtotal: Number(subtotal.toFixed(2)),
@@ -104,7 +104,7 @@ const Orders = () => {
         quantity,
       })),
       specialNote,
-      paymentType, // Include paymentType in the payload
+      paymentType,
     };
 
     try {
@@ -123,13 +123,13 @@ const Orders = () => {
           total,
           status: "PENDING",
           specialNote,
-          paymentType, // Include paymentType in createdOrders
+          paymentType,
         },
       ]);
       setOrderSent(true);
       setOrder({});
       setSpecialNote("");
-      setPaymentType(null); // Reset paymentType after submission
+      setPaymentType(null);
     } catch (error) {
       console.error("Failed to send order:", error);
       alert("Failed to send order. Try again.");
@@ -152,7 +152,7 @@ const Orders = () => {
       total,
       date: new Date().toLocaleString(),
       specialNote,
-      paymentType, // Include paymentType in receipt
+      paymentType,
     };
     setReceipt(receiptData);
   };
@@ -185,24 +185,19 @@ const Orders = () => {
   return (
     <div className="min-h-screen p-4 bg-gray-100">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Main Content */}
         <div className="flex flex-col gap-6">
-          {/* Tabs for Menu Categories */}
           <div className="flex flex-wrap gap-2 border-b border-gray-200">
             {Object.keys(categorizedItems).map((category) => (
               <Button
                 key={category}
                 variant={activeTab === category ? "default" : "ghost"}
-                className={`text-xs sm:text-sm px-3 py-1 sm:px-4 sm:py-2 transition-all ${activeTab === category ? "bg-[#05431E] text-white border-b-2 border-[#04391A]" : "text-gray-600 hover:bg-gray-100"
-                  }`}
+                className={`text-xs sm:text-sm px-3 py-1 sm:px-4 sm:py-2 transition-all ${activeTab === category ? "bg-[#05431E] text-white border-b-2 border-[#04391A]" : "text-gray-600 hover:bg-gray-100"}`}
                 onClick={() => setActiveTab(category)}
               >
                 {category}
               </Button>
             ))}
           </div>
-
-          {/* Items Grid */}
           <div>
             <div className="flex justify-between items-center mb-4">
               <h1 className="text-lg sm:text-xl font-bold text-gray-800">Take Order</h1>
@@ -242,10 +237,7 @@ const Orders = () => {
               ))}
             </div>
           </div>
-
-          {/* Order Summary & Created Orders */}
           <div className="space-y-6">
-            {/* Current Order Summary */}
             <div className="bg-white p-4 rounded-lg h-[80vh] sm:h-[70vh] flex flex-col">
               <div className="flex-1 overflow-y-auto mb-3">
                 {Object.entries(order).map(([id, { quantity, price, name }]: [string, any], index) => (
@@ -278,7 +270,7 @@ const Orders = () => {
                     value={specialNote}
                     onChange={(e) => setSpecialNote(e.target.value)}
                     placeholder="Add special note (e.g., no onions, extra sauce)"
-                    className="w-full p-2 rounded-lg bg-[#FAFBFF] text-[10px] sm:text-xs border border-gray-200 focus:outline-none focus:border-[#05431E]"
+                    className="w-full p-2 rounded-lg bg-[#FAFBFF] text-[10px] Helvetica, sans-serif sm:text-xs border border-gray-200 focus:outline-none focus:border-[#05431E]"
                     rows={3}
                   />
                 </div>
@@ -292,10 +284,12 @@ const Orders = () => {
                   <p className="text-xs sm:text-sm">VAT (7.5%)</p>
                   <p className="text-xs sm:text-sm">₦{vatTax.toLocaleString()}</p>
                 </div>
-                <div className="flex justify-between mt-2">
-                  <p className="text-xs sm:text-sm">Service Fee (10%)</p>
-                  <p className="text-xs sm:text-sm">₦{serviceFee.toLocaleString()}</p>
-                </div>
+                {/* {subdomain !== "355" && (
+                  <div className="flex justify-between mt-2">
+                    <p className="text-xs sm:text-sm">Service Fee (10%)</p>
+                    <p className="text-xs sm:text-sm">₦{serviceFee.toLocaleString()}</p>
+                  </div>
+                )} */}
                 <div className="mt-3 mb-3 border-t border-[#05431E] border-t-[0.5px] border-dashed" />
                 <div className="flex justify-between">
                   <p className="text-xs sm:text-sm font-semibold">Total</p>
@@ -342,8 +336,6 @@ const Orders = () => {
                 </div>
               </div>
             </div>
-
-            {/* Created Orders Display */}
             {createdOrders.length > 0 && (
               <div className="space-y-4">
                 {createdOrders.map((createdOrder) => (
@@ -359,21 +351,19 @@ const Orders = () => {
                     }))}
                     subtotal={`₦${createdOrder.subtotal.toLocaleString()}`}
                     vatTax={`₦${createdOrder.vatTax.toLocaleString()}`}
-                    serviceFee={`₦${createdOrder.serviceFee.toLocaleString()}`}
+                    serviceFee={subdomain !== "355" ? `₦${createdOrder.serviceFee.toLocaleString()}` : undefined}
                     total={`₦${createdOrder.total.toLocaleString()}`}
                     status={createdOrder.status}
                     subdomain={subdomain}
                     id={createdOrder.id}
                     specialNote={createdOrder.specialNote}
-                    paymentType={createdOrder.paymentType} // Pass paymentType to OrderCard
+                    paymentType={createdOrder.paymentType}
                   />
                 ))}
               </div>
             )}
           </div>
         </div>
-
-        {/* Receipt Modal */}
         {receipt && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1100]">
             <div className="bg-white p-4 rounded-lg w-full max-w-[90%] sm:max-w-[400px]">
@@ -406,10 +396,12 @@ const Orders = () => {
                   <span>VAT (7.5%)</span>
                   <span>₦{receipt.vatTax.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-[10px] sm:text-sm text-gray-700 mt-1">
-                  <span>Service Fee (10%)</span>
-                  <span>₦{receipt.serviceFee.toLocaleString()}</span>
-                </div>
+                {subdomain !== "355" && (
+                  <div className="flex justify-between text-[10px] sm:text-sm text-gray-700 mt-1">
+                    <span>Service Fee (10%)</span>
+                    <span>₦{receipt.serviceFee.toLocaleString()}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-[10px] sm:text-sm font-semibold text-gray-800 mt-1">
                   <span>Total</span>
                   <span>₦{receipt.total.toLocaleString()}</span>
