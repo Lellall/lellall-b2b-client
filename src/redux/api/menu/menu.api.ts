@@ -19,6 +19,7 @@ type MenuItemResponse = {
     description?: string;
     price: number;
     status: string;
+    tags?: string[];
     inventoryItems: { inventoryId: string; quantity: number }[];
 };
 
@@ -80,6 +81,25 @@ export const menuApi = baseApi.injectEndpoints({
             providesTags: ["MENU"],
         }),
 
+        getAllTags: builder.query<string[], { subdomain: string }>({
+            query: (params) => ({
+                url: `/menus/${params.subdomain}/tags`,
+                method: "GET",
+                credentials: "include",
+            }),
+            providesTags: ["MENU"],
+        }),
+
+        getMenuItemsByTag: builder.query<MenuItemResponse[], { subdomain: string; tag: string }>({
+            query: (params) => ({
+                url: `/menus/${params.subdomain}/items/by-tag/${params.tag}`,
+                method: "GET",
+                credentials: "include",
+            }),
+            providesTags: ["MENU"],
+        }),
+
+        // Mutations
         createMenu: builder.mutation<MenuResponse, { subdomain: string; data: CreateMenuDto }>({
             query: ({ subdomain, data }) => ({
                 url: `/menus/${subdomain}`,
@@ -154,6 +174,8 @@ export const {
     useGetMenusQuery,
     useGetMenuItemsQuery,
     useGetAllMenuItemsQuery,
+    useGetAllTagsQuery,
+    useGetMenuItemsByTagQuery,
     useCreateMenuMutation,
     useAddMenuItemMutation,
     useBulkEditMenuItemMutation,

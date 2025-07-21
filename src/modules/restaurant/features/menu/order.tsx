@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Add, MinusCirlce, Send, Trash } from "iconsax-react";
 import OrderCard from "./components/order-card";
+import PreReceipt from "./pre-receipt";
 import SearchBar from "@/components/search-bar/search-bar";
 import { useCreateOrdersMutation, useUpdateOrdersMutation } from "@/redux/api/order/order.api";
-import { useGetAllMenuItemsQuery } from "@/redux/api/menu/menu.api";
+import { useGetAllMenuItemsQuery, useGetAllTagsQuery, useGetMenuItemsByTagQuery } from "@/redux/api/menu/menu.api";
 import { useSelector } from "react-redux";
 import { selectAuth } from "@/redux/api/auth/auth.slice";
 import { ColorRing } from "react-loader-spinner";
@@ -15,9 +16,7 @@ interface MenuItem {
   description: string;
   price: number;
   status: string;
-  menu: {
-    name: string;
-  };
+  tags: string[];
 }
 
 const Orders = () => {
@@ -26,28 +25,38 @@ const Orders = () => {
   const [receipt, setReceipt] = useState(null);
   const [tableNumber, setTableNumber] = useState("01");
   const [specialNote, setSpecialNote] = useState("");
-  const [paymentType, setPaymentType] = useState<string | null>(null);
   const [createdOrders, setCreatedOrders] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("All");
 
   const { subdomain, user } = useSelector(selectAuth);
   const { data: menuItems = [], isLoading: isLoadingMenu, error: menuError } = useGetAllMenuItemsQuery({ subdomain });
+  const { data: tags = [], isLoading: isLoadingTags, error: tagsError } = useGetAllTagsQuery({ subdomain });
+  const { data: taggedItems = [], isLoading: isLoadingTaggedItems, error: taggedItemsError } = useGetMenuItemsByTagQuery(
+    { subdomain, tag: activeTab },
+    { skip: activeTab === "All" }
+  );
   const [createOrders, { isLoading: isCreating }] = useCreateOrdersMutation();
   const [updateOrderStatus] = useUpdateOrdersMutation();
 
-  const categorizeMenuItems = (items) => {
-    const categories = items.reduce((acc, item) => {
-      const category = item.menu?.name || "Other";
-      if (!acc[category]) {
-        acc[category] = [];
-      }
-      acc[category].push(item);
-      return acc;
-    }, {});
-    return { All: items, ...categories };
-  };
+  const displayedItems = useMemo(() => {
+    if (activeTab === "All") {
+      return menuItems;
+    }
+    return taggedItems;
+  }, [menuItems, taggedItems, activeTab]);
 
-  const categorizedItems = useMemo(() => categorizeMenuItems(menuItems), [menuItems]);
+  useEffect(() => {
+    if (activeTab === "All") {
+      return;
+    }
+    setOrder((prev) => {
+      const validItemIds = new Set(taggedItems.map((item: MenuItem) => item.id));
+      const filteredOrder = Object.fromEntries(
+        Object.entries(prev).filter(([itemId]) => validItemIds.has(itemId))
+      );
+      return filteredOrder;
+    });
+  }, [activeTab, taggedItems]);
 
   const generateDarkColorFromId = (id: string) => {
     if (!id) return "bg-gray-700";
@@ -78,8 +87,8 @@ const Orders = () => {
 
   const calculateTotal = () => {
     const subtotal = Object.values(order).reduce((acc: number, { quantity, price }: any) => acc + quantity * price, 0);
-    const vatRate = 0.075; // 7.5% VAT
-    const serviceFeeRate = subdomain === "355" ? 0 : 0.10; // 0% service fee for subdomain 355
+    const vatRate = 0.075;
+    const serviceFeeRate = subdomain === "355" ? 0 : 0.10;
     const vatTax = subtotal * vatRate;
     const serviceFee = subdomain === "355" ? 0 : subtotal * serviceFeeRate;
     const total = subtotal + vatTax + serviceFee;
@@ -92,11 +101,6 @@ const Orders = () => {
   };
 
   const sendOrderToKitchen = async () => {
-    if (!paymentType) {
-      alert("Please select a payment type.");
-      return;
-    }
-
     const orderData = {
       waiterId: user?.id,
       items: Object.entries(order).map(([id, { quantity }]: [string, any]) => ({
@@ -104,7 +108,7 @@ const Orders = () => {
         quantity,
       })),
       specialNote,
-      paymentType,
+      paymentType: null,
     };
 
     try {
@@ -123,13 +127,12 @@ const Orders = () => {
           total,
           status: "PENDING",
           specialNote,
-          paymentType,
+          paymentType: null,
         },
       ]);
       setOrderSent(true);
       setOrder({});
       setSpecialNote("");
-      setPaymentType(null);
     } catch (error) {
       console.error("Failed to send order:", error);
       alert("Failed to send order. Try again.");
@@ -152,12 +155,16 @@ const Orders = () => {
       total,
       date: new Date().toLocaleString(),
       specialNote,
-      paymentType,
     };
     setReceipt(receiptData);
   };
 
-  if (isLoadingMenu) {
+  const getButtonText = () => {
+    if (activeTab === "All") return "Send to Kitchen";
+    return `Send to ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}`;
+  };
+
+  if (isLoadingMenu || isLoadingTags) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <ColorRing
@@ -172,10 +179,10 @@ const Orders = () => {
     );
   }
 
-  if (menuError) {
+  if (menuError || tagsError || taggedItemsError) {
     return (
       <div className="min-h-screen bg-gray-100 p-4 flex items-center justify-center text-red-500">
-        Error loading menu items: {JSON.stringify(menuError)}
+        Error loading data: {JSON.stringify(menuError || tagsError || taggedItemsError)}
       </div>
     );
   }
@@ -187,14 +194,14 @@ const Orders = () => {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col gap-6">
           <div className="flex flex-wrap gap-2 border-b border-gray-200">
-            {Object.keys(categorizedItems).map((category) => (
+            {["All", ...tags].map((tag) => (
               <Button
-                key={category}
-                variant={activeTab === category ? "default" : "ghost"}
-                className={`text-xs sm:text-sm px-3 py-1 sm:px-4 sm:py-2 transition-all ${activeTab === category ? "bg-[#05431E] text-white border-b-2 border-[#04391A]" : "text-gray-600 hover:bg-gray-100"}`}
-                onClick={() => setActiveTab(category)}
+                key={tag}
+                variant={activeTab === tag ? "default" : "ghost"}
+                className={`text-xs sm:text-sm px-3 py-1 sm:px-4 sm:py-2 transition-all ${activeTab === tag ? "bg-[#05431E] text-white border-b-2 border-[#04391A]" : "text-gray-600 hover:bg-gray-100"}`}
+                onClick={() => setActiveTab(tag)}
               >
-                {category}
+                {tag}
               </Button>
             ))}
           </div>
@@ -202,40 +209,57 @@ const Orders = () => {
             <div className="flex justify-between items-center mb-4">
               <h1 className="text-lg sm:text-xl font-bold text-gray-800">Take Order</h1>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-[60vh] sm:max-h-[70vh] overflow-y-auto">
-              {categorizedItems[activeTab].map((item: MenuItem) => (
-                <div
-                  key={item.id}
-                  className={`p-2 sm:p-3 rounded-lg ${generateDarkColorFromId(item.id)} text-white transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:brightness-110`}
-                >
-                  <div className="flex flex-col space-y-1">
-                    <h3 className="text-xs sm:text-sm font-semibold truncate">{item.name}</h3>
-                    <p className="text-[10px] sm:text-xs font-medium">₦{item.price.toLocaleString()}</p>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-1">
-                        <button
-                          onClick={() => updateQuantity(item.id, -1)}
-                          className="bg-white bg-opacity-20 p-1 rounded-full hover:bg-opacity-30 w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center"
-                          aria-label={`Decrease quantity of ${item.name}`}
-                        >
-                          <MinusCirlce size={12} className="sm:w-4 sm:h-4" />
-                        </button>
-                        <span className="text-xs sm:text-sm font-medium w-5 sm:w-6 text-center">
-                          {order[item.id]?.quantity || 0}
-                        </span>
-                        <button
-                          onClick={() => updateQuantity(item.id, 1)}
-                          className="bg-white bg-opacity-20 p-1 rounded-full hover:bg-opacity-30 w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center"
-                          aria-label={`Increase quantity of ${item.name}`}
-                        >
-                          <Add size={12} className="sm:w-4 sm:h-4" />
-                        </button>
+            {isLoadingTaggedItems && activeTab !== "All" ? (
+              <div className="flex items-center justify-center">
+                <ColorRing
+                  height="80"
+                  width="80"
+                  radius="9"
+                  color="#05431E"
+                  ariaLabel="three-dots-loading"
+                  visible={true}
+                />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-[60vh] sm:max-h-[70vh] overflow-y-auto">
+                {displayedItems?.length > 0 ? (
+                  displayedItems.map((item: MenuItem) => (
+                    <div
+                      key={item.id}
+                      className={`p-2 sm:p-3 rounded-lg ${generateDarkColorFromId(item.id)} text-white transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:brightness-110`}
+                    >
+                      <div className="flex flex-col space-y-1">
+                        <h3 className="text-xs sm:text-sm font-semibold truncate">{item.name}</h3>
+                        <p className="text-[10px] sm:text-xs font-medium">₦{item.price.toLocaleString()}</p>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-1">
+                            <button
+                              onClick={() => updateQuantity(item.id, -1)}
+                              className="bg-white bg-opacity-20 p-1 rounded-full hover:bg-opacity-30 w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center"
+                              aria-label={`Decrease quantity of ${item.name}`}
+                            >
+                              <MinusCirlce size={12} className="sm:w-4 sm:h-4" />
+                            </button>
+                            <span className="text-xs sm:text-sm font-medium w-5 sm:w-6 text-center">
+                              {order[item.id]?.quantity || 0}
+                            </span>
+                            <button
+                              onClick={() => updateQuantity(item.id, 1)}
+                              className="bg-white bg-opacity-20 p-1 rounded-full hover:bg-opacity-30 w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center"
+                              aria-label={`Increase quantity of ${item.name}`}
+                            >
+                              <Add size={12} className="sm:w-4 sm:h-4" />
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  ))
+                ) : (
+                  <p className="text-gray-600">No items available for this tag.</p>
+                )}
+              </div>
+            )}
           </div>
           <div className="space-y-6">
             <div className="bg-white p-4 rounded-lg h-[80vh] sm:h-[70vh] flex flex-col">
@@ -270,11 +294,19 @@ const Orders = () => {
                     value={specialNote}
                     onChange={(e) => setSpecialNote(e.target.value)}
                     placeholder="Add special note (e.g., no onions, extra sauce)"
-                    className="w-full p-2 rounded-lg bg-[#FAFBFF] text-[10px] Helvetica, sans-serif sm:text-xs border border-gray-200 focus:outline-none focus:border-[#05431E]"
+                    className="w-full p-2 rounded-lg bg-[#FAFBFF] text-[10px] sm:text-xs border border-gray-200 focus:outline-none focus:border-[#05431E]"
                     rows={3}
                   />
                 </div>
               </div>
+              {Object.keys(order).length > 0 && (
+                <PreReceipt
+                  order={order}
+                  subdomain={subdomain}
+                  tableNumber={tableNumber}
+                  specialNote={specialNote}
+                />
+              )}
               <div className="bg-[#FAFBFF] p-3 sm:p-4 rounded-lg">
                 <div className="flex justify-between">
                   <p className="text-xs sm:text-sm">Subtotal</p>
@@ -284,12 +316,12 @@ const Orders = () => {
                   <p className="text-xs sm:text-sm">VAT (7.5%)</p>
                   <p className="text-xs sm:text-sm">₦{vatTax.toLocaleString()}</p>
                 </div>
-                {/* {subdomain !== "355" && (
+                {subdomain !== "355" && (
                   <div className="flex justify-between mt-2">
                     <p className="text-xs sm:text-sm">Service Fee (10%)</p>
                     <p className="text-xs sm:text-sm">₦{serviceFee.toLocaleString()}</p>
                   </div>
-                )} */}
+                )}
                 <div className="mt-3 mb-3 border-t border-[#05431E] border-t-[0.5px] border-dashed" />
                 <div className="flex justify-between">
                   <p className="text-xs sm:text-sm font-semibold">Total</p>
@@ -299,7 +331,7 @@ const Orders = () => {
               <div className="flex my-4 sm:my-5 flex-col sm:flex-row justify-between gap-2">
                 <Button
                   onClick={sendOrderToKitchen}
-                  disabled={!Object.keys(order).length || isCreating || !paymentType}
+                  disabled={!Object.keys(order).length || isCreating}
                   className="flex items-center bg-[#05431E] text-white px-3 py-2 rounded-lg hover:bg-[#04391A] text-xs sm:text-sm transition-all disabled:bg-gray-400 justify-center"
                 >
                   {isCreating ? (
@@ -313,27 +345,10 @@ const Orders = () => {
                     />
                   ) : (
                     <>
-                      <Send size={14} className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" /> Send To Kitchen
+                      <Send size={14} className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" /> {getButtonText()}
                     </>
                   )}
                 </Button>
-                <div className="mb-3 w-1/2">
-                  <label htmlFor="paymentType" className="text-xs sm:text-sm font-medium text-gray-700 mr-2">
-                    Select Payment Type:
-                  </label>
-                  <select
-                    id="paymentType"
-                    value={paymentType || ""}
-                    onChange={(e) => setPaymentType(e.target.value || null)}
-                    className="w-1/2 p-2 rounded-lg bg-[#FAFBFF] text-[10px] sm:text-xs border border-gray-200 focus:outline-none focus:border-[#05431E]"
-                  >
-                    <option value="">Select Payment Type</option>
-                    <option value="CASH">Cash</option>
-                    <option value="TRANSFER">Transfer</option>
-                    <option value="CARD">Card</option>
-                    <option value="ONLINE">Online</option>
-                  </select>
-                </div>
               </div>
             </div>
             {createdOrders.length > 0 && (
@@ -372,9 +387,6 @@ const Orders = () => {
               <p className="text-[10px] sm:text-xs text-gray-600 mb-2">{receipt.table}</p>
               {receipt.specialNote && (
                 <p className="text-[10px] sm:text-xs text-gray-600 mb-2">Note: {receipt.specialNote}</p>
-              )}
-              {receipt.paymentType && (
-                <p className="text-[10px] sm:text-xs text-gray-600 mb-2">Payment Type: {receipt.paymentType}</p>
               )}
               <ul className="space-y-1 mb-2 max-h-32 sm:max-h-40 overflow-y-auto">
                 {receipt.items.map((item: any) => (

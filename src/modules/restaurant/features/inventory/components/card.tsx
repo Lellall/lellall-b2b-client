@@ -3,7 +3,7 @@ import { useReactToPrint } from 'react-to-print';
 import ReceiptPDF from '../../menu/ReceiptPDF';
 import { ArrowSquareDown, ArrowSquareUp, Trash, Edit } from 'iconsax-react';
 import ConfirmationModal from './confirmation-modal';
-import { useGetBankDetailsQuery, useUpdateOrderItemsMutation } from '@/redux/api/order/order.api';
+import { useGetBankDetailsQuery, useUpdateOrderItemsMutation, useUpdateOrdersMutation } from '@/redux/api/order/order.api';
 import EditOrderItemsModal from './edit-modal';
 import { toast } from 'react-toastify';
 
@@ -23,7 +23,7 @@ interface Order {
   specialNote?: string;
   waiter?: { firstName: string; lastName: string };
   restaurantId: string;
-  paymentType?: string;
+  paymentType?: string | null;
 }
 
 interface CardItemProps {
@@ -59,7 +59,11 @@ const CardItem: React.FC<CardItemProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [updateOrderItems, { isLoading: isUpdating }] = useUpdateOrderItemsMutation();
+  const [selectedPaymentType, setSelectedPaymentType] = useState(order.paymentType || "CASH");
+  const [selectedStatus, setSelectedStatus] = useState(order.status);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateOrderItems, { isLoading: isUpdatingItems }] = useUpdateOrderItemsMutation();
+  const [updateOrderStatus] = useUpdateOrdersMutation();
   const {
     data: bankDetails,
     isLoading: isBankDetailsLoading,
@@ -68,8 +72,20 @@ const CardItem: React.FC<CardItemProps> = ({
   } = useGetBankDetailsQuery(restaurantId);
 
   console.log({ restaurantId, bankDetails, isBankDetailsLoading, bankDetailsError }, 'Bank Details Query');
+  console.log('Order prop in CardItem:', order); // Debug order prop
+
+  const paymentOptions = [
+    { value: "CASH", label: "Cash" },
+    { value: "TRANSFER", label: "Transfer" },
+    { value: "CARD", label: "Card" },
+    { value: "ONLINE", label: "Online" },
+  ];
 
   const handleDelete = async () => {
+    if (!order.id) {
+      toast.error('Invalid order ID', { position: 'top-right' });
+      return;
+    }
     setIsDeleting(true);
     try {
       await handleDeleteOrder(order.id);
@@ -80,6 +96,10 @@ const CardItem: React.FC<CardItemProps> = ({
   };
 
   const handleEditOrderItems = async (items: { orderItemId?: string; menuItemId: string; quantity: number }[]) => {
+    if (!order.id) {
+      toast.error('Invalid order ID', { position: 'top-right' });
+      return;
+    }
     try {
       console.log('Received items in handleEditOrderItems:', items);
       await updateOrderItems({
@@ -97,6 +117,30 @@ const CardItem: React.FC<CardItemProps> = ({
     }
   };
 
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log(order, 'order');
+
+    if (!order.id) {
+      toast.error('Invalid order ID', { position: 'top-right' });
+      return;
+    }
+    setIsUpdating(true);
+    try {
+      await updateOrderStatus({
+        subdomain,
+        data: { status: selectedStatus, paymentType: selectedPaymentType || null },
+        id: order.id,
+      }).unwrap();
+      toast.success('Order updated successfully', { position: 'top-right' });
+    } catch (err) {
+      console.error('Failed to update order:', err);
+      toast.error('Failed to update order', { position: 'top-right' });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   if (isBankDetailsLoading) {
     return <div className="text-xs sm:text-sm text-gray-600">Loading bank details...</div>;
   }
@@ -106,6 +150,11 @@ const CardItem: React.FC<CardItemProps> = ({
     return <div className="text-xs sm:text-sm text-red-600">Error loading bank details</div>;
   }
 
+  if (!order || !order.id) {
+    console.error('Invalid order data:', order);
+    return <div className="text-xs sm:text-sm text-red-600">Invalid order data</div>;
+  }
+
   return (
     <div className="bg-white rounded-lg p-3 sm:p-4 flex flex-col hover:bg-gray-50 transition-all duration-300">
       <div className="flex justify-between items-center mb-2">
@@ -113,44 +162,36 @@ const CardItem: React.FC<CardItemProps> = ({
           #{order.id.substring(0, 6)}
         </span>
         <span
-          className={`text-[10px] sm:text-xs px-2 py-1 rounded-full ${
-            order.status === 'PENDING'
-              ? 'bg-yellow-100 text-yellow-800'
-              : order.status === 'PREPARING'
+          className={`text-[10px] sm:text-xs px-2 py-1 rounded-full ${order.status === 'PENDING'
+            ? 'bg-yellow-100 text-yellow-800'
+            : order.status === 'PREPARING'
               ? 'bg-blue-100 text-blue-800'
               : order.status === 'SERVED'
-              ? 'bg-green-100 text-green-800'
-              : 'bg-red-100 text-red-800'
-          }`}
+                ? 'bg-green-100 text-green-800'
+                : 'bg-red-100 text-red-800'
+            }`}
         >
           {order.status}
         </span>
-        {!isBankDetailsLoading && (
-          <div ref={contentRef}>
-            <ReceiptPDF
-              orderData={{
-                ...order,
-                subtotal: order.subtotal,
-                vatTax: order.vatTax,
-                serviceFee: order.serviceFee,
-                total: order.total,
-                paymentType: order.paymentType,
-              }}
-              reactToPrintFn={reactToPrintFn}
-              bankDetails={bankDetails}
-              subdomain={subdomain}
-            />
-          </div>
-        )}
+        <div ref={contentRef}>
+          <ReceiptPDF
+            orderData={{
+              ...order,
+              subtotal: order.subtotal,
+              vatTax: order.vatTax,
+              serviceFee: order.serviceFee,
+              total: order.total,
+              paymentType: selectedPaymentType,
+            }}
+            reactToPrintFn={reactToPrintFn}
+            bankDetails={bankDetails}
+            subdomain={subdomain}
+          />
+        </div>
       </div>
       <p className="text-[10px] sm:text-xs text-gray-600 mb-2">
         {new Date(order.createdAt).toLocaleString()}
       </p>
-      {order.paymentType && (
-        <p className="text-[10px] sm:text-xs text-gray-600 mb-2">
-          Payment Type: {order.paymentType}
-        </p>
-      )}
       <div className="text-xs sm:text-sm text-gray-900">
         <button
           onClick={() => toggleExpand(order.id)}
@@ -214,23 +255,68 @@ const CardItem: React.FC<CardItemProps> = ({
             <span>₦{order.total.toLocaleString()}</span>
           </div>
         </div>
-        <select
-          value={order.status}
-          onChange={(e) => handleStatusUpdate(order.id, e.target.value)}
-          className="mt-2 w-full border rounded-md p-1 text-[10px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-[#05431E]"
-        >
-          <option value="PENDING">Pending</option>
-          <option value="PREPARING">In Process</option>
-          <option value="SERVED">Completed</option>
-          <option value="CANCELLED">Cancelled</option>
-        </select>
+        <form onSubmit={handleFormSubmit} className="mt-2 space-y-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {paymentOptions.map((option) => (
+              <label
+                key={option.value}
+                className={`flex items-center space-x-1 p-[0.5px] rounded-md  cursor-pointer text-[10px] transition-all duration-200 ${selectedPaymentType === option.value
+                  ? 'border-[#05431E] bg-[#05431E] text-white'
+                  : 'border-gray-300 bg-white text-gray-800 hover:bg-gray-50'
+                  }`}
+              >
+                <input
+                  type="radio"
+                  name="paymentType"
+                  value={option.value}
+                  checked={selectedPaymentType === option.value}
+                  onChange={(e) => setSelectedPaymentType(e.target.value)}
+                  className="hidden"
+                  aria-checked={selectedPaymentType === option.value}
+                />
+                <span
+                  className={`w-2 h-2 border rounded-sm flex items-center justify-center ${selectedPaymentType === option.value
+                    ? 'border-[#05431E] bg-[#05431E]'
+                    : 'border-gray-300'
+                    }`}
+                >
+                  {selectedPaymentType === option.value && (
+                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </span>
+                <span>{option.label}</span>
+              </label>
+            ))}
+          </div>
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="w-full border rounded-md p-1 text-[10px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-[#05431E]"
+          >
+            <option value="PENDING">Pending</option>
+            <option value="PREPARING">In Process</option>
+            <option value="SERVED">Completed</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
+          <button
+            type="submit"
+            disabled={isUpdating || (selectedStatus === order.status && selectedPaymentType === (order.paymentType || ""))}
+            className={`w-full flex justify-center items-center ${isUpdating || (selectedStatus === order.status && selectedPaymentType === (order.paymentType || ""))
+              ? 'bg-gray-300 cursor-not-allowed'
+              : 'bg-[#05431E] hover:bg-[#04391A]'
+              } text-white rounded-md p-1 text-[10px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-[#05431E]`}
+          >
+            {isUpdating ? 'Saving...' : 'Save Changes'}
+          </button>
+        </form>
         <div className="flex gap-2 mt-2">
           <button
             onClick={() => setIsEditModalOpen(true)}
-            disabled={isUpdating || order.status !== 'PENDING'}
-            className={`flex-1 flex justify-center items-center ${
-              isUpdating || order.status !== 'PENDING' ? 'bg-gray-300' : 'bg-blue-500 hover:bg-blue-600'
-            } text-white rounded-md p-1 text-[10px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            disabled={isUpdatingItems || order.status !== 'PENDING'}
+            className={`flex-1 flex justify-center items-center ${isUpdatingItems || order.status !== 'PENDING' ? 'bg-gray-300' : 'bg-blue-500 hover:bg-blue-600'
+              } text-white rounded-md p-1 text-[10px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-blue-500`}
             aria-label={`Edit order ${order.id}`}
           >
             <Edit size={16} color="#FFFFFF" />
@@ -238,9 +324,8 @@ const CardItem: React.FC<CardItemProps> = ({
           <button
             onClick={() => setIsModalOpen(true)}
             disabled={isDeleting || order.status !== 'PENDING'}
-            className={`flex-1 flex justify-center items-center ${
-              isDeleting || order.status !== 'PENDING' ? 'bg-red-300' : 'bg-red-500 hover:bg-red-600'
-            } text-white rounded-md p-1 text-[10px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-red-500`}
+            className={`flex-1 flex justify-center items-center ${isDeleting || order.status !== 'PENDING' ? 'bg-red-300' : 'bg-red-500 hover:bg-red-600'
+              } text-white rounded-md p-1 text-[10px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-red-500`}
             aria-label={`Delete order ${order.id}`}
           >
             <Trash size={16} color="#FFFFFF" />
@@ -258,7 +343,7 @@ const CardItem: React.FC<CardItemProps> = ({
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         onConfirm={handleEditOrderItems}
-        isLoading={isUpdating}
+        isLoading={isUpdatingItems}
         order={order}
       />
     </div>
@@ -273,6 +358,7 @@ const Card: React.FC<CardProps> = ({
   handleStatusUpdate,
   subdomain,
 }) => {
+  console.log('Orders prop in Card:', orders); // Debug orders prop
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
       {orders.map((order) => (

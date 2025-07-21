@@ -38,8 +38,8 @@ export const orderApi = baseApi.injectEndpoints({
       invalidatesTags: ["MENU", "INVENTORY"],
     }),
     updateOrders: builder.mutation({
-      query: ({ subdomain, data, orderId }) => ({
-        url: `/orders/${subdomain}/${orderId}/status`,
+      query: ({ subdomain, data, id }) => ({
+        url: `/orders/${subdomain}/${id}/status`,
         method: "PATCH",
         body: data,
         credentials: "include",

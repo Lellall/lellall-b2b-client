@@ -36,12 +36,9 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain }) => {
         <div className="w-full p-3 bg-white font-sans text-xs leading-tight">
           <div className="text-center mb-4">
             <div className="inline-block">
-              <h1 className="text-[30px] font-extrabold tracking-widest leading-tight italic" style={{ fontFamily: 'Arial, sans-serif', color: '#000000' }}>
-                {subdomain}'s
+              <h1 className="text-[30px] font-extrabold tracking-widest leading-tight" style={{ fontFamily: 'Arial, sans-serif', color: '#000000' }}>
+                {subdomain} {subdomain === 'yax' ? 'StakeHouse' : ''}
               </h1>
-              <p className="text-[10px] font-semibold tracking-[0.15em] text-black">
-                RESTAURANT
-              </p>
             </div>
           </div>
           <div className="mb-2 text-right">
