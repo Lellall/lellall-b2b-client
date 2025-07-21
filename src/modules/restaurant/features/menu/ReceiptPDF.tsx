@@ -37,7 +37,7 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain }) => {
           <div className="text-center mb-4">
             <div className="inline-block">
               <h1 className="text-[30px] font-extrabold tracking-widest leading-tight" style={{ fontFamily: 'Arial, sans-serif', color: '#000000' }}>
-                {subdomain} {subdomain === 'yax' ? 'StakeHouse' : ''}
+                {subdomain} {subdomain === '355' ? 'StakeHouse' : ''}
               </h1>
             </div>
           </div>
