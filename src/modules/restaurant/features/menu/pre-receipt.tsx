@@ -38,7 +38,7 @@ const PreReceipt: React.FC<PreReceiptProps> = ({ order, subdomain, tableNumber, 
           <div className="text-center mb-4">
             <div className="inline-block">
               <h1 className="text-[30px] font-extrabold tracking-widest leading-tight" style={{ fontFamily: 'Arial, sans-serif', color: '#000000' }}>
-                {subdomain}
+              {subdomain} {subdomain === '355' ? 'Steakhouse' : ''}
               </h1>
             </div>
           </div>
