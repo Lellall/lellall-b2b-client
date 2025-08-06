@@ -53,10 +53,11 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
   const [queryStartTime, setQueryStartTime] = useState<string | undefined>(undefined);
   const [queryEndTime, setQueryEndTime] = useState<string | undefined>(undefined);
 
-  // Format dates as YYYY-MM-DD with validation
+  // Format dates as YYYY-MM-DD without any modifications
   const formattedStartDate = selectedStartDate && !isNaN(selectedStartDate.getTime())
-    ? selectedStartDate.toISOString().split('T')[0]
+    ? `${selectedStartDate.getFullYear()}-${String(selectedStartDate.getMonth() + 1).padStart(2, '0')}-${String(selectedStartDate.getDate()).padStart(2, '0')}`
     : new Date().toISOString().split('T')[0];
+
   const formattedEndDate = selectedEndDate && !isNaN(selectedEndDate.getTime())
     ? `${selectedEndDate.getFullYear()}-${String(selectedEndDate.getMonth() + 1).padStart(2, '0')}-${String(selectedEndDate.getDate()).padStart(2, '0')}`
     : undefined;
@@ -217,9 +218,7 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
                 <input
                   type="text"
                   value={inputEndTime}
-                 
-
- onChange={(e) => setInputEndTime(e.target.value)}
+                  onChange={(e) => setInputEndTime(e.target.value)}
                   placeholder="HH:mm"
                   className="p-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0E5D37] bg-white transition-colors w-20"
                 />
@@ -260,7 +259,7 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
             </div>
 
             {/* Daily Sold Items Card */}
-            <div className="bg-white  rounded-xl p-6 hover:bg-gray-50 transition-colors">
+            <div className="bg-white rounded-xl p-6 hover:bg-gray-50 transition-colors">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-base font-semibold text-gray-900">
                   Sold Items for {formattedStartDate}
@@ -288,30 +287,54 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
               ) : soldItemsData?.items.length === 0 ? (
                 <p className="text-gray-500 text-sm">No items sold in this time range</p>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-gray-100 text-gray-700 font-semibold text-xs border-b border-gray-200">
-                        <th className="py-3 px-4 text-left">Name</th>
-                        <th className="py-3 px-4 text-right">Quantity</th>
-                        <th className="py-3 px-4 text-right">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {soldItemsData?.items.map((item, index) => (
-                        <tr
-                          key={index}
-                          className="border-b border-gray-200 even:bg-gray-50 hover:bg-gray-100 transition-colors"
-                        >
-                          <td className="py-3 px-4 text-gray-700 truncate max-w-[150px] sm:max-w-[200px]">
-                            {item.name}
-                          </td>
-                          <td className="py-3 px-4 text-right text-gray-700">{item.quantity}</td>
-                          <td className="py-3 px-4 text-right text-gray-700">{item.total}</td>
+                <div className="space-y-6">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-gray-100 text-gray-700 font-semibold text-xs border-b border-gray-200">
+                          <th className="py-3 px-4 text-left">Name</th>
+                          <th className="py-3 px-4 text-right">Quantity</th>
+                          <th className="py-3 px-4 text-right">Total</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {soldItemsData?.items.map((item, index) => (
+                          <tr
+                            key={index}
+                            className="border-b border-gray-200 even:bg-gray-50 hover:bg-gray-100 transition-colors"
+                          >
+                            <td className="py-3 px-4 text-gray-700 truncate max-w-[150px] sm:max-w-[200px]">
+                              {item.name}
+                            </td>
+                            <td className="py-3 px-4 text-right text-gray-700">{item.quantity}</td>
+                            <td className="py-3 px-4 text-right text-gray-700">{item.total}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {/* Totals Section */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-3">Totals</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-600">Total Items Sold</p>
+                        <p className="text-lg font-bold text-[#0E5D37]">{soldItemsData?.totalItemsSold || 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Total Revenue</p>
+                        <p className="text-lg font-bold text-[#0E5D37]">{soldItemsData?.totalRevenue || '₦0'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Total VAT Tax</p>
+                        <p className="text-lg font-bold text-[#0E5D37]">{soldItemsData?.totalVatTax || '₦0'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Total Service Fee</p>
+                        <p className="text-lg font-bold text-[#0E5D37]">{soldItemsData?.totalServiceFee || '₦0'}</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
