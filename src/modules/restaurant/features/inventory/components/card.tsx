@@ -17,6 +17,8 @@ interface Order {
     menuItem: { name: string; price: number };
   }>;
   subtotal: number;
+  discountPercentage?: number;
+  discountAmount?: number;
   vatTax: number;
   serviceFee: number;
   total: number;
@@ -178,6 +180,8 @@ const CardItem: React.FC<CardItemProps> = ({
             orderData={{
               ...order,
               subtotal: order.subtotal,
+              discountPercentage: order.discountPercentage, // Pass discountPercentage
+              discountAmount: order.discountAmount, // Pass discountAmount
               vatTax: order.vatTax,
               serviceFee: order.serviceFee,
               total: order.total,
@@ -239,6 +243,10 @@ const CardItem: React.FC<CardItemProps> = ({
           <div className="flex justify-between text-xs">
             <span>Subtotal</span>
             <span>₦{order.subtotal.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between mt-1 text-xs">
+            <span>Discount ({order.discountPercentage ?? 0}%)</span>
+            <span>₦{(order.discountAmount ?? 0).toLocaleString()}</span>
           </div>
           <div className="flex justify-between mt-1 text-xs">
             <span>VAT</span>

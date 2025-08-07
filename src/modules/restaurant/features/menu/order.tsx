@@ -9,6 +9,7 @@ import { useGetAllMenuItemsQuery, useGetAllTagsQuery, useGetMenuItemsByTagQuery 
 import { useSelector } from "react-redux";
 import { selectAuth } from "@/redux/api/auth/auth.slice";
 import { ColorRing } from "react-loader-spinner";
+import { PrintableInvoice } from "./rafawa";
 
 interface MenuItem {
   id: string;
@@ -25,25 +26,31 @@ const Orders = () => {
   const [receipt, setReceipt] = useState(null);
   const [tableNumber, setTableNumber] = useState("01");
   const [specialNote, setSpecialNote] = useState("");
+  const [discountPercentage, setDiscountPercentage] = useState<number>(0);
   const [createdOrders, setCreatedOrders] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("All");
+  const [searchQuery, setSearchQuery] = useState(""); // New: Search query state
 
   const { subdomain, user } = useSelector(selectAuth);
-  const { data: menuItems = [], isLoading: isLoadingMenu, error: menuError } = useGetAllMenuItemsQuery({ subdomain });
+  const { data: menuItems = [], isLoading: isLoadingMenu, error: menuError } = useGetAllMenuItemsQuery({ 
+    subdomain,
+    search: searchQuery // Pass search query to the backend
+  });
   const { data: tags = [], isLoading: isLoadingTags, error: tagsError } = useGetAllTagsQuery({ subdomain });
   const { data: taggedItems = [], isLoading: isLoadingTaggedItems, error: taggedItemsError } = useGetMenuItemsByTagQuery(
-    { subdomain, tag: activeTab },
+    { subdomain, tag: activeTab, search: searchQuery }, // Pass search query to tagged items
     { skip: activeTab === "All" }
   );
   const [createOrders, { isLoading: isCreating }] = useCreateOrdersMutation();
   const [updateOrderStatus] = useUpdateOrdersMutation();
 
   const displayedItems = useMemo(() => {
-    if (activeTab === "All") {
-      return menuItems;
-    }
-    return taggedItems;
-  }, [menuItems, taggedItems, activeTab]);
+    const items = activeTab === "All" ? menuItems : taggedItems;
+    if (!searchQuery) return items;
+    return items.filter((item: MenuItem) =>
+      item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [menuItems, taggedItems, activeTab, searchQuery]);
 
   useEffect(() => {
     if (activeTab === "All") {
@@ -89,11 +96,15 @@ const Orders = () => {
     const subtotal = Object.values(order).reduce((acc: number, { quantity, price }: any) => acc + quantity * price, 0);
     const vatRate = 0.075;
     const serviceFeeRate = subdomain === "355" ? 0 : 0.10;
-    const vatTax = subtotal * vatRate;
-    const serviceFee = subdomain === "355" ? 0 : subtotal * serviceFeeRate;
-    const total = subtotal + vatTax + serviceFee;
+    const discountAmount = subtotal * (discountPercentage / 100);
+    const discountedSubtotal = subtotal - discountAmount;
+    const vatTax = discountedSubtotal * vatRate;
+    const serviceFee = subdomain === "355" ? 0 : discountedSubtotal * serviceFeeRate;
+    const total = discountedSubtotal + vatTax + serviceFee;
     return {
       subtotal: Number(subtotal.toFixed(2)),
+      discountAmount: Number(discountAmount.toFixed(2)),
+      discountedSubtotal: Number(discountedSubtotal.toFixed(2)),
       vatTax: Number(vatTax.toFixed(2)),
       serviceFee: Number(serviceFee.toFixed(2)),
       total: Number(total.toFixed(2)),
@@ -109,11 +120,12 @@ const Orders = () => {
       })),
       specialNote,
       paymentType: null,
+      discountPercentage,
     };
 
     try {
       const response = await createOrders({ subdomain, data: orderData }).unwrap();
-      const { subtotal, vatTax, serviceFee, total } = calculateTotal();
+      const { subtotal, discountAmount, discountedSubtotal, vatTax, serviceFee, total } = calculateTotal();
       setCreatedOrders((prev) => [
         ...prev,
         {
@@ -122,17 +134,22 @@ const Orders = () => {
           items: orderData.items,
           timestamp: new Date().toISOString(),
           subtotal,
+          discountAmount,
+          discountedSubtotal,
           vatTax,
           serviceFee,
           total,
           status: "PENDING",
           specialNote,
           paymentType: null,
+          discountPercentage,
         },
       ]);
       setOrderSent(true);
       setOrder({});
       setSpecialNote("");
+      setDiscountPercentage(0);
+      setSearchQuery(""); // Reset search query after sending order
     } catch (error) {
       console.error("Failed to send order:", error);
       alert("Failed to send order. Try again.");
@@ -140,7 +157,7 @@ const Orders = () => {
   };
 
   const generateReceipt = () => {
-    const { subtotal, vatTax, serviceFee, total } = calculateTotal();
+    const { subtotal, discountAmount, discountedSubtotal, vatTax, serviceFee, total } = calculateTotal();
     const receiptData = {
       table: `Table ${tableNumber}`,
       items: Object.entries(order).map(([id, { quantity, price, name }]: [string, any]) => ({
@@ -150,17 +167,20 @@ const Orders = () => {
         subtotal: Number((quantity * price).toFixed(2)),
       })),
       subtotal,
+      discountAmount,
+      discountedSubtotal,
       vatTax,
       serviceFee,
       total,
       date: new Date().toLocaleString(),
       specialNote,
+      discountPercentage,
     };
     setReceipt(receiptData);
   };
 
   const getButtonText = () => {
-    if (activeTab === "All") return "Send to Kitchen";
+    if (activeTab === "All") return "Place Order";
     return `Send to ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}`;
   };
 
@@ -187,7 +207,7 @@ const Orders = () => {
     );
   }
 
-  const { subtotal, vatTax, serviceFee, total } = calculateTotal();
+  const { subtotal, discountAmount, discountedSubtotal, vatTax, serviceFee, total } = calculateTotal();
 
   return (
     <div className="min-h-screen p-4 bg-gray-100">
@@ -208,6 +228,15 @@ const Orders = () => {
           <div>
             <div className="flex justify-between items-center mb-4">
               <h1 className="text-lg sm:text-xl font-bold text-gray-800">Take Order</h1>
+            </div>
+            {/* New: Add SearchBar component */}
+            <div className="mb-4">
+              <SearchBar
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search menu items..."
+                className="w-full"
+              />
             </div>
             {isLoadingTaggedItems && activeTab !== "All" ? (
               <div className="flex items-center justify-center">
@@ -248,7 +277,7 @@ const Orders = () => {
                               className="bg-white bg-opacity-20 p-1 rounded-full hover:bg-opacity-30 w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center"
                               aria-label={`Increase quantity of ${item.name}`}
                             >
-                              <Add size={12} className="sm:w-4 sm:h-4" />
+                              <Add size={12} className="sm:w- rumors sm:h-4" />
                             </button>
                           </div>
                         </div>
@@ -256,7 +285,7 @@ const Orders = () => {
                     </div>
                   ))
                 ) : (
-                  <p className="text-gray-600">No items available for this tag.</p>
+                  <p className="text-gray-600">No items available for this tag or search.</p>
                 )}
               </div>
             )}
@@ -289,7 +318,7 @@ const Orders = () => {
                     </div>
                   </div>
                 ))}
-                <div className="mt-3">
+                <div className="mt-3 space-y-3">
                   <textarea
                     value={specialNote}
                     onChange={(e) => setSpecialNote(e.target.value)}
@@ -297,6 +326,27 @@ const Orders = () => {
                     className="w-full p-2 rounded-lg bg-[#FAFBFF] text-[10px] sm:text-xs border border-gray-200 focus:outline-none focus:border-[#05431E]"
                     rows={3}
                   />
+                  <div className="flex flex-col">
+                    <label htmlFor="discount" className="text-xs sm:text-sm text-gray-700 mb-1">
+                      Discount (%)
+                    </label>
+                    <input
+                      type="number"
+                      id="discount"
+                      value={discountPercentage}
+                      onChange={(e) => {
+                        const value = Number(e.target.value);
+                        if (value >= 0 && value <= 100) {
+                          setDiscountPercentage(value);
+                        }
+                      }}
+                      placeholder="Enter discount percentage (0-100)"
+                      className="w-full p-2 rounded-lg bg-[#FAFBFF] text-[10px] sm:text-xs border border-gray-200 focus:outline-none focus:border-[#05431E]"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                    />
+                  </div>
                 </div>
               </div>
               {Object.keys(order).length > 0 && (
@@ -305,6 +355,7 @@ const Orders = () => {
                   subdomain={subdomain}
                   tableNumber={tableNumber}
                   specialNote={specialNote}
+                  discountPercentage={discountPercentage}
                 />
               )}
               <div className="bg-[#FAFBFF] p-3 sm:p-4 rounded-lg">
@@ -312,6 +363,12 @@ const Orders = () => {
                   <p className="text-xs sm:text-sm">Subtotal</p>
                   <p className="text-xs sm:text-sm">₦{subtotal.toLocaleString()}</p>
                 </div>
+                {discountPercentage > 0 && (
+                  <div className="flex justify-between mt-2">
+                    <p className="text-xs sm:text-sm">Discount ({discountPercentage}%)</p>
+                    <p className="text-xs sm:text-sm">₦{discountAmount.toLocaleString()}</p>
+                  </div>
+                )}
                 <div className="flex justify-between mt-2">
                   <p className="text-xs sm:text-sm">VAT (7.5%)</p>
                   <p className="text-xs sm:text-sm">₦{vatTax.toLocaleString()}</p>
@@ -365,6 +422,7 @@ const Orders = () => {
                       price: `₦${(menuItems.find((i: MenuItem) => i.id === item.menuItemId)?.price * item.quantity).toLocaleString()}`,
                     }))}
                     subtotal={`₦${createdOrder.subtotal.toLocaleString()}`}
+                    discountAmount={createdOrder.discountAmount ? `₦${createdOrder.discountAmount.toLocaleString()}` : undefined}
                     vatTax={`₦${createdOrder.vatTax.toLocaleString()}`}
                     serviceFee={subdomain !== "355" ? `₦${createdOrder.serviceFee.toLocaleString()}` : undefined}
                     total={`₦${createdOrder.total.toLocaleString()}`}
@@ -373,6 +431,7 @@ const Orders = () => {
                     id={createdOrder.id}
                     specialNote={createdOrder.specialNote}
                     paymentType={createdOrder.paymentType}
+                    discountPercentage={createdOrder.discountPercentage}
                   />
                 ))}
               </div>
@@ -387,6 +446,9 @@ const Orders = () => {
               <p className="text-[10px] sm:text-xs text-gray-600 mb-2">{receipt.table}</p>
               {receipt.specialNote && (
                 <p className="text-[10px] sm:text-xs text-gray-600 mb-2">Note: {receipt.specialNote}</p>
+              )}
+              {receipt.discountPercentage > 0 && (
+                <p className="text-[10px] sm:text-xs text-gray-600 mb-2">Discount: {receipt.discountPercentage}%</p>
               )}
               <ul className="space-y-1 mb-2 max-h-32 sm:max-h-40 overflow-y-auto">
                 {receipt.items.map((item: any) => (
@@ -404,6 +466,12 @@ const Orders = () => {
                   <span>Subtotal</span>
                   <span>₦{receipt.subtotal.toLocaleString()}</span>
                 </div>
+                {receipt.discountPercentage > 0 && (
+                  <div className="flex justify-between text-[10px] sm:text-sm text-gray-700 mt-1">
+                    <span>Discount ({receipt.discountPercentage}%)</span>
+                    <span>₦{receipt.discountAmount.toLocaleString()}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-[10px] sm:text-sm text-gray-700 mt-1">
                   <span>VAT (7.5%)</span>
                   <span>₦{receipt.vatTax.toLocaleString()}</span>

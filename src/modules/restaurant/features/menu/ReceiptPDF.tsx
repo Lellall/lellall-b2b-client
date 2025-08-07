@@ -93,6 +93,9 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain }) => {
               <span className="font-semibold">Subtotal:</span> ₦{orderData.subtotal.toFixed(2)}
             </p>
             <p>
+              <span className="font-semibold">Discount ({orderData.discountPercentage ?? 0}%):</span> ₦{(orderData.discountAmount ?? 0).toFixed(2)}
+            </p>
+            <p>
               <span className="font-semibold">VAT:</span> ₦{orderData.vatTax.toFixed(2)}
             </p>
             {subdomain !== "355" && (

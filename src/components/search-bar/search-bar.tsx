@@ -80,7 +80,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   border,
   borderRadius,
   backgroundColor,
-  shadow = true,
+  shadow = false,
   fontSize,
   color,
   inputPadding,
