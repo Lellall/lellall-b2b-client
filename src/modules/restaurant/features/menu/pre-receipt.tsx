@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Receipt as Btn } from 'iconsax-react';
 
@@ -11,7 +11,20 @@ interface PreReceiptProps {
 
 const PreReceipt: React.FC<PreReceiptProps> = ({ order, subdomain, tableNumber, specialNote }) => {
   const componentRef = useRef<HTMLDivElement>(null);
+  const [bgColor, setBgColor] = useState('#ffffff'); // Default white background
+
   const reactToPrintFn = useReactToPrint({ contentRef: componentRef });
+
+  // Calculate luminance to determine if the background is light or dark
+  const getLuminance = (hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    return 0.299 * r + 0.587 * g + 0.114 * b;
+  };
+
+  // Determine font color based on background luminance
+  const fontColor = getLuminance(bgColor) > 0.5 ? '#000000' : '#ffffff';
 
   return (
     <div>
@@ -21,24 +34,50 @@ const PreReceipt: React.FC<PreReceiptProps> = ({ order, subdomain, tableNumber, 
             .no-print {
               display: none !important;
             }
+            @page {
+              margin: 0;
+              size: auto;
+            }
+            body {
+              margin: 0;
+              padding: 0;
+            }
+            .print-container {
+              width: 100vw !important;
+              height: 100vh !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              box-sizing: border-box;
+              overflow: hidden;
+            }
           }
         `}
       </style>
-      <button
-        onClick={reactToPrintFn}
-        className="flex text-[10px] sm:text-xs text-[#05431E] hover:underline focus:outline-none no-print"
-      >
-        <Btn size={14} className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" /> Print Pre-Receipt
-      </button>
+      <div className="flex items-center gap-2 no-print">
+        <button
+          onClick={reactToPrintFn}
+          className="flex text-[10px] sm:text-xs text-[#05431E] hover:underline focus:outline-none"
+        >
+          <Btn size={14} className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" /> Print Pre-Receipt
+        </button>
+        <input
+          type="color"
+          value={bgColor}
+          onChange={(e) => setBgColor(e.target.value)}
+          className="w-8 h-8 border-none cursor-pointer"
+          title="Choose background color"
+        />
+      </div>
       <div
         ref={componentRef}
-        className="invisible h-0 w-0 overflow-hidden print:visible print:h-auto print:w-full"
+        className="invisible h-0 w-0 overflow-hidden print:visible print:h-auto print:w-full print-container"
+        style={{ backgroundColor: bgColor, color: fontColor }}
       >
-        <div className="w-full p-3 bg-white font-sans text-xs leading-tight">
+        <div className="min-h-[100vh] w-full p-3 font-sans text-xs leading-tight box-border">
           <div className="text-center mb-4">
             <div className="inline-block">
-              <h1 className="text-[30px] font-extrabold tracking-widest leading-tight" style={{ fontFamily: 'Arial, sans-serif', color: '#000000' }}>
-              {subdomain} {subdomain === '355' ? 'Steakhouse' : ''}
+              <h1 className="text-[30px] font-extrabold tracking-widest leading-tight" style={{ fontFamily: 'Arial, sans-serif', color: fontColor }}>
+                {subdomain} {subdomain === '355' ? 'Steakhouse' : ''}
               </h1>
             </div>
           </div>
@@ -55,24 +94,24 @@ const PreReceipt: React.FC<PreReceiptProps> = ({ order, subdomain, tableNumber, 
               </p>
             )}
           </div>
-          <hr className="border-gray-300 my-1" />
+          <hr className="border-gray-300 my-1" style={{ borderColor: fontColor }} />
           <table className="w-full border-collapse mb-2 text-xs">
             <thead>
-              <tr className="bg-gray-100">
+              <tr className="bg-gray-100" style={{ backgroundColor: getLuminance(bgColor) > 0.5 ? '#e5e7eb' : '#4b5563', color: fontColor }}>
                 <th className="p-1 text-left">Item</th>
                 <th className="p-1 text-left">Qty</th>
               </tr>
             </thead>
             <tbody>
               {Object.entries(order).map(([id, { name, quantity }]) => (
-                <tr key={id} className="border-b border-gray-200">
+                <tr key={id} className="border-b border-gray-200" style={{ borderColor: fontColor }}>
                   <td className="p-1 truncate">{name}</td>
                   <td className="p-1">{quantity}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <hr className="border-gray-300 my-1" />
+          <hr className="border-gray-300 my-1" style={{ borderColor: fontColor }} />
           <div className="text-left">
             <p className="mt-1">Thank you for dining with us!</p>
           </div>

@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { useReactToPrint } from 'react-to-print';
+import { Receipt as Btn } from 'iconsax-react';
 import { useGetDailySalesRevenueQuery, useGetDailySoldItemsQuery, useLazyDownloadDailySoldItemsCsvQuery } from '@/redux/api/order/order.api';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -46,12 +48,27 @@ const datePickerStyles = `
 `;
 
 const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => {
+  const componentRef = useRef<HTMLDivElement>(null);
+  const [bgColor, setBgColor] = useState('#ffffff'); // Default white background
   const [selectedStartDate, setSelectedStartDate] = useState<Date>(new Date());
   const [selectedEndDate, setSelectedEndDate] = useState<Date | null>(null);
   const [inputStartTime, setInputStartTime] = useState<string>('');
   const [inputEndTime, setInputEndTime] = useState<string>('');
   const [queryStartTime, setQueryStartTime] = useState<string | undefined>(undefined);
   const [queryEndTime, setQueryEndTime] = useState<string | undefined>(undefined);
+
+  const reactToPrintFn = useReactToPrint({ contentRef: componentRef });
+
+  // Calculate luminance to determine if the background is light or dark
+  const getLuminance = (hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    return 0.299 * r + 0.587 * g + 0.114 * b;
+  };
+
+  // Determine font color based on background luminance
+  const fontColor = getLuminance(bgColor) > 0.5 ? '#000000' : '#ffffff';
 
   // Format dates as YYYY-MM-DD without any modifications
   const formattedStartDate = selectedStartDate && !isNaN(selectedStartDate.getTime())
@@ -152,8 +169,173 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
 
   return (
     <>
-      <style>{datePickerStyles}</style>
+      <style>
+        {`
+          ${datePickerStyles}
+          @media print {
+            .no-print {
+              display: none !important;
+            }
+            @page {
+              margin: 0;
+              size: auto;
+            }
+            body {
+              margin: 0;
+              padding: 0;
+            }
+            .print-container {
+              width: 100vw !important;
+              min-height: 100vh !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              box-sizing: border-box;
+              overflow: hidden;
+            }
+            .print-container * {
+              color: ${fontColor} !important;
+            }
+            .print-container table thead tr {
+              background-color: ${getLuminance(bgColor) > 0.5 ? '#e5e7eb' : '#4b5563'} !important;
+            }
+            .print-container table tbody tr.even:bg-gray-50 {
+              background-color: ${getLuminance(bgColor) > 0.5 ? '#f9fafb' : '#6b7280'} !important;
+            }
+            .print-container table tbody tr:hover {
+              background-color: ${getLuminance(bgColor) > 0.5 ? '#e5e7eb' : '#4b5563'} !important;
+            }
+            .print-container .bg-gray-50 {
+              background-color: ${getLuminance(bgColor) > 0.5 ? '#f9fafb' : '#6b7280'} !important;
+            }
+            .print-container .border-gray-200 {
+              border-color: ${fontColor} !important;
+            }
+            .print-container .text-[#0E5D37] {
+              color: ${fontColor} !important;
+            }
+          }
+        `}
+      </style>
       <div className="bg-white p-6 rounded-xl">
+        <div className="flex items-center gap-2 mb-4 no-print">
+          <button
+            onClick={reactToPrintFn}
+            className="flex text-[10px] sm:text-xs text-[#05431E] hover:underline focus:outline-none"
+          >
+            <Btn size={14} className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" /> Print Sales
+          </button>
+          <input
+            type="color"
+            value={bgColor}
+            onChange={(e) => setBgColor(e.target.value)}
+            className="w-8 h-8 border-none cursor-pointer"
+            title="Choose background color"
+          />
+        </div>
+        <div
+          ref={componentRef}
+          className="invisible h-0 w-0 overflow-hidden print:visible print:w-full print-container"
+          style={{ backgroundColor: bgColor }}
+        >
+          <div className="min-h-[100vh] w-full p-6 box-border">
+            <div className="max-w-7xl mx-auto">
+              {/* Header */}
+              <div className="mb-8">
+                <h1 className="text-xl font-bold" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  Daily Sales Dashboard - {subdomain}
+                </h1>
+                <p className="text-sm">
+                  {formattedStartDate}
+                  {formattedEndDate && formattedEndDate !== formattedStartDate ? ` to ${formattedEndDate}` : ''}{' '}
+                  {queryStartTime && queryEndTime ? `(${queryStartTime}-${queryEndTime})` : '(Full Day)'}
+                </p>
+              </div>
+
+              {/* Cards Grid */}
+              <div className="grid grid-cols-1 gap-6">
+                {/* Daily Sales Revenue Card */}
+                <div className="rounded-xl p-6">
+                  <h2 className="text-base font-semibold mb-4">
+                    Sales Revenue
+                  </h2>
+                  {isRevenueLoading ? (
+                    <p className="text-sm">Loading...</p>
+                  ) : revenueError ? (
+                    <p className="text-sm">Error loading revenue: {revenueError.message || 'Unknown error'}</p>
+                  ) : (
+                    <p className="text-4xl font-bold">{revenueData?.revenue || '₦0'}</p>
+                  )}
+                </div>
+
+                {/* Daily Sold Items Card */}
+                <div className="rounded-xl p-6">
+                  <h2 className="text-base font-semibold mb-4">
+                    Sold Items
+                  </h2>
+                  {isItemsLoading ? (
+                    <p className="text-sm">Loading...</p>
+                  ) : itemsError ? (
+                    <p className="text-sm">Error loading sold items: {itemsError.message || 'Unknown error'}</p>
+                  ) : soldItemsData?.items.length === 0 ? (
+                    <p className="text-sm">No items sold in this time range</p>
+                  ) : (
+                    <div className="space-y-6">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="text-xs border-b border-gray-200">
+                              <th className="py-3 px-4 text-left">Name</th>
+                              <th className="py-3 px-4 text-right">Quantity</th>
+                              <th className="py-3 px-4 text-right">Total</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {soldItemsData?.items.map((item, index) => (
+                              <tr
+                                key={index}
+                                className="border-b border-gray-200 even:bg-gray-50 hover:bg-gray-100 transition-colors"
+                              >
+                                <td className="py-3 px-4 truncate max-w-[150px] sm:max-w-[200px]">
+                                  {item.name}
+                                </td>
+                                <td className="py-3 px-4 text-right">{item.quantity}</td>
+                                <td className="py-3 px-4 text-right">{item.total}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      {/* Totals Section */}
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h3 className="text-sm font-semibold mb-3">Totals</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm">Total Items Sold</p>
+                            <p className="text-lg font-bold">{soldItemsData?.totalItemsSold || 0}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm">Total Revenue</p>
+                            <p className="text-lg font-bold">{soldItemsData?.totalRevenue || '₦0'}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm">Total VAT Tax</p>
+                            <p className="text-lg font-bold">{soldItemsData?.totalVatTax || '₦0'}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm">Total Service Fee</p>
+                            <p className="text-lg font-bold">{soldItemsData?.totalServiceFee || '₦0'}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Original UI */}
         <div className="max-w-7xl mx-auto">
           {/* Header and Date/Time Pickers */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
