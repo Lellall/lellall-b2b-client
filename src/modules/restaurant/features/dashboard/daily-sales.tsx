@@ -98,6 +98,45 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
     },
   );
 
+  /**
+ * Sum up specific currency fields from an object
+ * @param data - Object containing currency string fields
+ * @param keys - Keys in the object to sum
+ * @param formatted - If true, returns formatted Naira string
+ */
+  function sumCurrencyFields<T extends Record<string, string>>(
+    data: T,
+    keys: (keyof T)[],
+    formatted = false
+  ): number | string {
+    const total = keys.reduce((sum, key) => {
+      const num = parseFloat((data[key] || "").toString().replace(/[₦,]/g, "")) || 0;
+      return sum + num;
+    }, 0);
+
+    return formatted
+      ? `₦${total.toLocaleString("en-NG", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}`
+      : total;
+  }
+
+  // Example usage
+  const apiData = {
+    totalRevenue: soldItemsData && soldItemsData?.totalRevenue,
+    totalServiceFee: soldItemsData && soldItemsData?.totalServiceFee,
+    totalVatTax: soldItemsData && soldItemsData?.totalVatTax
+  };
+
+  const sum = sumCurrencyFields(apiData, [
+    "totalRevenue",
+    "totalServiceFee",
+    "totalVatTax"
+  ], true);
+
+  console.log(sum);
+
   // Query for daily sales revenue
   const { data: revenueData, isLoading: isRevenueLoading, error: revenueError } = useGetDailySalesRevenueQuery(
     {
@@ -325,6 +364,18 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
                             <p className="text-sm">Total Service Fee</p>
                             <p className="text-lg font-bold">{soldItemsData?.totalServiceFee || '₦0'}</p>
                           </div>
+                          <div>
+                            <p className="text-sm">Grand Total</p>
+                            <p className="text-lg font-bold">
+                              {soldItemsData?.totalRevenue && soldItemsData?.totalVatTax && soldItemsData?.totalServiceFee
+                                ? `₦${(
+                                  parseFloat(soldItemsData.totalRevenue.replace('₦', '').replace(',', '')) +
+                                  parseFloat(soldItemsData.totalVatTax.replace('₦', '').replace(',', '')) +
+                                  parseFloat(soldItemsData.totalServiceFee.replace('₦', '').replace(',', ''))
+                                ).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                : '₦0'}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -514,6 +565,12 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
                       <div>
                         <p className="text-sm text-gray-600">Total Service Fee</p>
                         <p className="text-lg font-bold text-[#0E5D37]">{soldItemsData?.totalServiceFee || '₦0'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Grand Total</p>
+                        <p className="text-lg font-bold text-[#0E5D37]">
+                          {sum}
+                        </p>
                       </div>
                     </div>
                   </div>
