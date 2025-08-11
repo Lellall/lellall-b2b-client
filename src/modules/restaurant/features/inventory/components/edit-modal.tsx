@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { theme } from '@/theme/theme';
+import Select from "react-select";
 import { useGetAllMenuItemsQuery } from '@/redux/api/menu/menu.api';
 import { useSelector } from 'react-redux';
 import { selectAuth } from '@/redux/api/auth/auth.slice';
@@ -229,24 +230,36 @@ const EditOrderItemsModal: React.FC<EditOrderItemsModalProps> = ({
             );
           })}
           {/* Add New Item Section */}
+
+
           <div className="border-t pt-4">
             <h3 className="text-sm font-semibold mb-2">Add New Item</h3>
+
             <div className="mb-2">
               <label className="text-xs text-gray-600">Menu Item</label>
-              <select
-                value={newItem.menuItemId}
-                onChange={(e) => handleNewMenuItemChange(e.target.value)}
-                className="w-full border rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#05431E]"
-                disabled={isLoading}
-              >
-                <option value="">Select an item</option>
-                {availableMenuItems.map((menuItem: MenuItem) => (
-                  <option key={menuItem.id} value={menuItem.id}>
-                    {menuItem.name} (₦{menuItem.price.toLocaleString()})
-                  </option>
-                ))}
-              </select>
+              <Select
+                value={availableMenuItems.find(item => item.id === newItem.menuItemId) || null}
+                onChange={(option) => handleNewMenuItemChange(option?.value || "")}
+                options={availableMenuItems.map((menuItem) => ({
+                  value: menuItem.id,
+                  label: `${menuItem.name} (₦${menuItem.price.toLocaleString()})`
+                }))}
+                isDisabled={isLoading}
+                placeholder="Select an item"
+                className="text-sm"
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    borderColor: "#ccc",
+                    borderRadius: "0.375rem",
+                    padding: "2px",
+                    boxShadow: "none",
+                    "&:hover": { borderColor: "#05431E" }
+                  })
+                }}
+              />
             </div>
+
             <div>
               <label className="text-xs text-gray-600">Quantity</label>
               <input
@@ -258,6 +271,7 @@ const EditOrderItemsModal: React.FC<EditOrderItemsModalProps> = ({
                 disabled={isLoading}
               />
             </div>
+
             <button
               onClick={handleAddNewItem}
               className="mt-2 w-full bg-[#05431E] text-white rounded-md p-2 text-sm hover:bg-[#04381A] focus:outline-none disabled:bg-gray-400"
@@ -266,6 +280,7 @@ const EditOrderItemsModal: React.FC<EditOrderItemsModalProps> = ({
               Add Item
             </button>
           </div>
+
         </div>
         <div className="mt-6 flex justify-end gap-2">
           <button
@@ -278,11 +293,10 @@ const EditOrderItemsModal: React.FC<EditOrderItemsModalProps> = ({
           <button
             onClick={handleSubmit}
             disabled={isLoading || !items.every((item) => item.quantity && item.quantity > 0)}
-            className={`px-4 py-2 text-sm text-white rounded-md focus:outline-none ${
-              isLoading || !items.every((item) => item.quantity && item.quantity > 0)
+            className={`px-4 py-2 text-sm text-white rounded-md focus:outline-none ${isLoading || !items.every((item) => item.quantity && item.quantity > 0)
                 ? 'bg-gray-400'
                 : 'bg-[#05431E] hover:bg-[#04381A]'
-            }`}
+              }`}
           >
             {isLoading ? 'Saving...' : 'Save'}
           </button>
