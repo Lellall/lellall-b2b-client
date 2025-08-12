@@ -546,6 +546,10 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
                         <p className="text-lg font-bold text-[#0E5D37]">{soldItemsData?.totalRevenue || '₦0'}</p>
                       </div>
                       <div>
+                        <p className="text-sm text-gray-600">Discounts(₦)</p>
+                        <p className="text-lg font-bold text-[#0E5D37]">{soldItemsData?.totalDiscountAmount || '₦0'}</p>
+                      </div>
+                      <div>
                         <p className="text-sm text-gray-600">Total VAT Tax</p>
                         <p className="text-lg font-bold text-[#0E5D37]">{soldItemsData?.totalVatTax || '₦0'}</p>
                       </div>
