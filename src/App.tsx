@@ -42,7 +42,7 @@ const App = () => {
   const isAdminSubdomain = subdomain === 'admin';
 
   // Check if user is allowed to access the dashboard
-  const canAccessDashboard = user?.role === 'ADMIN' || user?.role === 'MANAGER';
+  const canAccessDashboard = user?.role === 'ADMIN' || user?.role === 'MANAGER' || user?.role === "WAITER";
 
   // Query restaurant data unless accessing admin subdomain with SUPER_ADMIN
   const { data: restaurant, isLoading, isError } = useGetRestaurantBySubdomainQuery(subdomain, {

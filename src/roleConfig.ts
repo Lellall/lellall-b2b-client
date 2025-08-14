@@ -9,6 +9,7 @@ export interface NavItemConfig {
 
 export const navItemsByRole: Record<string, NavItemConfig[]> = {
   WAITER: [
+    { to: '/', icon: Home, text: 'Dashboard', end: true },
     { to: '/menu', icon: Element2, text: 'Menu' },
     { to: '/settings', icon: Setting, text: 'Settings' },
     { to: '/inventory', icon: ArchiveBox, text: 'Inventory & Stock' },
