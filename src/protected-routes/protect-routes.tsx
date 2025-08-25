@@ -77,9 +77,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
   }
 
   // Redirect WAITER to /settings if trying to access the root route (/)
-  // if (userRole === 'WAITER' && currentPath === '/' && daysLeft > 0) {
-  //   return <Navigate to="/settings" replace />;
-  // }
+  if (userRole === 'WAITER' && currentPath === '/' && daysLeft > 0) {
+    return <Navigate to="/settings" replace />;
+  }
 
   // Check if the current route is allowed for the user's role and plan
   if (!isRouteAllowed(userRole, currentPath, daysLeft, planName)) {
