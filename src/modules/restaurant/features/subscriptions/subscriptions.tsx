@@ -143,25 +143,34 @@ const Subscriptions = () => {
     : [];
 
   const planFeatures = {
-    'Basic Plan': ['Inventory Management', 'Menu Management'],
-    'Standard Plan': ['Inventory Management', 'Menu Management', 'Reports'],
-    'Business Plan': ['Inventory Management', 'Menu Management', 'Reports', 'Reservations'],
-    'Premium Plan': [
+    // 'Basic Plan': ['Inventory Management', 'Menu Management'],
+    // 'Standard Plan': ['Inventory Management', 'Menu Management', 'Reports'],
+    'Core': ['Inventory Management', 'Menu Management', 'Reports', 'Reservations', 'Staff Management'],
+    'Elite': [
       'Inventory Management',
       'Menu Management',
       'Reports',
       'Reservations',
       'Staff Management',
-      'In App Chat',
-      'Multi Branch Management',
+      // 'In App Chat',
+      'Staff Management',
+      // 'Multi Branch Management',
+      'AI-Powered Reports and Management'
     ],
   };
 
   const planStyles = {
-    'Basic Plan': { background: '#1E2A38', color: '#A9CCE3' },
-    'Standard Plan': { background: '#2E4057', color: '#D4A017' },
-    'Business Plan': { background: '#1ABC9C', color: '#ECF0F1' },
-    'Premium Plan': { background: 'linear-gradient(to right, #D4A017, #8E44AD)', color: '#FFFFFF' },
+    // 'Basic Plan': { background: '#1E2A38', color: '#A9CCE3' },
+    // 'Standard Plan': { background: '#2E4057', color: '#D4A017' },
+    'Core': {
+      background: 'linear-gradient(to right, #36D1DC, #5B86E5)', // aqua → soft blue
+      color: '#FFFFFF'     // clean light text
+    },
+
+    'Elite': {
+      background: 'linear-gradient(to right, #0F2027, #203A43, #2C5364)', // dark modern teal gradient
+      color: '#FFFFFF'
+    }
   };
 
   const handleInitiatePayment = async (planId: string, planPrice: number) => {
