@@ -379,7 +379,7 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4">
               <div className="flex items-center gap-2">
-                <label className="text-sm font-semibold text-gray-700">Start Date:</label>
+                <label className="text-sm font-semibold text-gray-700">Date:</label>
                 <DatePicker
                   selected={selectedStartDate}
                   onChange={(date: Date | null) => {
@@ -399,7 +399,7 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
                   popperClassName="z-50"
                 />
               </div>
-              <div className="flex items-center gap-2">
+              {/* <div className="flex items-center gap-2">
                 <label className="text-sm font-semibold text-gray-700">End Date:</label>
                 <DatePicker
                   selected={selectedEndDate}
@@ -448,7 +448,7 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
                 className="bg-[#0E5D37] text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#0A4B2A] transition-colors"
               >
                 Apply Time
-              </button>
+              </button> */}
             </div>
           </div>
 
