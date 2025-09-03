@@ -30,6 +30,7 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
     { to: '/inventory', icon: ArchiveBox, text: 'Inventory & Stock' },
     { to: '/reservations', icon: Calendar2, text: 'Reservations' },
     { to: '/staffs', icon: UserSearch, text: 'Staffs' },
+    { to: '/subscriptions', icon: MoneyChange, text: 'Subscriptions' },
     { to: '/settings', icon: Setting, text: 'Settings' },
   ],
   SUPER_ADMIN: [
@@ -37,6 +38,7 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
     { to: '/agents', icon: UserSearch, text: 'Agents' },
     { to: '/reports', icon: Car, text: 'Logistics' },
     { to: '/shops', icon: MessageQuestion, text: 'Customer Care' },
+    { to: '/subscriptions', icon: MoneyChange, text: 'Subscriptions' },
     { to: '/settings', icon: Setting, text: 'Settings' },
     { to: '/operations', icon: Home, text: 'Operations' }, // Static route for sidebar
   ],
