@@ -192,7 +192,6 @@ export const orderApi = baseApi.injectEndpoints({
       },
       providesTags: ["MENU"],
     }),
-
     getDailySoldItems: builder.query<
       {
         startDate: string;
@@ -228,7 +227,6 @@ export const orderApi = baseApi.injectEndpoints({
       },
       providesTags: ['MENU'],
     }),
-
     downloadDailySoldItemsCsv: builder.query<
       string,
       { subdomain: string; startDate: string; endDate?: string; startTime?: string; endTime?: string }
@@ -274,6 +272,96 @@ export const orderApi = baseApi.injectEndpoints({
       },
       providesTags: ['MENU'],
     }),
+    getPaymentTypeSummary: builder.query<
+      {
+        startDate: string | null;
+        endDate: string | null;
+        summary: {
+          paymentType: string | null;
+          orderCount: number;
+          totalSubtotal: number;
+          totalDiscountAmount: number;
+          totalVatTax: number;
+          totalServiceFee: number;
+          totalRevenue: number;
+        }[];
+        totalOrders: number;
+        totalSubtotal: number;
+        totalDiscountAmount: number;
+        totalVatTax: number;
+        totalServiceFee: number;
+        totalRevenue: number;
+      },
+      { subdomain: string; startDate?: string; endDate?: string }
+    >({
+      query: ({ subdomain, startDate, endDate }) => {
+        const queryParams = new URLSearchParams();
+        if (startDate) queryParams.set('startDate', startDate);
+        if (endDate) queryParams.set('endDate', endDate);
+        queryParams.set('format', 'json');
+
+        const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+
+        return {
+          url: `/orders/${subdomain}/stats/payment-type-summary${queryString}`,
+          method: 'GET',
+          credentials: 'include',
+        };
+      },
+      async onQueryStarted(_args, { queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          toast.success("Payment type summary fetched successfully", { position: "top-right" });
+        } catch (err) {
+          console.error('Failed to fetch payment type summary:', err);
+          toast.error('Failed to fetch payment type summary', { position: 'top-right' });
+        }
+      },
+      providesTags: ['MENU'],
+    }),
+    downloadPaymentTypeSummaryCsv: builder.query<
+      string,
+      { subdomain: string; startDate?: string; endDate?: string }
+    >({
+      query: ({ subdomain, startDate, endDate }) => {
+        const queryParams = new URLSearchParams();
+        queryParams.set('format', 'csv');
+        if (startDate) queryParams.set('startDate', startDate);
+        if (endDate) queryParams.set('endDate', endDate);
+
+        const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+
+        return {
+          url: `/orders/${subdomain}/stats/payment-type-summary${queryString}`,
+          method: 'GET',
+          credentials: 'include',
+          responseHandler: (response) => response.text(),
+        };
+      },
+      async onQueryStarted({ subdomain, startDate, endDate }, { queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+
+          const safeEndDate = endDate || (startDate ? new Date(new Date(startDate).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+
+          link.href = url;
+          link.download = `payment-type-summary-${subdomain}${startDate ? `-${startDate}` : ''}${endDate ? `_to_${endDate}` : ''}.csv`;
+
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+          toast.success("Payment type summary CSV downloaded successfully", { position: "top-right" });
+        } catch (err) {
+          console.error('Failed to download payment type summary CSV:', err);
+          toast.error('Failed to download payment type summary CSV', { position: 'top-right' });
+        }
+      },
+      providesTags: ['MENU'],
+    }),
   }),
 });
 
@@ -294,5 +382,7 @@ export const {
   useGetDailySoldItemsQuery,
   useUpdateOrderItemsMutation,
   useGetBankDetailsQuery,
-  useLazyDownloadDailySoldItemsCsvQuery
+  useLazyDownloadDailySoldItemsCsvQuery,
+  useGetPaymentTypeSummaryQuery,
+  useLazyDownloadPaymentTypeSummaryCsvQuery,
 } = orderApi;

@@ -1,10 +1,11 @@
 import React, { useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Receipt as Btn } from 'iconsax-react';
-import { useGetDailySalesRevenueQuery, useGetDailySoldItemsQuery, useLazyDownloadDailySoldItemsCsvQuery } from '@/redux/api/order/order.api';
+import { useGetDailySalesRevenueQuery, useGetDailySoldItemsQuery, useLazyDownloadDailySoldItemsCsvQuery, useGetPaymentTypeSummaryQuery } from '@/redux/api/order/order.api';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { toast } from 'react-toastify';
+import { Money, Card, Bank, Wallet2, WalletRemove } from "iconsax-react";
 
 // Custom CSS for react-datepicker to match flat design with primary color
 const datePickerStyles = `
@@ -98,6 +99,16 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
     },
   );
 
+
+  const { data: paymentTypeData, isLoading: isPaymentTypeLoading, error: paymentTypeError } = useGetPaymentTypeSummaryQuery(
+    {
+      subdomain,
+      startDate: formattedStartDate,
+    },
+    {
+      skip: !formattedStartDate || isNaN(new Date(formattedStartDate).getTime()),
+    },
+  );
   /**
    * Sum up specific currency fields from an object
    * @param data - Object containing currency string fields
@@ -116,9 +127,9 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
 
     return formatted
       ? `₦${total.toLocaleString("en-NG", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}`
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`
       : total;
   }
 
@@ -455,28 +466,105 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
           {/* Cards Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Daily Sales Revenue Card */}
-            <div className="bg-white rounded-xl p-6 hover:bg-gray-50 transition-colors">
-              <h2 className="text-base font-semibold text-gray-900 mb-4">
-                Sales Revenue for {formattedStartDate}
-                {formattedEndDate && formattedEndDate !== formattedStartDate ? ` to ${formattedEndDate}` : ''}{' '}
-                {queryStartTime && queryEndTime ? `(${queryStartTime}-${queryEndTime})` : '(Full Day)'}
-              </h2>
-              {isRevenueLoading ? (
-                <div className="flex items-center gap-2 text-gray-500 text-sm">
-                  <svg className="animate-spin h-5 w-5 text-[#0E5D37]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Loading...
+
+
+            <div className="">
+              {/* Daily Sales Revenue Card */}
+              <div className="bg-white rounded-2xl p-8 hover:bg-gray-50 transition-colors">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-10">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Sales Revenue
+                  </h2>
+                  <span className="text-sm text-gray-500">
+                    {formattedStartDate}
+                    {formattedEndDate && formattedEndDate !== formattedStartDate
+                      ? ` → ${formattedEndDate}`
+                      : ""}{" "}
+                    {queryStartTime && queryEndTime
+                      ? `(${queryStartTime}-${queryEndTime})`
+                      : "(Full Day)"}
+                  </span>
                 </div>
-              ) : revenueError ? (
-                <p className="text-red-600 bg-red-50 p-2 rounded-lg text-sm">Error loading revenue: {revenueError.message || 'Unknown error'}</p>
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-4xl font-bold text-[#0E5D37]">{revenueData?.revenue || '₦0'}</p>
+
+                {/* Main Revenue */}
+                {isRevenueLoading ? (
+                  <div className="flex items-center gap-2 text-gray-500 text-sm">
+                    <svg
+                      className="animate-spin h-5 w-5 text-[#0E5D37]"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 
+               0 0 5.373 0 12h4zm2 5.291A7.962 
+               7.962 0 014 12H0c0 3.042 1.135 
+               5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    Loading...
+                  </div>
+                ) : revenueError ? (
+                  <p className="text-red-600 bg-red-50 p-3 rounded-lg text-sm">
+                    Error loading revenue: {revenueError.message || "Unknown error"}
+                  </p>
+                ) : (
+                  <p className="text-5xl font-bold text-[#0E5D37] mb-12 tracking-tight">
+                    {revenueData?.revenue || "₦0"}
+                  </p>
+                )}
+
+                {/* Payment Breakdown */}
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-6">
+                    Payment Breakdown
+                  </h3>
+                  <div className="grid grid-cols-2 gap-x-12 gap-y-12">
+                    {paymentTypeData?.summary?.map((item, index) => {
+                      const Icon =
+                        item.paymentType === "CASH"
+                          ? Money
+                          : item.paymentType === "CARD"
+                            ? Card
+                            : item.paymentType === "TRANSFER"
+                              ? Bank
+                              : item.paymentType === "ONLINE"
+                                ? Wallet2
+                                : WalletRemove; // fallback for null/unknown
+
+                      return (
+                        <div key={index} className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Icon size="18" color="#0E5D37" variant="Bulk" />
+                            <p className="text-sm font-medium text-gray-700">
+                              {item.paymentType || "Unknown"}
+                            </p>
+                          </div>
+                          <p className="text-2xl font-bold text-[#0E5D37] leading-tight">
+                            {item.orderCount}
+                          </p>
+                          <p className="text-lg font-semibold text-[#0E5D37]">
+                            ₦{item.totalRevenue?.toLocaleString()}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              )}
+              </div>
             </div>
+
 
             {/* Daily Sold Items Card */}
             <div className="bg-white rounded-xl p-6 hover:bg-gray-50 transition-colors">

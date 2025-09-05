@@ -81,6 +81,7 @@ const CardItem: React.FC<CardItemProps> = ({
     { value: "TRANSFER", label: "Transfer" },
     { value: "CARD", label: "Card" },
     { value: "ONLINE", label: "Online" },
+    { value: "DELIVERY", label: "Delivery" },
   ];
 
   const handleDelete = async () => {
