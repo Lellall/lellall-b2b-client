@@ -32,6 +32,7 @@ function StaffForm({ formValues, setFormValues, setModalOpen, handleChange, onSu
     "BARTENDER",
     "HOST",
     "KITCHEN_STAFF",
+    "CASHIER",
   ];
 
   return (
