@@ -33,7 +33,7 @@ const Inventory = () => {
   }, [searchParams]);
 
   // Check if user is a WAITER
-  const isWaiter = user.role === "WAITER" || "CASHIER";
+  const isWaiter = user.role === "WAITER" || user.role === "CASHIER";
 
   return (
     <>
