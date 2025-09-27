@@ -174,7 +174,12 @@ const Subscriptions = () => {
   };
 
   const handleInitiatePayment = async (planId: string, planPrice: number) => {
-    if (!user?.ownedRestaurant?.id || !user?.email) {
+    console.log(user, 'user')
+    
+    // Get restaurant ID from either ownedRestaurant (ADMIN) or restaurant (MANAGER)
+    const restaurantId = user?.ownedRestaurant?.id || user?.restaurant?.id;
+    
+    if (!restaurantId || !user?.email) {
       toast.error('User or restaurant information is missing.');
       return;
     }
@@ -184,7 +189,7 @@ const Subscriptions = () => {
       return;
     }
 
-    const reference = `sub_${user.ownedRestaurant.id}_${Date.now()}`;
+    const reference = `sub_${restaurantId}_${Date.now()}`;
     const paymentDto = {
       email: user.email,
       amount: isChecked ? (planPrice * 12).toString() : planPrice.toString(),
@@ -198,10 +203,10 @@ const Subscriptions = () => {
     try {
       console.log('Initiating payment with DTO:', paymentDto);
       const response = await initiatePayment({
-        restaurantId: user.ownedRestaurant.id,
+        restaurantId: restaurantId as string,
         dto: paymentDto,
         provider: selectedProvider,
-        subdomain,
+        subdomain: subdomain ?? undefined,
       }).unwrap();
       console.log('Payment initiation response:', response);
       toast.success('Redirecting to payment...');

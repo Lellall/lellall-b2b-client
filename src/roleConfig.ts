@@ -37,6 +37,7 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
     { to: '/reservations', icon: Calendar2, text: 'Reservations' },
     { to: '/staffs', icon: UserSearch, text: 'Staffs' },
     { to: '/subscriptions', icon: MoneyChange, text: 'Subscriptions' },
+    { to: '/verify-payment', icon: null, text: '' },
     { to: '/settings', icon: Setting, text: 'Settings' },
   ],
   SUPER_ADMIN: [
