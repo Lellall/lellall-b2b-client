@@ -29,6 +29,7 @@ const endpointsRequiringToken = [
   "request",
   "reservations",
   "^/restaurants/[a-fA-F0-9-]+$",
+  "^/restaurants/[^/]+/service-fee$",
   "^/supply-request/[a-fA-F0-9-]+$",
   "^/request/[a-fA-F0-9-]+$",
   "^/products/[a-fA-F0-9-]+$",

@@ -1,5 +1,9 @@
 import { useState } from "react";
 import { useUpdateOrdersMutation } from "@/redux/api/order/order.api";
+import { useGetVatConfigQuery } from "@/redux/api/vat/vat.api";
+import { useGetServiceFeeConfigQuery } from "@/redux/api/service-fee/service-fee.api";
+import { useSelector } from "react-redux";
+import { selectAuth } from "@/redux/api/auth/auth.slice";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface OrderItem {
@@ -47,6 +51,16 @@ const OrderCard = ({
 }: OrderCardProps) => {
   const [selectedStatus, setSelectedStatus] = useState(status);
   const [updateOrderStatus] = useUpdateOrdersMutation();
+  
+  // Get VAT configuration
+  const { data: vatConfig } = useGetVatConfigQuery(subdomain, {
+    skip: !subdomain,
+  });
+
+  // Get service fee configuration
+  const { data: serviceFeeConfig } = useGetServiceFeeConfigQuery(subdomain, {
+    skip: !subdomain,
+  });
 
   const handleStatusChange = async (newStatus: string) => {
     setSelectedStatus(newStatus);
@@ -129,13 +143,19 @@ const OrderCard = ({
               <span className="text-[10px] sm:text-sm font-semibold">{discountAmount}</span>
             </div>
           )}
-          <div className="flex items-center gap-4 sm:gap-6">
-            <span className="text-[10px] sm:text-sm font-medium">VAT (7.5%)</span>
-            <span className="text-[10px] sm:text-sm font-semibold">{vatTax}</span>
-          </div>
-          {serviceFee && (
+          {vatConfig?.vatEnabled && (
             <div className="flex items-center gap-4 sm:gap-6">
-              <span className="text-[10px] sm:text-sm font-medium">Service Fee (10%)</span>
+              <span className="text-[10px] sm:text-sm font-medium">
+                VAT ({(vatConfig.vatRate * 100).toFixed(1)}%)
+              </span>
+              <span className="text-[10px] sm:text-sm font-semibold">{vatTax}</span>
+            </div>
+          )}
+          {serviceFee && serviceFeeRate > 0 && (
+            <div className="flex items-center gap-4 sm:gap-6">
+              <span className="text-[10px] sm:text-sm font-medium">
+                Service Fee ({(serviceFeeRate * 100).toFixed(1)}%)
+              </span>
               <span className="text-[10px] sm:text-sm font-semibold">{serviceFee}</span>
             </div>
           )}

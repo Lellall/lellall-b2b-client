@@ -7,6 +7,7 @@ import { theme } from "@/theme/theme"
 import { Button } from "@/components/ui/button"
 import { toast } from "react-toastify"
 import { useLoginMutation } from "@/redux/api/auth/auth.api"
+import { getSubdomainFromUrl } from "@/utils/config"
 
 const schema = yup
   .object({
@@ -28,7 +29,16 @@ const Login = () => {
 
   const onSubmit = async (data) => {
     try {
-      const result = await login(data).unwrap()
+      // Get subdomain from URL
+      const subdomain = getSubdomainFromUrl()
+      
+      // Create login payload with subdomain
+      const loginPayload = {
+        ...data,
+        subdomain: subdomain || undefined // Include subdomain if available
+      }
+      
+      const result = await login(loginPayload).unwrap()
       // Handle successful login, perhaps navigate to home or dashboard
       localStorage.setItem("access_token", result.accessToken)
 
