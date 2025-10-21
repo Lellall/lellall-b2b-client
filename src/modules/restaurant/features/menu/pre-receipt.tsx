@@ -73,7 +73,25 @@ const PreReceipt: React.FC<PreReceiptProps> = ({ order, subdomain, tableNumber, 
         className="invisible h-0 w-0 overflow-hidden print:visible print:h-auto print:w-full print-container"
         style={{ backgroundColor: bgColor, color: fontColor }}
       >
-        <div className="min-h-[100vh] w-full p-3 font-sans text-xs leading-tight box-border">
+        <div className="min-h-[100vh] w-full p-3 font-sans text-xs leading-tight box-border relative">
+          {/* Background watermark for 355 */}
+          {subdomain === "355" && (
+            <div 
+              className="absolute inset-0 flex items-center justify-center pointer-events-none"
+              style={{ 
+                opacity: 0.08,
+                zIndex: 0,
+                fontSize: '120px',
+                fontWeight: '900',
+                color: '#ff6b35',
+                fontFamily: 'Arial, sans-serif',
+                letterSpacing: '10px'
+              }}
+            >
+              @10
+            </div>
+          )}
+          <div className="relative z-10">
           <div className="text-center mb-4">
             <div className="inline-block">
               <h1 className="text-[30px] font-extrabold tracking-widest leading-tight" style={{ fontFamily: 'Arial, sans-serif', color: fontColor }}>
@@ -113,7 +131,23 @@ const PreReceipt: React.FC<PreReceiptProps> = ({ order, subdomain, tableNumber, 
           </table>
           <hr className="border-gray-300 my-1" style={{ borderColor: fontColor }} />
           <div className="text-left">
-            <p className="mt-1">Thank you for dining with us!</p>
+            {subdomain === "355" ? (
+              <div className="text-right" style={{ marginTop: '-10px' }}>
+                <p className="font-bold text-sm" style={{ color: '#ff6b35', textShadow: '2px 2px 4px rgba(0,0,0,0.2)', fontWeight: '800' }}>
+                  🎉 Thank you for dining with us! 🎉
+                </p>
+                <p className="text-xs font-semibold mt-1" style={{ color: '#2d3748', letterSpacing: '2px', fontWeight: '700' }}>
+                  ✨ 355 @ 10: ✨
+                </p>
+                <p className="text-xs font-medium italic" style={{ color: '#1a365d', lineHeight: '1.3', fontWeight: '600' }}>
+                  Your patronage for the past 10 years<br/>
+                  is well celebrated thanks! 🏆
+                </p>
+              </div>
+            ) : (
+              <p className="mt-1">Thank you for dining with us!</p>
+            )}
+          </div>
           </div>
         </div>
       </div>
