@@ -134,7 +134,7 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain }) => {
                 </p>
                 <p className="text-xs font-medium italic" style={{ color: '#1a365d', lineHeight: '1.3', fontWeight: '600' }}>
                   Your patronage for the past 10 years<br/>
-                  is well celebrated thanks! 🏆
+                  is well celebrated thank you! 🏆
                 </p>
               </div>
             ) : (
