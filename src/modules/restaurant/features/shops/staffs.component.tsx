@@ -4,8 +4,11 @@ import NavigationTabs, { Tab } from "@/components/ui/navigation-tab";
 import Table from "@/components/ui/table";
 import { theme } from "@/theme/theme"
 import { Add, More } from "iconsax-react"
+import { useState } from "react";
 
 const Staffs = () => {
+  const [activeTab, setActiveTab] = useState<string>("staffs-management");
+  
   const statuses = ["Active", "On Leave", "In Active"];
   const StatusTag = ({ status }: { status: string }) => {
     const statusColors: Record<string, string> = {
@@ -20,12 +23,23 @@ const Staffs = () => {
       </span>
     );
   };
+  
   const handleStatusChange = (status: string) => {
     console.log("Selected Status:", status);
   };
+
+  const handleTabChange = (tabName: string) => {
+    const tabMap: { [key: string]: string } = {
+      "Staffs Management": "staffs-management",
+      "Attendace": "attendance"
+    };
+    setActiveTab(tabMap[tabName] || "staffs-management");
+    console.log("Selected Tab:", tabName);
+  };
+
   const tabs: Tab[] = [
-    { name: "Staffs Management", active: true },
-    { name: "Attendace", active: false },
+    { name: "Staffs Management", active: activeTab === "staffs-management" },
+    { name: "Attendace", active: activeTab === "attendance" },
   ];
   const columns = [
     { key: "staffId", label: "Staff ID" },
@@ -61,7 +75,7 @@ const Staffs = () => {
         </div>
       </div>
       <div className="mt-5">
-        <NavigationTabs tabs={tabs} width="270px" />
+        <NavigationTabs tabs={tabs} width="270px" onTabChange={handleTabChange} />
       </div>
       <div className="mt-5">
         <Table columns={columns} data={data}

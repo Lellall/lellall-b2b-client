@@ -19,7 +19,9 @@ interface SearchBarProps {
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; // Add onChange prop
 }
 
-const SearchContainer = styled.div<SearchBarProps>`
+const SearchContainer = styled.div.withConfig({
+  shouldForwardProp: (prop) => !['width', 'height', 'border', 'borderRadius', 'backgroundColor', 'shadow'].includes(prop),
+})<SearchBarProps>`
   display: flex;
   align-items: center;
   width: ${({ width }) => width || 'min(100%, 400px)'}; /* Responsive width */
@@ -45,7 +47,9 @@ const SearchContainer = styled.div<SearchBarProps>`
   }
 `;
 
-const SearchInput = styled.input<SearchBarProps>`
+const SearchInput = styled.input.withConfig({
+  shouldForwardProp: (prop) => !['fontSize', 'color', 'inputPadding', 'placeholderColor'].includes(prop),
+})<SearchBarProps>`
   flex: 1;
   border: none;
   outline: none;
@@ -66,7 +70,9 @@ const SearchInput = styled.input<SearchBarProps>`
   }
 `;
 
-const IconWrapper = styled.div<SearchBarProps>`
+const IconWrapper = styled.div.withConfig({
+  shouldForwardProp: (prop) => !['iconColor'].includes(prop),
+})<SearchBarProps>`
   display: flex;
   align-items: center;
   justify-content: center;

@@ -8,6 +8,8 @@ type ModalProps = {
   position?: "center" | "left" | "right" | "top" | "bottom";
   width?: string;
   variant?: "modal" | "wizard";
+  title?: string;
+  size?: "sm" | "md" | "lg";
   children: React.ReactNode;
 };
 
@@ -29,6 +31,7 @@ const ModalContent = styled.div<{
   open: boolean;
   width?: string;
   variant?: ModalProps["variant"];
+  size?: ModalProps["size"];
 }>`
   background: white;
   border-radius: 16px;
@@ -38,6 +41,18 @@ const ModalContent = styled.div<{
 
   /* Base padding */
   padding: ${({ variant }) => (variant === "wizard" ? "2rem" : "1.5rem")};
+
+  /* Size handling */
+  ${({ size }) => {
+    switch (size) {
+      case "sm":
+        return "width: 400px; max-width: 90vw;";
+      case "lg":
+        return "width: 800px; max-width: 90vw;";
+      default:
+        return "width: 600px; max-width: 90vw;";
+    }
+  }}
 
   /* Width handling */
   ${({ width, variant }) => `
@@ -105,6 +120,8 @@ const Modal: React.FC<ModalProps> = ({
   position = "center",
   width,
   variant = "modal",
+  title,
+  size = "md",
   children,
 }) => {
   if (!isOpen) return null;
@@ -116,9 +133,15 @@ const Modal: React.FC<ModalProps> = ({
         open={isOpen}
         width={width}
         variant={variant}
+        size={size}
         onClick={(e) => e.stopPropagation()}
         className="border border-gray-200"
       >
+        {title && (
+          <div className="mb-4 pb-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+          </div>
+        )}
         {children}
       </ModalContent>
     </ModalOverlay>

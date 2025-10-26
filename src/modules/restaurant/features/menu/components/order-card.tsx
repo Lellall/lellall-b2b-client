@@ -62,6 +62,9 @@ const OrderCard = ({
     skip: !subdomain,
   });
 
+  // Extract service fee rate from config
+  const serviceFeeRate = serviceFeeConfig?.rate || 0;
+
   const handleStatusChange = async (newStatus: string) => {
     setSelectedStatus(newStatus);
     try {

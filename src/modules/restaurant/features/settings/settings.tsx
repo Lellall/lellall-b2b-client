@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Sun, Moon, User, Headphones, LogOut, Settings as SettingsIcon, Wallet } from "lucide-react";
+import { Sun, Moon, User, Headphones, LogOut, Settings as SettingsIcon, Wallet, Building2 } from "lucide-react";
 import Input from "@/components/input/input";
 import { useDispatch, useSelector } from "react-redux";
 import { selectAuth, logout } from "@/redux/api/auth/auth.slice";
@@ -10,6 +10,7 @@ import { useGetVatConfigQuery, useUpdateVatConfigMutation, VatConfig } from "@/r
 import { useGetServiceFeeConfigQuery, useUpdateServiceFeeConfigMutation, ServiceFeeConfig } from "@/redux/api/service-fee/service-fee.api";
 import { getSubdomainFromUrl } from "@/utils/config";
 import { toast } from "react-toastify";
+import BankDetailsManager from "./components/bank-details-manager";
 
 const Settings = () => {
   const [theme, setTheme] = useState("light");
@@ -17,6 +18,13 @@ const Settings = () => {
   const { isAuthenticated, user } = useSelector(selectAuth);
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+
+  // Debug: Log user object to see its structure
+  console.log("Settings - User object:", user);
+  console.log("Settings - User restaurantId:", user?.restaurantId);
+  console.log("Settings - User restaurant.id:", user?.restaurant?.id);
+  console.log("Settings - User ownedRestaurants:", user?.ownedRestaurants);
+  console.log("Settings - Final restaurantId being passed:", user?.restaurantId || user?.restaurant?.id || "");
 
   // Get subdomain for VAT API calls
   const subdomain = getSubdomainFromUrl();
@@ -249,6 +257,18 @@ const Settings = () => {
                     onClick={() => setActiveSection("service-fee")}
                   >
                     <Wallet className="w-5 h-5 mr-3" /> Service Fee
+                  </button>
+                )}
+                {canAccessFinancialSettings && (
+                  <button 
+                    className={`flex items-center w-full px-4 py-3 rounded-lg text-sm ${
+                      activeSection === "bank-details" 
+                        ? "bg-gray-100 text-green-900 font-medium" 
+                        : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                    onClick={() => setActiveSection("bank-details")}
+                  >
+                    <Building2 className="w-5 h-5 mr-3" /> Bank Details
                   </button>
                 )}
                 <button className="flex items-center w-full px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 text-sm">
@@ -516,6 +536,20 @@ const Settings = () => {
                     </button>
                   </div>
                 </form>
+              </>
+            )}
+
+            {activeSection === "bank-details" && (
+              <>
+                <div className="text-xl sm:text-2xl p-2 text-green-800 font-semibold">
+                  Bank Details Management
+                </div>
+                <div className="text-sm text-gray-600 mb-6">
+                  Manage your restaurant's bank account information for payments and settlements
+                </div>
+
+                {/* Bank Details Manager Component */}
+                <BankDetailsManager restaurantId={user?.restaurantId || user?.restaurant?.id || user?.ownedRestaurants?.[0]?.id || ""} />
               </>
             )}
           </div>

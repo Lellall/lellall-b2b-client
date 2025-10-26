@@ -1,11 +1,51 @@
-import React, { useRef } from 'react';
-import { useReactToPrint } from 'react-to-print';
+import { useRef } from 'react';
 import { Receipt as Btn } from 'iconsax-react';
-import { useGetBankDetailsQuery } from '@/redux/api/order/order.api';
 
-const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain }) => {
+interface BankDetail {
+  id: string;
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+  restaurantId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface OrderItem {
+  id: string;
+  quantity: number;
+  menuItem: {
+    name: string;
+    price: number;
+  };
+}
+
+interface OrderData {
+  createdAt: string;
+  waiter?: {
+    firstName?: string;
+    lastName?: string;
+  };
+  status: string;
+  specialNote?: string;
+  orderItems: OrderItem[];
+  subtotal: number;
+  discountPercentage?: number;
+  discountAmount?: number;
+  vatTax: number;
+  serviceFee: number;
+  total: number;
+  paymentType: string;
+}
+
+const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain }: {
+  orderData: OrderData;
+  reactToPrintFn: () => void;
+  bankDetails: BankDetail[] | BankDetail | null;
+  subdomain: string;
+}) => {
   const componentRef = useRef<HTMLDivElement>(null);
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('en-US', {
       dateStyle: 'medium',
       timeStyle: 'short',
@@ -61,10 +101,23 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain }) => {
           </div>
           <div className="mb-2 text-right">
             <p className="font-semibold">Bank Details</p>
-            <p>Bank Name: {bankDetails?.bankName}</p>
-            <p>Account Number: {bankDetails?.accountNumber}</p>
-            <p>Account Name: {bankDetails?.accountName}</p>
-            <p>Payment Type: {orderData.paymentType}</p>
+            {bankDetails && Array.isArray(bankDetails) && bankDetails.length > 0 ? (
+              bankDetails.map((bank, index) => (
+                <div key={bank.id || index} className="mb-2">
+                  <p>Bank Name: {bank.bankName}</p>
+                  <p>Account Number: {bank.accountNumber}</p>
+                  <p>Account Name: {bank.accountName}</p>
+                  {index === 0 && <p>Payment Type: {orderData.paymentType}</p>}
+                </div>
+              ))
+            ) : (
+              <div>
+                <p>Bank Name: {(bankDetails as BankDetail)?.bankName || 'N/A'}</p>
+                <p>Account Number: {(bankDetails as BankDetail)?.accountNumber || 'N/A'}</p>
+                <p>Account Name: {(bankDetails as BankDetail)?.accountName || 'N/A'}</p>
+                <p>Payment Type: {orderData.paymentType}</p>
+              </div>
+            )}
           </div>
           <hr className="border-gray-300 my-1" />
           <div className="mb-2">
@@ -95,7 +148,7 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain }) => {
               </tr>
             </thead>
             <tbody>
-              {orderData.orderItems.map((item) => (
+              {orderData.orderItems.map((item: OrderItem) => (
                 <tr key={item.id} className="border-b border-gray-200">
                   <td className="p-1 truncate">{item.menuItem.name}</td>
                   <td className="p-1">{item.quantity}</td>
@@ -134,7 +187,7 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain }) => {
                 </p>
                 <p className="text-xs font-medium italic" style={{ color: '#1a365d', lineHeight: '1.3', fontWeight: '600' }}>
                   Your patronage for the past 10 years<br/>
-                  is well celebrated thank you! 🏆
+                  is well celebrated thanks! 🏆
                 </p>
               </div>
             ) : (

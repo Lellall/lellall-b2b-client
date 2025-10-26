@@ -56,7 +56,9 @@ const LayoutWrapper = styled.div`
   overflow: hidden;
 `;
 
-const Sidebar = styled.div<SidebarProps>`
+const Sidebar = styled.div.withConfig({
+  shouldForwardProp: (prop) => !['isMobile', 'isSidebarOpen'].includes(prop),
+})<SidebarProps>`
   width: ${(props) => (props.isMobile ? (props.isSidebarOpen ? '250px' : '0') : props.isSidebarOpen ? '250px' : '80px')};
   background-color: ${(props) => props.theme.colors.primary};
   color: ${(props) => props.theme.colors.primaryFont};
@@ -100,7 +102,9 @@ const Backdrop = styled.div<{ isOpen: boolean }>`
   z-index: 999;
 `;
 
-const LogoWrapper = styled.div<LogoWrapperProps>`
+const LogoWrapper = styled.div.withConfig({
+  shouldForwardProp: (prop) => !['isSidebarOpen'].includes(prop),
+})<LogoWrapperProps>`
   display: flex;
   align-items: center;
   justify-content: ${(props) => (props.isSidebarOpen ? 'flex-start' : 'center')};
@@ -177,7 +181,9 @@ const Icon = styled.div`
   align-items: center;
 `;
 
-const Text = styled.span<TextProps>`
+const Text = styled.span.withConfig({
+  shouldForwardProp: (prop) => !['isSidebarOpen'].includes(prop),
+})<TextProps>`
   font-size: 14px;
   font-weight: 400;
   display: ${(props) => (props.isSidebarOpen ? 'inline' : 'none')};

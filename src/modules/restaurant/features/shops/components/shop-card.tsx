@@ -1,6 +1,6 @@
-import { More } from 'iconsax-react';
 import React from 'react';
 import styled from 'styled-components';
+import BranchActionsDropdown from './branch-actions-dropdown';
 
 interface CardProps {
   imageSrc: string;
@@ -8,6 +8,8 @@ interface CardProps {
   actionDotColor?: string;
   className?: string;
   onClick: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 const StyledCard = styled.div`
@@ -32,17 +34,23 @@ const StyledImage = styled.img`
   border-radius: 8px;
 `;
 
-const Card: React.FC<CardProps> = ({ imageSrc, title, actionDotColor = 'bg-black', className = '', onClick }) => {
+const Card: React.FC<CardProps> = ({ imageSrc, title, actionDotColor = 'bg-black', className = '', onClick, onEdit, onDelete }) => {
   return (
-    <div onClick={onClick}>
-      <StyledCard className={className}>
-        <div className="relative flex flex-col">
-          <StyledImage src={imageSrc} alt={title} />
-        </div>
-      </StyledCard>
-      <div className="mt-1 w-[350px] px-1 flex justify-between">
+    <div className="relative">
+      <div onClick={onClick}>
+        <StyledCard className={className}>
+          <div className="relative flex flex-col">
+            <StyledImage src={imageSrc} alt={title} />
+          </div>
+        </StyledCard>
+      </div>
+      <div className="mt-1 w-[350px] px-1 flex justify-between items-center">
         <div className='text-xs'>{title}</div>
-        <div className='mr-1'><More size="20px" color="#000" /></div>
+        <div className='mr-1'>
+          {onEdit && onDelete ? (
+            <BranchActionsDropdown onEdit={onEdit} onDelete={onDelete} />
+          ) : null}
+        </div>
       </div>
     </div>
   );

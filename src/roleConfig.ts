@@ -29,6 +29,9 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
     { to: '/settings', icon: Setting, text: 'Settings' },
     { to: '/subscriptions', icon: MoneyChange, text: 'Subscriptions' },
     { to: '/verify-payment', icon: null, text: '' },
+    { to: '/shops', icon: MessageQuestion, text: 'shops' },
+    { to: '/branches', icon: null, text: '' },
+    { to: '/branches/:branchId', icon: null, text: '' }
   ],
   MANAGER: [
     { to: '/', icon: Home, text: 'Dashboard', end: true },
@@ -39,6 +42,8 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
     { to: '/subscriptions', icon: MoneyChange, text: 'Subscriptions' },
     { to: '/verify-payment', icon: null, text: '' },
     { to: '/settings', icon: Setting, text: 'Settings' },
+    { to: '/branches', icon: null, text: '' },
+    { to: '/branches/:branchId', icon: null, text: '' }
   ],
   SUPER_ADMIN: [
     { to: '/', icon: Home, text: 'Operations', end: true },
@@ -48,6 +53,8 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
     { to: '/subscriptions', icon: MoneyChange, text: 'Subscriptions' },
     { to: '/settings', icon: Setting, text: 'Settings' },
     { to: '/operations', icon: Home, text: 'Operations' }, // Static route for sidebar
+    { to: '/branches', icon: null, text: '' },
+    { to: '/branches/:branchId', icon: null, text: '' }
   ],
 };
 

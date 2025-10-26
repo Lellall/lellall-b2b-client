@@ -82,6 +82,7 @@ const App = () => {
       />
       <Route path="shops" element={<Shops />} />
       <Route path="shops/:id" element={<ViewShop />} />
+      <Route path="branches/:branchId" element={<ViewShop />} />
       <Route path="settings" element={<Settings />} />
       <Route path="inventory" element={<Inventory />} />
       <Route path="menu" element={<Menu />} />

@@ -1,222 +1,124 @@
-import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-} from "@/components/ui/accordion";
-import styled from "styled-components";
 import { useState } from 'react';
-import { StyledButton } from "@/components/button/button-lellall";
-import { Add } from "iconsax-react";
-import ModalComponent from "./components/branch-modal";
+import Card from './components/shop-card';
+import img from '../.././../../../assets/placeholder.svg';
+import { StyledButton } from '@/components/button/button-lellall';
+import { Add } from 'iconsax-react';
+import SearchBar from '@/components/search-bar/search-bar';
+import { useNavigate } from 'react-router-dom';
+import { useGetBranchesQuery } from '@/redux/api/branches/branches.api';
+import { useSelector } from 'react-redux';
+import { selectAuth } from '@/redux/api/auth/auth.slice';
+import AddBranchModal from './components/add-branch-modal';
 
-const ModAccordion = styled(Accordion)`
-   border: none;
-   display: flex;
-   flex-wrap: wrap; 
-   overflow-x: auto; 
-   gap: 20px; 
-`;
+const Branch = () => {
+    const navigate = useNavigate();
+    const { user } = useSelector(selectAuth);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    
+    // Get parentId from user's restaurant
+    const parentId = user?.ownedRestaurant?.id || user?.restaurant?.id || '';
+    
+    // Fetch branches using the correct endpoint
+    const { data: branches = [], isLoading, error } = useGetBranchesQuery(parentId);
 
-const AccordionItemWrapper = styled.div`
-  width: 360px; 
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  background: #fff;
-  border-radius: 8px;
-  overflow: hidden;
-`;
-
-const StyledAccordionTrigger = styled(AccordionTrigger)`
-  padding: 12px 16px;
-  background-color: #fff;
-  border-bottom: 1px solid #e5e7eb;
-  width: 100%;
-  text-align: left;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-
-  &:hover {
-    background-color: #e5e7eb;
-  }
-`;
-
-const StyledAccordionContent = styled(AccordionContent)`
-  padding: 12px 16px;
-`;
-
-const ListItem = styled.div`
-  display: flex;
-  position: relative;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 16px;
-  background-color: #fff;
-  border-top: 1px solid #e5e7eb;
-  cursor: pointer;
-
-  &:hover {
-    background-color: #f3f4f6;
-  }
-
-  &:first-child {
-    border-top: none;
-  }
-`;
-
-const Dot = styled.div`
-  width: 6px;
-  height: 6px;
-  background-color: #333;
-  border-radius: 50%;
-  position: absolute;
-  left: 5px; /* Adjust based on your padding */
-  top: 50%;
-  transform: translateY(-50%);
-`;
-
-const DeleteIcon = styled.div`
-  color: red;
-  cursor: pointer;
-  margin-left: 10px
-`;
-
-const AddButton = styled.button`
-  background-color: #fff;
-  color: #333;
-  border: none;
-  padding: 8px 16px;
-  margin-top: 10px;
-  cursor: pointer;
-  border-radius: 4px;
-  display: block;
-  margin: 0 auto; /* Center the button */
-  &:hover {
-    background-color: #0056b3;
-  }
-`;
-
-export function AccordionDemo() {
-    // State for each accordion
-    const [accordionStates, setAccordionStates] = useState(
-        Array.from({ length: 3 }, (_, index) => ({
-            value: `item-${index + 1}`,
-            title: `Branches ${index + 1}`,
-            inputs: []
-        }))
-    );
-
-    // Function to add input for a specific accordion
-    const addInput = (accordionIndex) => {
-        setAccordionStates(prevStates => {
-            const newStates = [...prevStates];
-            newStates[accordionIndex] = {
-                ...newStates[accordionIndex],
-                inputs: [
-                    ...newStates[accordionIndex].inputs,
-                    { id: newStates[accordionIndex].inputs.length + 1, value: '' }
-                ]
-            };
-            return newStates;
-        });
+    const handleAddBranch = () => {
+        setIsModalOpen(true);
     };
 
-    // Function to handle input change for a specific accordion
-    const handleChange = (accordionIndex, inputId, newValue) => {
-        setAccordionStates(prevStates => {
-            const updatedInputs = prevStates[accordionIndex].inputs.map(input =>
-                input.id === inputId ? { ...input, value: newValue } : input
-            );
-            const newStates = [...prevStates];
-            newStates[accordionIndex] = {
-                ...newStates[accordionIndex],
-                inputs: updatedInputs
-            };
-            return newStates;
-        });
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
     };
 
-    // Function to delete input for a specific accordion
-    const deleteInput = (accordionIndex, inputId) => {
-        setAccordionStates(prevStates => {
-            const newInputs = prevStates[accordionIndex].inputs.filter(input => input.id !== inputId);
-            const newStates = [...prevStates];
-            newStates[accordionIndex] = {
-                ...newStates[accordionIndex],
-                inputs: newInputs
-            };
-            return newStates;
-        });
-    };
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
+            </div>
+        );
+    }
 
-    // Function to handle editable title changes
-    const handleTitleChange = (accordionIndex, newTitle) => {
-        setAccordionStates(prevStates => {
-            const newStates = [...prevStates];
-            newStates[accordionIndex] = {
-                ...newStates[accordionIndex],
-                title: newTitle
-            };
-            return newStates;
-        });
-    };
-
-    const defaultExpanded = accordionStates.map(item => item.value);
+    if (error) {
+        return (
+            <div className="text-center py-8">
+                <p className="text-red-500">Failed to load branches. Please try again.</p>
+            </div>
+        );
+    }
 
     return (
-        <>
-        <ModAccordion
-            type="multiple"
-            defaultValue={defaultExpanded}
-            collapsible
-            className="w-full"
-        >
-            {accordionStates.map((item, index) => (
-                <AccordionItemWrapper key={item.value}>
-                    <AccordionItem value={item.value}>
-                        <StyledAccordionTrigger>
-                            <div 
-                                className="py-2 px-3 mr-1 bg-gray-100 rounded w-full" 
-                                contentEditable="true"
-                                onBlur={(e) => handleTitleChange(index, e.currentTarget.textContent)}
-                                suppressContentEditableWarning={true}
-                            >
-                                {item.title}
-                            </div>
-                        </StyledAccordionTrigger>
-                        <StyledAccordionContent>
-                            {item.inputs.map(input => (
-                                <ListItem key={input.id} style={{ position: 'relative' }}>
-                                    <Dot />
-                                    <input
-                                        type="text"
-                                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2`}
-                                        value={input.value}
-                                        onChange={(e) => handleChange(index, input.id, e.target.value)}
-                                        placeholder="Enter branch name"
-                                    />
-                                    <DeleteIcon onClick={() => deleteInput(index, input.id)}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                        </svg>
-                                    </DeleteIcon>
-                                </ListItem>
-                            ))}
-                            <div className="my-2 mb-2 flex justify-center">
-                                <StyledButton onClick={() => addInput(index)} style={{ padding: '19px 15px', fontWeight: 300,}} background={'#fff'} color="#000" width='130px' variant="outline">
-                                    <Add size="32" color="#000" /> Add Sub Chain
-                                </StyledButton>
-                            </div>
-                        </StyledAccordionContent>
-                    </AccordionItem>
-                </AccordionItemWrapper>
-            ))}
-        </ModAccordion>
-        {/* <ModalComponent /> */}
-        </>
-    )
-}
+        <div>
+            <div className="flex mb-5 justify-between">
+                <div>
+                    <SearchBar
+                        placeholder="Search branches"
+                        width="300px"
+                        height="42px"
+                        border="1px solid #fff"
+                        borderRadius="10px"
+                        backgroundColor="#ffffff"
+                        shadow={false}
+                        fontSize="11px"
+                        color="#444"
+                        inputPadding="10px"
+                        placeholderColor="#bbb"
+                        iconColor="#ccc"
+                        iconSize={15}
+                    />
+                </div>
+                <StyledButton 
+                    style={{ padding: '19px 15px', fontWeight: 300 }} 
+                    background={'#fff'} 
+                    color="#000" 
+                    width='130px' 
+                    variant="outline"
+                    onClick={handleAddBranch}
+                >
+                    <Add size="32" color="#000" /> Add Branch
+                </StyledButton>
+            </div>
+            
+            {branches.length === 0 ? (
+                <div className="text-center py-12 bg-card rounded-lg border border-border">
+                    <div className="text-muted-foreground mb-4">
+                        <svg className="w-16 h-16 mx-auto mb-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-foreground mb-2">No branches found</h3>
+                    <p className="text-muted-foreground mb-4">Get started by creating your first branch</p>
+                    <StyledButton
+                        onClick={handleAddBranch}
+                        background="hsl(var(--active))"
+                        color="hsl(var(--secondary))"
+                        width="120px"
+                        variant="outline"
+                    >
+                        <Add size="16" className="mr-2" />
+                        Add Branch
+                    </StyledButton>
+                </div>
+            ) : (
+                <div className='flex flex-wrap justify-left gap-4'>
+                    {branches.map((branch) => (
+                        <Card
+                            key={branch.id}
+                            imageSrc={img}
+                            title={branch.name}
+                            actionDotColor="bg-green-500"
+                            onClick={() => navigate(`/branches/${branch.id}`)}
+                        />
+                    ))}
+                </div>
+            )}
+
+            {/* Add Branch Modal */}
+            <AddBranchModal
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+                parentId={parentId}
+            />
+        </div>
+    );
+};
+
+export default Branch;

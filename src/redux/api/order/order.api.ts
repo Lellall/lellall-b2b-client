@@ -28,6 +28,74 @@ export const orderApi = baseApi.injectEndpoints({
         meta: response.meta,
       }),
     }),
+    getOrdersByRestaurant: builder.query({
+      query: ({ restaurantId, page = 1, limit = 10, status }) => {
+        const url = `/orders/restaurant/${restaurantId}?page=${page}&limit=${limit}${status ? `&status=${status}` : ''}`;
+        console.log('getOrdersByRestaurant Query URL:', url);
+        return {
+          url,
+          method: "GET",
+          credentials: "include",
+        };
+      },
+      async onQueryStarted(_args, { queryFulfilled }) {
+        try {
+          await queryFulfilled;
+        } catch (err) {
+          console.error("Failed to fetch restaurant orders:", err);
+          toast.error("Failed to fetch orders", { position: "top-right" });
+        }
+      },
+      providesTags: ["MENU"],
+      transformResponse: (response: any) => {
+        console.log('Raw API Response:', response);
+        console.log('Response type:', typeof response);
+        console.log('Response keys:', Object.keys(response || {}));
+        
+        // Handle the actual API response structure
+        if (response && response.orders && response.pagination) {
+          // Calculate total amount for each order
+          const ordersWithTotal = response.orders.map((order: any) => {
+            const subtotal = order.orderItems?.reduce((sum: number, item: any) => {
+              return sum + (item.menuItem?.price || 0) * (item.quantity || 0);
+            }, 0) || 0;
+            
+            return {
+              ...order,
+              total: subtotal, // Add calculated total
+              customerName: `${order.waiter?.firstName || ''} ${order.waiter?.lastName || ''}`.trim() || 'N/A',
+              customerPhone: order.waiter?.email || 'N/A'
+            };
+          });
+          
+          return {
+            orders: ordersWithTotal,
+            meta: {
+              page: response.pagination.page,
+              limit: response.pagination.limit,
+              total: response.pagination.total,
+              totalPages: response.pagination.totalPages
+            }
+          };
+        } else if (response && response.data && response.meta) {
+          return {
+            orders: response.data,
+            meta: response.meta,
+          };
+        } else if (response && Array.isArray(response)) {
+          return {
+            orders: response,
+            meta: { total: response.length, page: 1, limit: response.length, totalPages: 1 },
+          };
+        } else {
+          console.warn('Unexpected response structure:', response);
+          return {
+            orders: [],
+            meta: { total: 0, page: 1, limit: 10, totalPages: 0 },
+          };
+        }
+      },
+    }),
     createOrders: builder.mutation({
       query: ({ subdomain, data }) => ({
         url: `/orders/${subdomain}`,
@@ -367,6 +435,7 @@ export const orderApi = baseApi.injectEndpoints({
 
 export const {
   useGetOrdersQuery,
+  useGetOrdersByRestaurantQuery,
   useDeleteOrderMutation,
   useCreateOrdersMutation,
   useUpdateOrdersMutation,

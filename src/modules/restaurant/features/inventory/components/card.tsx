@@ -3,7 +3,8 @@ import { useReactToPrint } from 'react-to-print';
 import ReceiptPDF from '../../menu/ReceiptPDF';
 import { ArrowSquareDown, ArrowSquareUp, Trash, Edit } from 'iconsax-react';
 import ConfirmationModal from './confirmation-modal';
-import { useGetBankDetailsQuery, useUpdateOrderItemsMutation, useUpdateOrdersMutation } from '@/redux/api/order/order.api';
+import { useGetBankDetailsQuery } from '@/redux/api/bank-details/bank-details.api';
+import { useUpdateOrderItemsMutation, useUpdateOrdersMutation } from '@/redux/api/order/order.api';
 import EditOrderItemsModal from './edit-modal';
 import { toast } from 'react-toastify';
 
@@ -189,7 +190,7 @@ const CardItem: React.FC<CardItemProps> = ({
               paymentType: selectedPaymentType,
             }}
             reactToPrintFn={reactToPrintFn}
-            bankDetails={bankDetails}
+            bankDetails={bankDetails?.bankDetails}
             subdomain={subdomain}
           />
         </div>

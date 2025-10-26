@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export type Tab = {
     name: string;
@@ -6,10 +6,31 @@ export type Tab = {
     width?: string;
 };
 
-const NavigationTabs = ({ tabs, width }: { tabs: Tab[]; width?: string }) => {
+interface NavigationTabsProps {
+    tabs: Tab[];
+    width?: string;
+    onTabChange?: (tabName: string) => void;
+}
+
+const NavigationTabs = ({ tabs, width, onTabChange }: NavigationTabsProps) => {
     const [activeTab, setActiveTab] = useState(
         tabs.find((tab) => tab.active)?.name || tabs[0]?.name
     );
+
+    // Update internal state when external tabs change
+    useEffect(() => {
+        const activeTabName = tabs.find((tab) => tab.active)?.name;
+        if (activeTabName && activeTabName !== activeTab) {
+            setActiveTab(activeTabName);
+        }
+    }, [tabs, activeTab]);
+
+    const handleTabClick = (tabName: string) => {
+        setActiveTab(tabName);
+        if (onTabChange) {
+            onTabChange(tabName);
+        }
+    };
 
     return (
         <div
@@ -19,7 +40,7 @@ const NavigationTabs = ({ tabs, width }: { tabs: Tab[]; width?: string }) => {
             {tabs.map((tab) => (
                 <button
                     key={tab.name}
-                    onClick={() => setActiveTab(tab.name)}
+                    onClick={() => handleTabClick(tab.name)}
                     className={`px-4 rounded-lg transition-all font-light duration-300 ${activeTab === tab.name
                         ? "bg-[#05431E] text-white"
                         : "text-[#05431E] hover:text-opacity-70"
