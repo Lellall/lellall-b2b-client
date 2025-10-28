@@ -290,16 +290,14 @@ const Layout: React.FC<LayoutProps> = ({ subdomainData }) => {
   const calculateDaysLeft = (subscription: any): number => {
     if (!subscription) return 0;
 
-    const { status, trialEndDate, endDate } = subscription;
+    // Based on endDate only, regardless of status
+    const { trialEndDate, endDate } = subscription;
     let relevantDate: string | null = null;
 
-    // Use endDate for ACTIVE subscriptions, trialEndDate for TRIAL
-    if (status === 'ACTIVE' && endDate) {
+    // Prioritize endDate, fallback to trialEndDate
+    if (endDate) {
       relevantDate = endDate;
-    } else if (status === 'PENDING_PAYMENT' && endDate) {
-      // Allow PENDING_PAYMENT status if endDate exists (payment confirmed but not yet processed)
-      relevantDate = endDate;
-    } else if (status === 'TRIAL' && trialEndDate) {
+    } else if (trialEndDate) {
       relevantDate = trialEndDate;
     }
 
@@ -341,7 +339,15 @@ const Layout: React.FC<LayoutProps> = ({ subdomainData }) => {
   const userRole = user.role || 'WAITER';
   const currentSubscription = user?.ownedRestaurant?.subscription || user?.restaurant?.subscription || subscription;
   const daysLeft = calculateDaysLeft(currentSubscription);
-  const status = currentSubscription?.status || 'UNKNOWN';
+  // Determine status based on endDate, not the subscription status field
+  const getStatusForDisplay = (subscription: any): string => {
+    if (!subscription) return 'EXPIRED';
+    const hasValidEndDate = subscription.endDate && new Date(subscription.endDate) > new Date();
+    const hasValidTrialDate = subscription.trialEndDate && new Date(subscription.trialEndDate) > new Date();
+    if (hasValidEndDate || hasValidTrialDate) return 'ACTIVE';
+    return 'EXPIRED';
+  };
+  const status = getStatusForDisplay(currentSubscription);
   const planName = currentSubscription?.plan?.name || 'No Plan';
 
   // Log for debugging

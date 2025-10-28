@@ -125,10 +125,11 @@ const Subscriptions = () => {
     return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
   };
 
-  const daysLeft = subscription?.trialEndDate
-    ? calculateDaysLeft(subscription.trialEndDate)
-    : subscription?.endDate
-      ? calculateDaysLeft(subscription.endDate)
+  // Calculate days left based on endDate, regardless of status
+  const daysLeft = subscription?.endDate
+    ? calculateDaysLeft(subscription.endDate)
+    : subscription?.trialEndDate
+      ? calculateDaysLeft(subscription.trialEndDate)
       : 0;
 
   const filteredPlans = plans
@@ -138,7 +139,8 @@ const Subscriptions = () => {
         ...plan,
         price: isChecked ? plan.price * 12 : plan.price,
         billingCycle: isChecked ? 'Annually' : 'Monthly',
-        isCurrent: subscription?.plan?.id === plan.id && subscription?.status === 'ACTIVE',
+        // Check if current plan by matching plan ID and if endDate is in the future
+        isCurrent: subscription?.plan?.id === plan.id && subscription?.endDate && new Date(subscription.endDate) > new Date(),
       }))
     : [];
 

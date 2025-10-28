@@ -17,18 +17,19 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
   const isSuperAdmin = userRole === 'SUPER_ADMIN';
 
   // Calculate days left for subscription (non-SUPER_ADMIN only)
+  // Based on endDate only, regardless of status
   const calculateDaysLeft = (subscription: any): number => {
     if (!subscription) return 0;
-    const { status, trialEndDate, endDate } = subscription;
+    const { trialEndDate, endDate } = subscription;
     let relevantDate: string | null = null;
-    if (status === 'ACTIVE' && endDate) {
+    
+    // Prioritize endDate, fallback to trialEndDate
+    if (endDate) {
       relevantDate = endDate;
-    } else if (status === 'PENDING_PAYMENT' && endDate) {
-      // Allow PENDING_PAYMENT status if endDate exists (payment confirmed but not yet processed)
-      relevantDate = endDate;
-    } else if (status === 'TRIAL' && trialEndDate) {
+    } else if (trialEndDate) {
       relevantDate = trialEndDate;
     }
+    
     if (!relevantDate) return 0;
     const today = new Date();
     const end = new Date(relevantDate);
