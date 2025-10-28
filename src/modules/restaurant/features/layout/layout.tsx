@@ -296,6 +296,9 @@ const Layout: React.FC<LayoutProps> = ({ subdomainData }) => {
     // Use endDate for ACTIVE subscriptions, trialEndDate for TRIAL
     if (status === 'ACTIVE' && endDate) {
       relevantDate = endDate;
+    } else if (status === 'PENDING_PAYMENT' && endDate) {
+      // Allow PENDING_PAYMENT status if endDate exists (payment confirmed but not yet processed)
+      relevantDate = endDate;
     } else if (status === 'TRIAL' && trialEndDate) {
       relevantDate = trialEndDate;
     }
