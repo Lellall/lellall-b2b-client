@@ -176,8 +176,8 @@ const Subscriptions = () => {
   const handleInitiatePayment = async (planId: string, planPrice: number) => {
     console.log(user, 'user')
     
-    // Get restaurant ID from either ownedRestaurant (ADMIN) or restaurant (MANAGER)
-    const restaurantId = user?.ownedRestaurant?.id || user?.restaurant?.id;
+    // Get restaurant ID from either ownedRestaurants (ADMIN) or restaurantId (MANAGER)
+    const restaurantId = user?.ownedRestaurants?.[0]?.id || user?.restaurantId;
     
     if (!restaurantId || !user?.email) {
       toast.error('User or restaurant information is missing.');

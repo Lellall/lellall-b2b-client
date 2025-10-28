@@ -187,6 +187,77 @@ export const restaurantApi = baseApi.injectEndpoints({
         }
       }
     }),
+
+    // AI Reporting endpoints
+    getRevenuePredictions: builder.query({
+      query: ({ restaurantId, days = 30 }) => ({
+        url: `/ai-reporting/${restaurantId}/predict-revenue?days=${days}`,
+        method: "GET",
+        credentials: "include",
+      }),
+      providesTags: ["MENU"],
+      async onQueryStarted(_args, { queryFulfilled }) {
+        try {
+          await queryFulfilled;
+        } catch (err: any) {
+          ErrorHandler(err);
+          console.error("Failed to fetch revenue predictions:", err);
+        }
+      },
+    }),
+
+    compareRestaurants: builder.mutation({
+      query: (data) => ({
+        url: `/ai-reporting/compare-restaurants`,
+        method: "POST",
+        body: data,
+        credentials: "include",
+      }),
+      async onQueryStarted(_args, { queryFulfilled }) {
+        try {
+          await queryFulfilled;
+        } catch (err: any) {
+          ErrorHandler(err);
+          console.error("Failed to compare restaurants:", err);
+        }
+      },
+    }),
+
+    getWaiterPerformance: builder.query({
+      query: ({ restaurantId, days = 30 }) => ({
+        url: `/ai-reporting/${restaurantId}/waiter-performance?days=${days}`,
+        method: "GET",
+        credentials: "include",
+      }),
+      providesTags: ["MENU"],
+    }),
+
+    getTopPerformers: builder.query({
+      query: ({ restaurantId, days = 30 }) => ({
+        url: `/ai-reporting/${restaurantId}/top-performers?days=${days}`,
+        method: "GET",
+        credentials: "include",
+      }),
+      providesTags: ["MENU"],
+    }),
+
+    getBusinessInsights: builder.query({
+      query: ({ restaurantId, days = 30 }) => ({
+        url: `/ai-reporting/${restaurantId}/insights?days=${days}`,
+        method: "GET",
+        credentials: "include",
+      }),
+      providesTags: ["MENU"],
+    }),
+
+    getSeasonalTrends: builder.query({
+      query: ({ restaurantId, months = 12 }) => ({
+        url: `/ai-reporting/${restaurantId}/seasonal-trends?months=${months}`,
+        method: "GET",
+        credentials: "include",
+      }),
+      providesTags: ["MENU"],
+    }),
   }),
 })
 
@@ -200,5 +271,11 @@ export const {
   useGetRestaurantByIdQuery,
   useUpdateRestaurantMutation,
   useDeleteRestaurantMutation,
-  useGetUsersStatsQuery
+  useGetUsersStatsQuery,
+  useGetRevenuePredictionsQuery,
+  useCompareRestaurantsMutation,
+  useGetWaiterPerformanceQuery,
+  useGetTopPerformersQuery,
+  useGetBusinessInsightsQuery,
+  useGetSeasonalTrendsQuery,
 } = restaurantApi

@@ -37,12 +37,12 @@ const TabsLayout = ({ restaurantId }: TabsLayoutProps) => {
                 >
                     Invoices
                 </button> */}
-                <button
+                {/* <button
                     className={`py-2 px-4 text-xs  text-center text-gray-600 hover:text-gray-800 focus:outline-none ${activeTab === 'tab-4' ? 'border-b-2 border-green-900 text-green-900' : ''}`}
                     onClick={() => openTab('tab-4')}
                 >
                     Reports
-                </button>
+                </button> */}
                 <button
                     className={`py-2 px-4 text-xs  text-center text-gray-600 hover:text-gray-800 focus:outline-none ${activeTab === 'tab-6' ? 'border-b-2 border-green-900 text-green-900' : ''}`}
                     onClick={() => openTab('tab-6')}

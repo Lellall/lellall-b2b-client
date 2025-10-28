@@ -40,7 +40,13 @@ const endpointsRequiringToken = [
   "units",
   "^/restaurants/user/[a-fA-F0-9-]{36}$",
   "^/subscription-plans/pay/[a-fA-F0-9-]{36}$",
-  "bank-details"
+  "bank-details",
+  "^/ai-reporting/[a-fA-F0-9-]+/predict-revenue",
+  "^/ai-reporting/[a-fA-F0-9-]+/waiter-performance",
+  "^/ai-reporting/[a-fA-F0-9-]+/top-performers",
+  "^/ai-reporting/[a-fA-F0-9-]+/insights",
+  "^/ai-reporting/[a-fA-F0-9-]+/seasonal-trends",
+  "/ai-reporting/compare-restaurants"
 ];
 
 const endpointsWithoutToken = ["/auth/login", "/auth/register", "/auth/refresh-token"];

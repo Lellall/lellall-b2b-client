@@ -1,20 +1,13 @@
-import { Button } from "@/components/ui/button";
-import { Filter, Download } from "lucide-react";
-import StatCard from "./components/stat-card";
-import ProductsTable from "./components/products-table";
-import { NewOrderDialog } from "./components/add-product-dialog";
-import { RequestSupplyDialog } from "./components/request-supply-dialog";
 import { useEffect, useState } from "react";
 import StockSheet from "./stock/stock-sheet";
 import Kitchen from "./stock/kitchen";
-import Orders from "../menu/order";
 import InventoryComponent from "./inventory";
 import KitchenView from "./stock/view-orders";
 import TemplateList from "./template-list";
 import { useSearchParams } from "react-router-dom";
 import SupplyRequests from "../gpt-supply-request/gpt-supply";
 import { useSelector } from "react-redux";
-import { selectAuth, logout } from "@/redux/api/auth/auth.slice";
+import { selectAuth } from "@/redux/api/auth/auth.slice";
 
 const Inventory = () => {
   const [searchParams] = useSearchParams();
@@ -72,6 +65,12 @@ const Inventory = () => {
             >
               Templates
             </button>
+            <button
+              className={`py-2 px-4 text-xs text-center text-gray-600 hover:text-gray-800 focus:outline-none ${activeTab === "tab-6" ? "border-b-2 border-green-900 text-green-900" : ""}`}
+              onClick={() => openTab("tab-6")}
+            >
+              Supply Requests
+            </button>
           </>
         )}
       </div>
@@ -101,7 +100,12 @@ const Inventory = () => {
             )}
             {activeTab === "tab-5" && (
               <div>
-                <TemplateList />
+                <TemplateList inventory={[]} />
+              </div>
+            )}
+            {activeTab === "tab-6" && (
+              <div>
+                <SupplyRequests />
               </div>
             )}
           </>

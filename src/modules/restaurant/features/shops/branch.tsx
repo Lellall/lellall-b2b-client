@@ -16,7 +16,7 @@ const Branch = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     
     // Get parentId from user's restaurant
-    const parentId = user?.ownedRestaurant?.id || user?.restaurant?.id || '';
+    const parentId = user?.ownedRestaurants?.[0]?.id || user?.restaurantId || '';
     
     // Fetch branches using the correct endpoint
     const { data: branches = [], isLoading, error } = useGetBranchesQuery(parentId);

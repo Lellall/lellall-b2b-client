@@ -1,4 +1,4 @@
-import { Home, UserSearch, Car, MessageQuestion, Setting, Element2, ArchiveBox, Calendar2, MoneyChange } from 'iconsax-react';
+import { Home, UserSearch, Car, MessageQuestion, Setting, Element2, ArchiveBox, Calendar2, MoneyChange, TrendUp } from 'iconsax-react';
 
 export interface NavItemConfig {
   to: string;
@@ -24,6 +24,7 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
     { to: '/', icon: Home, text: 'Dashboard', end: true },
     { to: '/menu', icon: Element2, text: 'Menu' },
     { to: '/inventory', icon: ArchiveBox, text: 'Inventory & Stock' },
+    { to: '/insights', icon: TrendUp, text: 'Insights & AI' },
     { to: '/reservations', icon: Calendar2, text: 'Reservations' },
     { to: '/staffs', icon: UserSearch, text: 'Staffs' },
     { to: '/settings', icon: Setting, text: 'Settings' },
@@ -37,13 +38,14 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
     { to: '/', icon: Home, text: 'Dashboard', end: true },
     { to: '/menu', icon: Element2, text: 'Menu' },
     { to: '/inventory', icon: ArchiveBox, text: 'Inventory & Stock' },
+    // { to: '/insights', icon: TrendUp, text: 'Insights & AI' },
     { to: '/reservations', icon: Calendar2, text: 'Reservations' },
     { to: '/staffs', icon: UserSearch, text: 'Staffs' },
     { to: '/subscriptions', icon: MoneyChange, text: 'Subscriptions' },
     { to: '/verify-payment', icon: null, text: '' },
     { to: '/settings', icon: Setting, text: 'Settings' },
-    { to: '/branches', icon: null, text: '' },
-    { to: '/branches/:branchId', icon: null, text: '' }
+    // { to: '/branches', icon: null, text: '' },
+    // { to: '/branches/:branchId', icon: null, text: '' }
   ],
   SUPER_ADMIN: [
     { to: '/', icon: Home, text: 'Operations', end: true },
@@ -70,6 +72,7 @@ const planFeatures: Record<string, string[]> = {
     'Staff Management',
     'In App Chat',
     'Multi Branch Management',
+    'Insights',
   ],
 };
 
@@ -81,6 +84,7 @@ const featureToRoutes: Record<string, string[]> = {
   'Staff Management': ['/staffs'],
   'In App Chat': [],
   'Multi Branch Management': [],
+  'Insights': ['/insights'],
 };
 
 export const getNavItemsByRole = (role: string, daysLeft: number, planName: string | undefined): NavItemConfig[] => {
@@ -107,7 +111,7 @@ export const getNavItemsByRole = (role: string, daysLeft: number, planName: stri
   const allowedFeatures = planFeatures[planName];
   const allowedRoutes = allowedFeatures
     .flatMap((feature) => featureToRoutes[feature] || [])
-    .concat(['/settings', '/subscriptions', '/verify-payment', '/']);
+    .concat(['/settings', '/subscriptions', '/verify-payment', '/', '/insights']);
 
   return defaultRoutes.filter((item) => allowedRoutes.includes(item.to));
 };

@@ -68,7 +68,7 @@ export const supplyRequestApi = baseApi.injectEndpoints({
         }),
         gptGetInventory: builder.query<ParsedItem[], { subdomain: string; restaurantId: string }>({
             query: ({ subdomain, restaurantId }) => ({
-                url: `/gpt-supply-requests/inventory/${restaurantId}`,
+                url: `/gpt-supply-requests/${restaurantId}`,
                 method: 'GET',
                 credentials: 'include',
             }),

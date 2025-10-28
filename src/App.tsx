@@ -30,6 +30,7 @@ import Staff from './modules/restaurant/features/staff/staff';
 import VerifyPaymentPage from './modules/restaurant/features/subscriptions/verify-page';
 import Dashboard from './modules/restaurant/features/dashboard/dashboard';
 import SubscriptionExpired from './SubscriptionExpired';
+import Insights from './modules/restaurant/features/insights/insights';
 
 const App = () => {
   const { isAuthenticated, user, refreshToken } = useSelector(selectAuth);
@@ -88,6 +89,7 @@ const App = () => {
       <Route path="menu" element={<Menu />} />
       <Route path="staffs" element={<Staff />} />
       <Route path="reports" element={<Reports />} />
+      <Route path="insights" element={<Insights />} />
       <Route path="menu/orders" element={<Orders />} />
       <Route path="subscriptions" element={<Subscriptions />} />
       <Route path="reservations" element={<Reservations />} />
