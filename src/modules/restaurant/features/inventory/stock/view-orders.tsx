@@ -42,9 +42,9 @@ const KitchenView = () => {
     }
   };
 
-  const handleDeleteOrder = async (orderId: string) => {
+  const handleDeleteOrder = async (orderId: string, deleteReason?: string) => {
     try {
-      await deleteOrder({ subdomain, orderId }).unwrap();
+      await deleteOrder({ subdomain, orderId, deleteReason }).unwrap();
       console.log(`Order ${orderId} deleted successfully`);
     } catch (err) {
       console.error('Failed to delete order:', err);

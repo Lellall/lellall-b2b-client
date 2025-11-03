@@ -8,6 +8,7 @@ import { useSearchParams } from "react-router-dom";
 import SupplyRequests from "../gpt-supply-request/gpt-supply";
 import { useSelector } from "react-redux";
 import { selectAuth } from "@/redux/api/auth/auth.slice";
+import DeletedOrders from "./stock/deleted-orders";
 
 const Inventory = () => {
   const [searchParams] = useSearchParams();
@@ -27,6 +28,8 @@ const Inventory = () => {
 
   // Check if user is a WAITER
   const isWaiter = user.role === "WAITER" || user.role === "CASHIER";
+  // Check if user is ADMIN (only admins can see deleted orders)
+  const isAdmin = user.role === "ADMIN" || user.role === "SUPER_ADMIN";
 
   return (
     <>
@@ -71,6 +74,15 @@ const Inventory = () => {
             >
               Supply Requests
             </button>
+            {/* Only show Deleted Orders tab for ADMIN users */}
+            {isAdmin && (
+              <button
+                className={`py-2 px-4 text-xs text-center text-gray-600 hover:text-gray-800 focus:outline-none ${activeTab === "tab-7" ? "border-b-2 border-green-900 text-green-900" : ""}`}
+                onClick={() => openTab("tab-7")}
+              >
+                Deleted Orders
+              </button>
+            )}
           </>
         )}
       </div>
@@ -106,6 +118,12 @@ const Inventory = () => {
             {activeTab === "tab-6" && (
               <div>
                 <SupplyRequests />
+              </div>
+            )}
+            {/* Only render Deleted Orders tab for ADMIN users */}
+            {isAdmin && activeTab === "tab-7" && (
+              <div>
+                <DeletedOrders />
               </div>
             )}
           </>

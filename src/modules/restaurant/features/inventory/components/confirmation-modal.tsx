@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { theme } from '@/theme/theme';
 
@@ -23,7 +23,7 @@ const ModalContent = styled.div`
   width: 90%;
   max-width: 400px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  text-align: center;
+  text-align: left;
 `;
 
 const ModalTitle = styled.h2`
@@ -36,12 +36,35 @@ const ModalTitle = styled.h2`
 const ModalText = styled.p`
   font-size: 14px;
   color: #4a5568;
+  margin-bottom: 16px;
+`;
+
+const TextArea = styled.textarea`
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
   margin-bottom: 24px;
+  color: #2d3748;
+
+  &:focus {
+    outline: none;
+    border-color: ${theme.colors.active};
+    box-shadow: 0 0 0 3px rgba(5, 67, 30, 0.1);
+  }
+
+  &::placeholder {
+    color: #a0aec0;
+  }
 `;
 
 const ModalButtons = styled.div`
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 16px;
 `;
 
@@ -78,7 +101,7 @@ const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
 interface ConfirmationModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onConfirm: () => void;
+    onConfirm: (deleteReason?: string) => void;
     isLoading: boolean;
     orderId: string;
 }
@@ -90,18 +113,41 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     isLoading,
     orderId,
 }) => {
+    const [deleteReason, setDeleteReason] = useState('');
+
+    const handleClose = () => {
+        setDeleteReason('');
+        onClose();
+    };
+
+    const handleConfirm = () => {
+        onConfirm(deleteReason.trim() || undefined);
+    };
+
     if (!isOpen) return null;
 
     return (
-        <ModalOverlay role="dialog" aria-labelledby="modal-title" aria-modal="true">
-            <ModalContent>
+        <ModalOverlay role="dialog" aria-labelledby="modal-title" aria-modal="true" onClick={handleClose}>
+            <ModalContent onClick={(e) => e.stopPropagation()}>
                 <ModalTitle id="modal-title">Confirm Delete</ModalTitle>
                 <ModalText>Are you sure you want to delete order #{orderId.substring(0, 6)}?</ModalText>
+                <div>
+                    <label htmlFor="deleteReason" style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#2d3748', marginBottom: '8px' }}>
+                        Reason for deletion (optional)
+                    </label>
+                    <TextArea
+                        id="deleteReason"
+                        placeholder="Enter reason for deleting this order..."
+                        value={deleteReason}
+                        onChange={(e) => setDeleteReason(e.target.value)}
+                        disabled={isLoading}
+                    />
+                </div>
                 <ModalButtons>
-                    <Button onClick={onClose} disabled={isLoading}>
+                    <Button onClick={handleClose} disabled={isLoading}>
                         Cancel
                     </Button>
-                    <Button variant="primary" onClick={onConfirm} disabled={isLoading}>
+                    <Button variant="primary" onClick={handleConfirm} disabled={isLoading}>
                         {isLoading ? 'Deleting...' : 'Delete'}
                     </Button>
                 </ModalButtons>

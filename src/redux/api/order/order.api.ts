@@ -176,9 +176,10 @@ export const orderApi = baseApi.injectEndpoints({
       providesTags: ["MENU", "INVENTORY"],
     }),
     deleteOrder: builder.mutation({
-      query: ({ subdomain, orderId }) => ({
+      query: ({ subdomain, orderId, deleteReason }) => ({
         url: `/orders/${subdomain}/${orderId}`,
         method: "DELETE",
+        body: deleteReason ? { deleteReason } : undefined,
         credentials: "include",
       }),
       invalidatesTags: ["MENU"],
@@ -430,6 +431,47 @@ export const orderApi = baseApi.injectEndpoints({
       },
       providesTags: ['MENU'],
     }),
+    getDeletedOrders: builder.query({
+      query: ({ subdomain, page = 1, limit = 10 }) => {
+        const url = `/orders/${subdomain}/deleted?page=${page}&limit=${limit}`;
+        return {
+          url,
+          method: "GET",
+          credentials: "include",
+        };
+      },
+      async onQueryStarted(_args, { queryFulfilled }) {
+        try {
+          await queryFulfilled;
+        } catch (err) {
+          console.error("Failed to fetch deleted orders:", err);
+          toast.error("Failed to fetch deleted orders", { position: "top-right" });
+        }
+      },
+      providesTags: ["MENU"],
+      transformResponse: (response: { deletedOrders: any[]; pagination: { page: number; limit: number; total: number; totalPages: number } }) => ({
+        deletedOrders: response.deletedOrders || [],
+        pagination: response.pagination || { page: 1, limit: 10, total: 0, totalPages: 0 },
+      }),
+    }),
+    restoreOrder: builder.mutation({
+      query: ({ subdomain, orderId }) => ({
+        url: `/orders/${subdomain}/${orderId}/restore`,
+        method: "POST",
+        credentials: "include",
+      }),
+      invalidatesTags: ["MENU"],
+      async onQueryStarted(_args, { queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          toast.success("Order restored successfully", { position: "top-right" });
+        } catch (err) {
+          ErrorHandler(err as any);
+          toast.error("Failed to restore order", { position: "top-right" });
+          throw err;
+        }
+      },
+    }),
   }),
 });
 
@@ -454,4 +496,6 @@ export const {
   useLazyDownloadDailySoldItemsCsvQuery,
   useGetPaymentTypeSummaryQuery,
   useLazyDownloadPaymentTypeSummaryCsvQuery,
+  useGetDeletedOrdersQuery,
+  useRestoreOrderMutation,
 } = orderApi;

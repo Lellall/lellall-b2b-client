@@ -34,7 +34,7 @@ interface CardItemProps {
   expandedOrders: string[];
   toggleExpand: (orderId: string) => void;
   handleStatusUpdate: (orderId: string, status: string) => void;
-  handleDeleteOrder: (orderId: string) => Promise<void>;
+  handleDeleteOrder: (orderId: string, deleteReason?: string) => Promise<void>;
   subdomain: string;
   restaurantId: string;
 }
@@ -43,7 +43,7 @@ interface CardProps {
   orders: Order[];
   expandedOrders: string[];
   toggleExpand: (orderId: string) => void;
-  handleDeleteOrder: (orderId: string) => Promise<void>;
+  handleDeleteOrder: (orderId: string, deleteReason?: string) => Promise<void>;
   handleStatusUpdate: (orderId: string, status: string) => void;
   subdomain: string;
 }
@@ -85,14 +85,14 @@ const CardItem: React.FC<CardItemProps> = ({
     { value: "DELIVERY", label: "Delivery" },
   ];
 
-  const handleDelete = async () => {
+  const handleDelete = async (deleteReason?: string) => {
     if (!order.id) {
       toast.error('Invalid order ID', { position: 'top-right' });
       return;
     }
     setIsDeleting(true);
     try {
-      await handleDeleteOrder(order.id);
+      await handleDeleteOrder(order.id, deleteReason);
       setIsModalOpen(false);
     } finally {
       setIsDeleting(false);
