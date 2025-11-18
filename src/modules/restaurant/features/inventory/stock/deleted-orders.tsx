@@ -46,10 +46,25 @@ interface DeletedOrder {
 }
 
 const DeletedOrders = () => {
-  const { subdomain } = useSelector(selectAuth);
+  const { subdomain, user } = useSelector(selectAuth);
   const [currentPage, setCurrentPage] = useState(0);
   const [expandedOrders, setExpandedOrders] = useState<string[]>([]);
   const [restoringOrderId, setRestoringOrderId] = useState<string | null>(null);
+
+  // Check if user has permission to view deleted orders (only ADMIN and MANAGER)
+  const canViewDeletedOrders = user?.role === 'ADMIN' || user?.role === 'MANAGER' || user?.role === 'SUPER_ADMIN';
+
+  // If user doesn't have permission, show access denied message
+  if (!canViewDeletedOrders) {
+    return (
+      <div className="min-h-screen p-6 bg-gradient-to-br from-gray-50 via-white to-gray-50 flex items-center justify-center">
+        <div className="text-center animate-fade-in">
+          <div className="text-red-500 text-lg mb-2">Access Denied</div>
+          <div className="text-gray-600">You don't have permission to view deleted orders. Only administrators and managers can access this page.</div>
+        </div>
+      </div>
+    );
+  }
 
   const { data, error, isLoading, isFetching } = useGetDeletedOrdersQuery(
     {

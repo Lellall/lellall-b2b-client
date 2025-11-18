@@ -7,6 +7,8 @@ import { useGetBankDetailsQuery } from '@/redux/api/bank-details/bank-details.ap
 import { useUpdateOrderItemsMutation, useUpdateOrdersMutation } from '@/redux/api/order/order.api';
 import EditOrderItemsModal from './edit-modal';
 import { toast } from 'react-toastify';
+import { useSelector } from 'react-redux';
+import { selectAuth } from '@/redux/api/auth/auth.slice';
 
 interface Order {
   id: string;
@@ -57,6 +59,7 @@ const CardItem: React.FC<CardItemProps> = ({
   subdomain,
   restaurantId,
 }) => {
+  const { user } = useSelector(selectAuth);
   const contentRef = useRef<HTMLDivElement>(null);
   const reactToPrintFn = useReactToPrint({ contentRef });
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -73,6 +76,9 @@ const CardItem: React.FC<CardItemProps> = ({
     error: bankDetailsError,
     refetch,
   } = useGetBankDetailsQuery(restaurantId);
+
+  // Check if user has permission to edit/delete orders (only ADMIN and MANAGER)
+  const canEditOrDelete = user?.role === 'ADMIN' || user?.role === 'MANAGER' || user?.role === 'SUPER_ADMIN';
 
   console.log({ restaurantId, bankDetails, isBankDetailsLoading, bankDetailsError }, 'Bank Details Query');
   console.log('Order prop in CardItem:', order); // Debug order prop
@@ -321,26 +327,28 @@ const CardItem: React.FC<CardItemProps> = ({
             {isUpdating ? 'Saving...' : 'Save Changes'}
           </button>
         </form>
-        <div className="flex gap-2 mt-2">
-          <button
-            onClick={() => setIsEditModalOpen(true)}
-            disabled={isUpdatingItems || order.status !== 'PENDING'}
-            className={`flex-1 flex justify-center items-center ${isUpdatingItems || order.status !== 'PENDING' ? 'bg-gray-300' : 'bg-blue-500 hover:bg-blue-600'
-              } text-white rounded-md p-1 text-[10px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            aria-label={`Edit order ${order.id}`}
-          >
-            <Edit size={16} color="#FFFFFF" />
-          </button>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            disabled={isDeleting || order.status !== 'PENDING'}
-            className={`flex-1 flex justify-center items-center ${isDeleting || order.status !== 'PENDING' ? 'bg-red-300' : 'bg-red-500 hover:bg-red-600'
-              } text-white rounded-md p-1 text-[10px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-red-500`}
-            aria-label={`Delete order ${order.id}`}
-          >
-            <Trash size={16} color="#FFFFFF" />
-          </button>
-        </div>
+        {canEditOrDelete && (
+          <div className="flex gap-2 mt-2">
+            <button
+              onClick={() => setIsEditModalOpen(true)}
+              disabled={isUpdatingItems || order.status !== 'PENDING'}
+              className={`flex-1 flex justify-center items-center ${isUpdatingItems || order.status !== 'PENDING' ? 'bg-gray-300' : 'bg-blue-500 hover:bg-blue-600'
+                } text-white rounded-md p-1 text-[10px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              aria-label={`Edit order ${order.id}`}
+            >
+              <Edit size={16} color="#FFFFFF" />
+            </button>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              disabled={isDeleting || order.status !== 'PENDING'}
+              className={`flex-1 flex justify-center items-center ${isDeleting || order.status !== 'PENDING' ? 'bg-red-300' : 'bg-red-500 hover:bg-red-600'
+                } text-white rounded-md p-1 text-[10px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-red-500`}
+              aria-label={`Delete order ${order.id}`}
+            >
+              <Trash size={16} color="#FFFFFF" />
+            </button>
+          </div>
+        )}
       </div>
       <ConfirmationModal
         isOpen={isModalOpen}

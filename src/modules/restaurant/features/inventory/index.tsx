@@ -28,8 +28,8 @@ const Inventory = () => {
 
   // Check if user is a WAITER
   const isWaiter = user.role === "WAITER" || user.role === "CASHIER";
-  // Check if user is ADMIN (only admins can see deleted orders)
-  const isAdmin = user.role === "ADMIN" || user.role === "SUPER_ADMIN";
+  // Check if user is ADMIN or MANAGER (only admins and managers can see deleted orders)
+  const canViewDeletedOrders = user.role === "ADMIN" || user.role === "MANAGER" || user.role === "SUPER_ADMIN";
 
   return (
     <>
@@ -74,8 +74,8 @@ const Inventory = () => {
             >
               Supply Requests
             </button>
-            {/* Only show Deleted Orders tab for ADMIN users */}
-            {isAdmin && (
+            {/* Only show Deleted Orders tab for ADMIN and MANAGER users */}
+            {canViewDeletedOrders && (
               <button
                 className={`py-2 px-4 text-xs text-center text-gray-600 hover:text-gray-800 focus:outline-none ${activeTab === "tab-7" ? "border-b-2 border-green-900 text-green-900" : ""}`}
                 onClick={() => openTab("tab-7")}
@@ -120,8 +120,8 @@ const Inventory = () => {
                 <SupplyRequests />
               </div>
             )}
-            {/* Only render Deleted Orders tab for ADMIN users */}
-            {isAdmin && activeTab === "tab-7" && (
+            {/* Only render Deleted Orders tab for ADMIN and MANAGER users */}
+            {canViewDeletedOrders && activeTab === "tab-7" && (
               <div>
                 <DeletedOrders />
               </div>
