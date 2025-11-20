@@ -40,7 +40,7 @@ const Kitchen = () => {
   });
   const { subdomain } = useSelector(selectAuth);
   const { data: menus, error: menusError, isLoading: isMenusLoading } = useGetMenusQuery({ subdomain });
-  const { data: items, error: itemsError, isLoading: isItemsLoading } = useGetAllMenuItemsQuery(
+  const { data: items, error: itemsError, isLoading: isItemsLoading, isFetching: isItemsFetching } = useGetAllMenuItemsQuery(
     selectedMenuId
       ? { subdomain, menuId: selectedMenuId }
       : { subdomain }
@@ -312,16 +312,17 @@ const Kitchen = () => {
                   </button>
                 </div>
               )}
-              {isItemsLoading ? (
-                <div className="w-full py-8 flex items-center justify-center">
+              {(isItemsLoading || isItemsFetching) ? (
+                <div className="w-full py-12 flex flex-col items-center justify-center gap-4">
                   <ColorRing
-                    height="50"
-                    width="50"
+                    height="60"
+                    width="60"
                     radius="9"
                     color={theme.colors.active}
                     ariaLabel="loading"
                     visible={true}
                   />
+                  <p className="text-sm text-gray-500">Loading menu items...</p>
                 </div>
               ) : items && items.length === 0 && selectedMenuId ? (
                 <div className="w-full py-8 text-center">
