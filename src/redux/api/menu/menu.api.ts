@@ -21,6 +21,7 @@ type MenuItemResponse = {
     status: string;
     tags?: string[];
     inventoryItems: { inventoryId: string; quantity: number }[];
+    menuId?: string;
 };
 
 type CreateMenuDto = {
@@ -71,13 +72,21 @@ export const menuApi = baseApi.injectEndpoints({
             providesTags: ["MENU"],
         }),
 
-        getAllMenuItems: builder.query<MenuItemResponse[], { subdomain: string; search?: string }>({
-            query: (params) => ({
-                url: `/menus/${params.subdomain}/items`,
-                method: "GET",
-                params: params.search ? { search: params.search } : undefined,
-                credentials: "include",
-            }),
+        getAllMenuItems: builder.query<MenuItemResponse[], { subdomain: string; search?: string; menuId?: string }>({
+            query: (params) => {
+                const queryParams: Record<string, string> = {};
+                if (params.search) queryParams.search = params.search;
+                if (params.menuId) {
+                    queryParams.menuId = params.menuId;
+                }
+                const url = `/menus/${params.subdomain}/items`;
+                return {
+                    url,
+                    method: "GET",
+                    params: Object.keys(queryParams).length > 0 ? queryParams : undefined,
+                    credentials: "include",
+                };
+            },
             providesTags: ["MENU"],
         }),
 

@@ -9,6 +9,7 @@ import SupplyRequests from "../gpt-supply-request/gpt-supply";
 import { useSelector } from "react-redux";
 import { selectAuth } from "@/redux/api/auth/auth.slice";
 import DeletedOrders from "./stock/deleted-orders";
+import LowStockInventory from "./stock/low-stock-inventory";
 
 const Inventory = () => {
   const [searchParams] = useSearchParams();
@@ -83,6 +84,12 @@ const Inventory = () => {
                 Deleted Orders
               </button>
             )}
+            <button
+              className={`py-2 px-4 text-xs text-center text-gray-600 hover:text-gray-800 focus:outline-none ${activeTab === "tab-8" ? "border-b-2 border-green-900 text-green-900" : ""}`}
+              onClick={() => openTab("tab-8")}
+            >
+              Low Stock
+            </button>
           </>
         )}
       </div>
@@ -124,6 +131,11 @@ const Inventory = () => {
             {canViewDeletedOrders && activeTab === "tab-7" && (
               <div>
                 <DeletedOrders />
+              </div>
+            )}
+            {activeTab === "tab-8" && (
+              <div>
+                <LowStockInventory />
               </div>
             )}
           </>

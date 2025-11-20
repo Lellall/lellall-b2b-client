@@ -46,7 +46,7 @@ const LowInventoryWarning = ({ navigation }) => {
                     <b><i>  Low Inventory Stock Warning: </i></b> <i>Please visit your inventory to restock the low products thanks.</i>
                 </WarningText>
             </div>
-            <div className='flex cursor-pointer' onClick={() => navigation('/inventory?tab=tab-4')}>
+            <div className='flex cursor-pointer' onClick={() => navigation('/inventory?tab=tab-8')}>
                 <div className='mt-[0.9px] mr-1'> <Box1 size="14" color="#333" /></div>
                 <div className='text-[#333] text-xs font-light'>Inventory</div>
                 <div className='mt-[1px] ml-1' >

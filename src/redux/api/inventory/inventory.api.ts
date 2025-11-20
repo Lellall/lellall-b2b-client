@@ -43,6 +43,46 @@ interface LowStockInventoryResponse {
   };
 }
 
+export interface RelatedMenuItem {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  status: 'AVAILABLE' | 'UNAVAILABLE';
+  menuId: string;
+  menuName: string;
+  inventoryQuantity: number;
+}
+
+export interface LowStockInventoryWithMenuItems {
+  id: string;
+  productName: string;
+  closingStock: number;
+  unitPrice: number;
+  unitOfMeasurement: string;
+  category: string;
+  dateAdded: string;
+  createdAt: string;
+  updatedAt: string;
+  menuItems: RelatedMenuItem[];
+}
+
+export interface PaginationInfo {
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+  nextPage: number | null;
+  prevPage: number | null;
+}
+
+export interface LowStockInventoryWithMenuItemsResponse {
+  data: LowStockInventoryWithMenuItems[];
+  pagination: PaginationInfo;
+}
+
 interface GenerateInvoiceResponse {
   invoice: {
     id: string;
@@ -477,6 +517,33 @@ export const inventoryAApi = baseApi.injectEndpoints({
         }
       },
     }),
+    getLowStockInventoryWithMenuItems: builder.query<LowStockInventoryWithMenuItemsResponse, { subdomain: string; restaurantId: string; page?: number; limit?: number; search?: string }>({
+      query: ({ subdomain, restaurantId, page = 1, limit = 10, search }) => {
+        const params = new URLSearchParams({
+          restaurantId,
+          page: page.toString(),
+          limit: limit.toString(),
+        });
+        if (search) {
+          params.append('search', search);
+        }
+        return {
+          url: `${subdomain}/inventory/low-stock/with-menu-items?${params.toString()}`,
+          method: 'GET',
+          credentials: 'include',
+        };
+      },
+      providesTags: ['INVENTORY'],
+      async onQueryStarted(_args, { queryFulfilled }) {
+        try {
+          await queryFulfilled;
+        } catch (err) {
+          ErrorHandler(err);
+          toast.error('Failed to fetch low stock inventory with menu items', { position: 'top-right' });
+          throw err;
+        }
+      },
+    }),
     generateInvoice: builder.mutation<void, { subdomain: string; data: any }>({
       query: ({ subdomain, data }) => ({
         url: `/invoices`,
@@ -526,6 +593,7 @@ export const {
   useApplySupplyRequestTemplateMutation,
   useDeleteSupplyRequestTemplateMutation,
   useGetLowStockInventoryQuery,
+  useGetLowStockInventoryWithMenuItemsQuery,
   useGenerateInvoiceMutation,
 } = inventoryAApi;
 

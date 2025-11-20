@@ -26,6 +26,7 @@ const Kitchen = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [itemToEdit, setItemToEdit] = useState(undefined);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedMenuId, setSelectedMenuId] = useState<string | null>(null);
 
   const handleEditClick = (item) => {
     setItemToEdit(item);
@@ -39,7 +40,11 @@ const Kitchen = () => {
   });
   const { subdomain } = useSelector(selectAuth);
   const { data: menus, error: menusError, isLoading: isMenusLoading } = useGetMenusQuery({ subdomain });
-  const { data: items, error: itemsError, isLoading: isItemsLoading } = useGetAllMenuItemsQuery({ subdomain });
+  const { data: items, error: itemsError, isLoading: isItemsLoading } = useGetAllMenuItemsQuery(
+    selectedMenuId
+      ? { subdomain, menuId: selectedMenuId }
+      : { subdomain }
+  );
   const [deleteMenuItem, { isLoading: isDeletingItem }] = useDeleteMenuItemMutation();
   const [deleteMenu, { isLoading: isDeletingMenu }] = useDeleteMenuMutation();
 
@@ -88,6 +93,11 @@ const Kitchen = () => {
   };
 
   const { subtotal, total } = calculateTotals();
+
+  const handleMenuClick = (menuId: string) => {
+    // Toggle: if same menu is clicked, clear filter; otherwise set new filter
+    setSelectedMenuId(selectedMenuId === menuId ? null : menuId);
+  };
 
   const openConfirmModal = (type, id, name) => {
     console.log('Opening confirm modal:', { type, id, name }); // Debug
@@ -218,7 +228,12 @@ const Kitchen = () => {
                 {menus?.map((menu, index) => (
                   <div
                     key={menu?.id}
-                    className="px-4 py-3 bg-white w-[150px] h-[100px] rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:bg-gray-50 active:bg-gray-100 cursor-pointer border border-gray-100"
+                    onClick={() => handleMenuClick(menu.id)}
+                    className={`px-4 py-3 bg-white w-[150px] h-[100px] rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:bg-gray-50 active:bg-gray-100 cursor-pointer border ${
+                      selectedMenuId === menu.id
+                        ? 'border-green-900 border-2 shadow-md bg-green-50'
+                        : 'border-gray-100'
+                    }`}
                   >
                     <div className="flex flex-col h-full justify-between">
                       <div className="flex justify-between items-center">
@@ -227,7 +242,10 @@ const Kitchen = () => {
                         </span>
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() => openConfirmModal('menu', menu.id, menu.name)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openConfirmModal('menu', menu.id, menu.name);
+                            }}
                             disabled={isDeletingMenu}
                             className="text-gray-500 hover:text-red-500 transition-colors duration-200"
                             title="Delete Menu"
@@ -279,8 +297,41 @@ const Kitchen = () => {
                   </div>
                 </div>
               </div>
-              <div className="w-full flex gap-4 flex-wrap my-2">
-                {items?.map((item) => (
+              {selectedMenuId && (
+                <div className="mb-4 flex items-center gap-2">
+                  <span className="text-sm text-gray-600">
+                    Filtered by: <span className="font-semibold text-green-900">
+                      {menus?.find(m => m.id === selectedMenuId)?.name}
+                    </span>
+                  </span>
+                  <button
+                    onClick={() => setSelectedMenuId(null)}
+                    className="text-xs text-gray-500 hover:text-gray-700 underline"
+                  >
+                    Clear filter
+                  </button>
+                </div>
+              )}
+              {isItemsLoading ? (
+                <div className="w-full py-8 flex items-center justify-center">
+                  <ColorRing
+                    height="50"
+                    width="50"
+                    radius="9"
+                    color={theme.colors.active}
+                    ariaLabel="loading"
+                    visible={true}
+                  />
+                </div>
+              ) : items && items.length === 0 && selectedMenuId ? (
+                <div className="w-full py-8 text-center">
+                  <p className="text-gray-500 text-sm">
+                    No items found in this menu.
+                  </p>
+                </div>
+              ) : (
+                <div className="w-full flex gap-4 flex-wrap my-2">
+                  {items?.map((item) => (
                   <div
                     key={item.id}
                     className={`px-5 py-4 w-[170px] h-[120px] rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-2 hover:brightness-110 active:brightness-90 cursor-pointer relative ${generateDarkColorFromId(
@@ -335,7 +386,8 @@ const Kitchen = () => {
                     <div className="absolute bottom-0 left-0 w-full h-1 bg-white bg-opacity-50 scale-x-0 origin-left transition-transform duration-300 hover:scale-x-100" />
                   </div>
                 ))}
-              </div>
+                </div>
+              )}
             </div>
             <div className="mt-10 mb-10 border-t border-gray-300 border-t-[0.5px]" />
           </div>
