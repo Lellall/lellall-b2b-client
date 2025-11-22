@@ -471,22 +471,42 @@ function Staff() {
           />
         </Modal>
 
-        <Modal isOpen={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)} position="center" className="w-11/12 sm:w-96">
+        <Modal isOpen={deleteConfirmOpen} onClose={() => !isDeleting && setDeleteConfirmOpen(false)} position="center" className="w-11/12 sm:w-96">
           <div className="p-6">
             <h2 className="text-lg font-semibold mb-4">Confirm Deletion</h2>
             <p className="text-gray-600 mb-6 text-sm">
               Are you sure you want to delete this staff member? This action cannot be undone.
             </p>
             <div className="flex justify-end gap-4">
-              <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)} className="text-sm">
+              <Button 
+                variant="outline" 
+                onClick={() => setDeleteConfirmOpen(false)} 
+                className="text-sm"
+                disabled={isDeleting}
+              >
                 Cancel
               </Button>
               <Button
                 variant="destructive"
                 onClick={handleDeleteStaff}
-                className="bg-red-600 hover:bg-red-700 text-white text-sm"
+                className="bg-red-600 hover:bg-red-700 text-white text-sm flex items-center gap-2"
+                disabled={isDeleting}
               >
-                Delete
+                {isDeleting ? (
+                  <>
+                    <ColorRing
+                      height="16"
+                      width="16"
+                      radius="9"
+                      color="#ffffff"
+                      ariaLabel="loading"
+                      visible={true}
+                    />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
               </Button>
             </div>
           </div>

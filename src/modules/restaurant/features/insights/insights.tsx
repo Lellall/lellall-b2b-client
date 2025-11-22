@@ -95,13 +95,17 @@ const Insights: React.FC = () => {
   const restaurantId = user?.ownedRestaurants?.[0]?.id || user?.restaurantId;
   const parentRestaurant = user?.ownedRestaurants?.[0];
 
-  // Helper to format currency (extract number from string like "₦450,000")
+  // Helper to format currency (extract number from string like "₦450,000" or "₦2824890.00")
   const formatCurrency = (value: string | undefined): string => {
-    if (!value) return '₦0';
-    // Extract numbers from the string
-    const num = value.replace(/[^\d]/g, '');
-    if (!num) return value;
-    return `₦${parseInt(num).toLocaleString()}`;
+    if (!value) return '₦0.00';
+    // Remove currency symbol and any existing formatting, but keep decimal point
+    const cleaned = value.replace(/[₦,]/g, '').trim();
+    if (!cleaned) return value;
+    // Parse as float to preserve decimal places
+    const num = parseFloat(cleaned);
+    if (isNaN(num)) return value;
+    // Format with 2 decimal places
+    return `₦${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   // Helper to get initials for avatar
