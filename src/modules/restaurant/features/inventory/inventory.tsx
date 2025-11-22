@@ -13,9 +13,11 @@ import { ColorRing } from 'react-loader-spinner';
 import NewSupplyRequestWizard from "./request-supply";
 import ResupplyRequestWizard from "./resupply-items";
 import BulkUpdateModal from "./components/bulk-update-inventory-wizard";
+import SingleDeleteInventoryWizard from "./components/single-delete-inventory-wizard";
 import { useState, useMemo, useEffect, memo } from "react";
 import { useBulkUpdateInventoryMutation } from "@/redux/api/inventory/inventory.api";
 import ReactPaginate from 'react-paginate';
+import { Trash } from 'iconsax-react';
 
 // Optional: Add CSS for react-paginate (unchanged)
 const paginationStyles = `
@@ -146,12 +148,14 @@ const InventoryComponent = () => {
   const [isModalOpen, setModalOpen] = useState(false);
   const [resupplyModalOpen, setResupplyModalOpen] = useState(false);
   const [isBulkUpdateModalOpen, setBulkUpdateModalOpen] = useState(false);
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{ id: string; productName: string } | null>(null);
   const [selectedItems, setSelectedItems] = useState<InventoryItem[]>([]);
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState(''); // New state for search term
   const limit = 10;
 
-  const { data, error, isLoading } = useGetInventoryQuery(
+  const { data, error, isLoading, refetch } = useGetInventoryQuery(
     { subdomain, page, limit, search: searchTerm, pollingInterval: 0 }, // Pass search term
     { skip: !subdomain }
   );
@@ -317,6 +321,18 @@ const InventoryComponent = () => {
     }
   };
 
+  const handleDeleteClick = (item: InventoryItem) => {
+    setItemToDelete({ id: item.id, productName: item.productName });
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteSuccess = (id: string) => {
+    // Remove the deleted item from selectedItems if it was selected
+    setSelectedItems(prev => prev.filter(item => item.id !== id));
+    // Refetch inventory data
+    refetch();
+  };
+
   const columns = [
     { key: "productName", label: "Product Name", className: 'table-cell' },
     { key: "unitPrice", label: "Unit Price", className: 'hidden lg:table-cell' },
@@ -325,6 +341,23 @@ const InventoryComponent = () => {
     { key: "totalBaseQuantity", label: "Total Base Quantity", className: 'hidden lg:table-cell' },
     { key: "dateAdded", label: "Date Added", className: 'hidden lg:table-cell' },
     { key: "category", label: "Category", className: 'table-cell' },
+    {
+      key: "actions",
+      label: "Actions",
+      className: 'table-cell',
+      render: (_: any, row: InventoryItem) => (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => handleDeleteClick(row)}
+            className="text-red-500 p-2 rounded hover:bg-red-50 transition-colors"
+            title="Delete item"
+            aria-label="Delete inventory item"
+          >
+            <Trash size={18} />
+          </button>
+        </div>
+      ),
+    },
   ];
 
   const handlePageChange = ({ selected }: { selected: number }) => {
@@ -517,6 +550,12 @@ const InventoryComponent = () => {
           onClose={() => setBulkUpdateModalOpen(false)}
           selectedItems={rawSelectedItems}
           onSubmit={handleBulkUpdate}
+        />
+        <SingleDeleteInventoryWizard
+          isModalOpen={isDeleteModalOpen}
+          setModalOpen={setDeleteModalOpen}
+          item={itemToDelete}
+          onDeleteSuccess={handleDeleteSuccess}
         />
       </div>
     </div>
