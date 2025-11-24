@@ -20,6 +20,11 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
     { to: '/settings', icon: Setting, text: 'Settings' },
     { to: '/inventory', icon: ArchiveBox, text: 'Inventory & Stock' },
   ],
+  STORE_KEEPER: [
+    { to: '/', icon: Home, text: 'Dashboard', end: true },
+    { to: '/inventory', icon: ArchiveBox, text: 'Inventory & Stock' },
+    { to: '/settings', icon: Setting, text: 'Settings' },
+  ],
   ADMIN: [
     { to: '/', icon: Home, text: 'Dashboard', end: true },
     { to: '/menu', icon: Element2, text: 'Menu' },
@@ -113,6 +118,13 @@ export const getNavItemsByRole = (role: string, daysLeft: number, planName: stri
     .flatMap((feature) => featureToRoutes[feature] || [])
     .concat(['/settings', '/subscriptions', '/verify-payment', '/', '/insights']);
 
+  // For STORE_KEEPER, always allow dashboard, inventory, and settings regardless of plan
+  if (role === 'STORE_KEEPER') {
+    return defaultRoutes.filter((item) => 
+      item.to === '/' || item.to === '/inventory' || item.to === '/settings' || allowedRoutes.includes(item.to)
+    );
+  }
+
   return defaultRoutes.filter((item) => allowedRoutes.includes(item.to));
 };
 
@@ -147,6 +159,13 @@ export const isRouteAllowed = (
 
   if (daysLeft === 0 && path === '/expired' && role !== 'SUPER_ADMIN') {
     return allowedRoutes.some((item) => item.to === '/expired');
+  }
+
+  // Special handling for STORE_KEEPER - always allow dashboard, inventory, and settings
+  if (role === 'STORE_KEEPER') {
+    if (path === '/' || path === '/inventory' || path === '/settings') {
+      return true;
+    }
   }
 
   const isAllowed = allowedRoutes.some((item) => {

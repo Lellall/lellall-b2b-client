@@ -85,6 +85,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
     return <Navigate to="/settings" replace />;
   }
 
+  // Special handling for STORE_KEEPER - always allow dashboard, inventory, and settings
+  if (userRole === 'STORE_KEEPER') {
+    if (currentPath === '/' || currentPath === '/inventory' || currentPath === '/settings' || currentPath.startsWith('/inventory')) {
+      return <Outlet />;
+    }
+    // Block access to other routes
+    return <LostScreen />;
+  }
+
   // Check if the current route is allowed for the user's role and plan
   if (!isRouteAllowed(userRole, currentPath, daysLeft, planName)) {
     if (userRole === 'WAITER' && daysLeft > 0) {

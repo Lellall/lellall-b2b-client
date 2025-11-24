@@ -9,14 +9,15 @@ import {
   useGetInventoryStatsQuery,
 } from '@/redux/api/order/order.api';
 import { useGetReservationByStatsQuery } from '@/redux/api/reservations/reservations.api';
-import { useGetLowStockInventoryQuery } from '@/redux/api/inventory/inventory.api';
+import { useGetLowStockInventoryQuery, useGetInventoryStatsORQuery } from '@/redux/api/inventory/inventory.api';
+import { useGetMenusQuery, useGetAllMenuItemsQuery } from '@/redux/api/menu/menu.api';
 import { useSelector } from 'react-redux';
 import { ColorRing } from 'react-loader-spinner';
 import useWindowSize from '@/hooks/use-window-size';
 import DailySalesDashboard from './daily-sales';
 import LowInventoryWarning from '../layout/low-inventory';
 import { useNavigate } from 'react-router-dom';
-import { Home2, Menu, Setting2, ArchiveBox } from 'iconsax-react';
+import { Home2, Menu, Setting2, ArchiveBox, DocumentText, Element2 } from 'iconsax-react';
 
 const DashboardContainer = styled.div`
   padding: 16px;
@@ -139,6 +140,18 @@ const Dashboard = () => {
     page: 1,
     limit: 10,
   });
+  const { data: inventoryStatsOR, isLoading: isInventoryStatsLoading } = useGetInventoryStatsORQuery(
+    { subdomain, period: 'monthly' },
+    { skip: !subdomain || user?.role !== 'STORE_KEEPER' }
+  );
+  const { data: menus, isLoading: isMenusLoading } = useGetMenusQuery(
+    { subdomain },
+    { skip: !subdomain || user?.role !== 'STORE_KEEPER' }
+  );
+  const { data: menuItems, isLoading: isMenuItemsLoading } = useGetAllMenuItemsQuery(
+    { subdomain },
+    { skip: !subdomain || user?.role !== 'STORE_KEEPER' }
+  );
 
   const monthlyExpensesData = [
     { label: 'Food Items', percentage: 60, color: '#99FF99' },
@@ -218,9 +231,98 @@ const Dashboard = () => {
           </GreetingContainer>
         )}
         <MobileViewContainer>
-          {user?.role !== 'WAITER' && (
+          {user?.role === 'STORE_KEEPER' && (
             <>
-              {hasLowStockItems && <LowInventoryWarning />}
+              {/* Store Keeper Dashboard - Mobile */}
+              <div className="mb-8">
+                <h1 className="text-2xl font-semibold text-[#05431E] mb-2">
+                  Welcome, {user?.firstName || 'Store Keeper'}!
+                </h1>
+                <p className="text-sm text-gray-500">{today}</p>
+              </div>
+
+              {/* Low Stock Items Warning */}
+              {hasLowStockItems && <LowInventoryWarning navigation={navigate} />}
+
+              {/* Stats Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                {/* Total Inventory Items */}
+                <div className="bg-gray-50 p-6 rounded-xl">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-11 h-11 rounded-lg bg-[#05431E] flex items-center justify-center flex-shrink-0">
+                      <ArchiveBox size={22} color="#FFFFFF" />
+                    </div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wider font-medium">Total Inventory</p>
+                  </div>
+                  <h2 className="text-3xl font-bold text-[#05431E] leading-tight">
+                    {isInventoryStatsLoading ? (
+                      <ColorRing height="28" width="28" colors={['#05431E', '#05431E', '#05431E', '#05431E', '#05431E']} ariaLabel="loading" visible={true} />
+                    ) : (
+                      inventoryStatsOR?.totalProducts || 0
+                    )}
+                  </h2>
+                </div>
+
+                {/* Total Menus */}
+                <div className="bg-gray-50 p-6 rounded-xl">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-11 h-11 rounded-lg bg-[#05431E] flex items-center justify-center flex-shrink-0">
+                      <Menu size={22} color="#FFFFFF" />
+                    </div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wider font-medium">Total Menus</p>
+                  </div>
+                  <h2 className="text-3xl font-bold text-[#05431E] leading-tight">
+                    {isMenusLoading ? (
+                      <ColorRing height="28" width="28" colors={['#05431E', '#05431E', '#05431E', '#05431E', '#05431E']} ariaLabel="loading" visible={true} />
+                    ) : (
+                      menus?.length || 0
+                    )}
+                  </h2>
+                </div>
+
+                {/* Total Menu Items */}
+                <div className="bg-gray-50 p-6 rounded-xl">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-11 h-11 rounded-lg bg-[#05431E] flex items-center justify-center flex-shrink-0">
+                      <Element2 size={22} color="#FFFFFF" />
+                    </div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wider font-medium">Total Menu Items</p>
+                  </div>
+                  <h2 className="text-3xl font-bold text-[#05431E] leading-tight">
+                    {isMenuItemsLoading ? (
+                      <ColorRing height="28" width="28" colors={['#05431E', '#05431E', '#05431E', '#05431E', '#05431E']} ariaLabel="loading" visible={true} />
+                    ) : (
+                      menuItems?.length || 0
+                    )}
+                  </h2>
+                </div>
+              </div>
+
+              {/* Quick Links */}
+              <div className="mt-10">
+                <h3 className="text-lg font-semibold text-[#05431E] mb-5">Quick Links</h3>
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => navigate('/inventory?tab=tab-2')}
+                    className="bg-gray-50 text-[#05431E] px-5 py-4 rounded-xl flex items-center gap-3 transition-all duration-200 text-sm font-medium flex-1 hover:bg-[#05431E] hover:text-white"
+                  >
+                    <DocumentText size={22} />
+                    <span>Stock Sheet</span>
+                  </button>
+                  <button
+                    onClick={() => navigate('/inventory?tab=tab-4')}
+                    className="bg-gray-50 text-[#05431E] px-5 py-4 rounded-xl flex items-center gap-3 transition-all duration-200 text-sm font-medium flex-1 hover:bg-[#05431E] hover:text-white"
+                  >
+                    <ArchiveBox size={22} />
+                    <span>Inventory</span>
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+          {user?.role !== 'WAITER' && user?.role !== 'STORE_KEEPER' && (
+            <>
+              {hasLowStockItems && <LowInventoryWarning navigation={navigate} />}
               <SalesCard
                 title="Weekly Sales"
                 amount={salesStats?.weeklySales}
@@ -263,7 +365,7 @@ const Dashboard = () => {
               </PieChartContainer>
             </>
           )}
-          <DailySalesDashboard subdomain={subdomain} />
+          {user?.role !== 'STORE_KEEPER' && <DailySalesDashboard subdomain={subdomain} />}
         </MobileViewContainer>
       </DashboardContainer>
     );
@@ -294,7 +396,96 @@ const Dashboard = () => {
           </QuickLinksContainer>
         </GreetingContainer>
       )}
-      {user?.role !== 'WAITER' && (
+      {user?.role === 'STORE_KEEPER' && (
+        <>
+          {/* Store Keeper Dashboard */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-semibold text-[#05431E] mb-2">
+              Welcome, {user?.firstName || 'Store Keeper'}!
+            </h1>
+            <p className="text-sm text-gray-500">{today}</p>
+          </div>
+
+          {/* Low Stock Items Warning */}
+          {hasLowStockItems && <LowInventoryWarning navigation={navigate} />}
+
+          {/* Stats Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+            {/* Total Inventory Items */}
+            <div className="bg-gray-50 p-7 rounded-xl">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-12 h-12 rounded-lg bg-[#05431E] flex items-center justify-center flex-shrink-0">
+                  <ArchiveBox size={24} color="#FFFFFF" />
+                </div>
+                <p className="text-xs text-gray-500 uppercase tracking-wider font-medium">Total Inventory</p>
+              </div>
+              <h2 className="text-4xl font-bold text-[#05431E] leading-tight">
+                {isInventoryStatsLoading ? (
+                  <ColorRing height="32" width="32" colors={['#05431E', '#05431E', '#05431E', '#05431E', '#05431E']} ariaLabel="loading" visible={true} />
+                ) : (
+                  inventoryStatsOR?.totalProducts || 0
+                )}
+              </h2>
+            </div>
+
+            {/* Total Menus */}
+            <div className="bg-gray-50 p-7 rounded-xl">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-12 h-12 rounded-lg bg-[#05431E] flex items-center justify-center flex-shrink-0">
+                  <Menu size={24} color="#FFFFFF" />
+                </div>
+                <p className="text-xs text-gray-500 uppercase tracking-wider font-medium">Total Menus</p>
+              </div>
+              <h2 className="text-4xl font-bold text-[#05431E] leading-tight">
+                {isMenusLoading ? (
+                  <ColorRing height="32" width="32" colors={['#05431E', '#05431E', '#05431E', '#05431E', '#05431E']} ariaLabel="loading" visible={true} />
+                ) : (
+                  menus?.length || 0
+                )}
+              </h2>
+            </div>
+
+            {/* Total Menu Items */}
+            <div className="bg-gray-50 p-7 rounded-xl">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-12 h-12 rounded-lg bg-[#05431E] flex items-center justify-center flex-shrink-0">
+                  <Element2 size={24} color="#FFFFFF" />
+                </div>
+                <p className="text-xs text-gray-500 uppercase tracking-wider font-medium">Total Menu Items</p>
+              </div>
+              <h2 className="text-4xl font-bold text-[#05431E] leading-tight">
+                {isMenuItemsLoading ? (
+                  <ColorRing height="32" width="32" colors={['#05431E', '#05431E', '#05431E', '#05431E', '#05431E']} ariaLabel="loading" visible={true} />
+                ) : (
+                  menuItems?.length || 0
+                )}
+              </h2>
+            </div>
+          </div>
+
+          {/* Quick Links */}
+          <div className="mt-10">
+            <h3 className="text-xl font-semibold text-[#05431E] mb-6">Quick Links</h3>
+            <div className="flex gap-5">
+              <button
+                onClick={() => navigate('/inventory?tab=tab-2')}
+                className="bg-gray-50 text-[#05431E] px-6 py-5 rounded-xl flex items-center gap-3 transition-all duration-200 text-base font-medium flex-1 hover:bg-[#05431E] hover:text-white"
+              >
+                <DocumentText size={24} />
+                <span>Stock Sheet</span>
+              </button>
+              <button
+                onClick={() => navigate('/inventory?tab=tab-4')}
+                className="bg-gray-50 text-[#05431E] px-6 py-5 rounded-xl flex items-center gap-3 transition-all duration-200 text-base font-medium flex-1 hover:bg-[#05431E] hover:text-white"
+              >
+                <ArchiveBox size={24} />
+                <span>Inventory</span>
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+      {user?.role !== 'WAITER' && user?.role !== 'STORE_KEEPER' && (
         <>
           {hasLowStockItems && <LowInventoryWarning navigation={navigate} />}
           <SalesCardGrid>
@@ -341,7 +532,7 @@ const Dashboard = () => {
           </PieChartContainer>
         </>
       )}
-      <DailySalesDashboard subdomain={subdomain} />
+      {user?.role !== 'STORE_KEEPER' && <DailySalesDashboard subdomain={subdomain} />}
     </DashboardContainer>
   );
 };
