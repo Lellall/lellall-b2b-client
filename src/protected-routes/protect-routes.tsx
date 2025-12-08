@@ -85,9 +85,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
     return <Navigate to="/settings" replace />;
   }
 
-  // Special handling for STORE_KEEPER - always allow dashboard, inventory, and settings
+  // Allow leave-tracker for all staff roles (any role that's not SUPER_ADMIN)
+  if (currentPath === '/leave-tracker' && !isSuperAdmin) {
+    return <Outlet />;
+  }
+
+  // Special handling for STORE_KEEPER - always allow dashboard, inventory, settings, and leave-tracker
   if (userRole === 'STORE_KEEPER') {
-    if (currentPath === '/' || currentPath === '/inventory' || currentPath === '/settings' || currentPath.startsWith('/inventory')) {
+    if (currentPath === '/' || currentPath === '/inventory' || currentPath === '/settings' || currentPath === '/leave-tracker' || currentPath.startsWith('/inventory')) {
       return <Outlet />;
     }
     // Block access to other routes

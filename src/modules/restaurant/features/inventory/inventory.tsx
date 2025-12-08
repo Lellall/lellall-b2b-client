@@ -1,6 +1,7 @@
 import { useGetInventoryQuery, useGetInventoryStatsORQuery, useLazyDownloadInventoryExportQuery } from "@/redux/api/inventory/inventory.api";
 import { useSelector } from "react-redux";
 import { selectAuth } from "@/redux/api/auth/auth.slice";
+import { usePermissions } from "@/hooks/usePermissions";
 import Table from "@/components/ui/table";
 import { format } from "date-fns";
 import { moneyFormatter } from "@/utils/moneyFormatter";
@@ -145,6 +146,7 @@ interface InventoryItem {
 
 const InventoryComponent = () => {
   const { subdomain } = useSelector(selectAuth);
+  const { canCreate, canUpdate } = usePermissions();
   const [isModalOpen, setModalOpen] = useState(false);
   const [resupplyModalOpen, setResupplyModalOpen] = useState(false);
   const [isBulkUpdateModalOpen, setBulkUpdateModalOpen] = useState(false);
@@ -479,43 +481,49 @@ const InventoryComponent = () => {
               <ExportCircle size={14} className="w-3 h-3 sm:w-4 sm:h-4 mr-1" color="#000" />
               {isFetching ? 'Downloading...' : 'Export (CSV)'}
             </StyledButton>
-            <StyledButton
-              onClick={() => setResupplyModalOpen(true)}
-              style={{ padding: '6px 10px', fontWeight: 300 }}
-              background="blue"
-              color={theme.colors.secondary}
-              width={{ base: '100%', sm: '150px' }}
-              variant="outline"
-              className="flex items-center justify-center gap-1 text-xs sm:text-sm"
-              aria-label="Resupply inventory"
-            >
-              <Add size={14} className="w-3 h-3 sm:w-4 sm:h-4 mr-1" color="#fff" /> Resupply Inventory
-            </StyledButton>
-            <StyledButton
-              onClick={() => setModalOpen(true)}
-              style={{ padding: '6px 10px', fontWeight: 300 }}
-              background={theme.colors.active}
-              color={theme.colors.secondary}
-              width={{ base: '100%', sm: '150px' }}
-              variant="outline"
-              className="flex items-center justify-center gap-1 text-xs sm:text-sm"
-              aria-label="Request new supply"
-            >
-              <Add size={14} className="w-3 h-3 sm:w-4 sm:h-4 mr-1" color="#fff" /> Request New Supply
-            </StyledButton>
-            <StyledButton
-              onClick={() => setBulkUpdateModalOpen(true)}
-              disabled={selectedItems.length === 0}
-              style={{ padding: '6px 10px', fontWeight: 300 }}
-              background={theme.colors.active}
-              color={theme.colors.secondary}
-              width={{ base: '100%', sm: '150px' }}
-              variant="outline"
-              className={`flex items-center justify-center gap-1 text-xs sm:text-sm ${selectedItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-              aria-label="Bulk update inventory"
-            >
-              <Add size={14} className="w-3 h-3 sm:w-4 sm:h-4 mr-1" color="#fff" /> Bulk Update
-            </StyledButton>
+            {canUpdate && (
+              <StyledButton
+                onClick={() => setResupplyModalOpen(true)}
+                style={{ padding: '6px 10px', fontWeight: 300 }}
+                background="blue"
+                color={theme.colors.secondary}
+                width={{ base: '100%', sm: '150px' }}
+                variant="outline"
+                className="flex items-center justify-center gap-1 text-xs sm:text-sm"
+                aria-label="Resupply inventory"
+              >
+                <Add size={14} className="w-3 h-3 sm:w-4 sm:h-4 mr-1" color="#fff" /> Resupply Inventory
+              </StyledButton>
+            )}
+            {canCreate && (
+              <StyledButton
+                onClick={() => setModalOpen(true)}
+                style={{ padding: '6px 10px', fontWeight: 300 }}
+                background={theme.colors.active}
+                color={theme.colors.secondary}
+                width={{ base: '100%', sm: '150px' }}
+                variant="outline"
+                className="flex items-center justify-center gap-1 text-xs sm:text-sm"
+                aria-label="Request new supply"
+              >
+                <Add size={14} className="w-3 h-3 sm:w-4 sm:h-4 mr-1" color="#fff" /> Request New Supply
+              </StyledButton>
+            )}
+            {canUpdate && (
+              <StyledButton
+                onClick={() => setBulkUpdateModalOpen(true)}
+                disabled={selectedItems.length === 0}
+                style={{ padding: '6px 10px', fontWeight: 300 }}
+                background={theme.colors.active}
+                color={theme.colors.secondary}
+                width={{ base: '100%', sm: '150px' }}
+                variant="outline"
+                className={`flex items-center justify-center gap-1 text-xs sm:text-sm ${selectedItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                aria-label="Bulk update inventory"
+              >
+                <Add size={14} className="w-3 h-3 sm:w-4 sm:h-4 mr-1" color="#fff" /> Bulk Update
+              </StyledButton>
+            )}
           </div>
         </div>
         <div className="overflow-x-auto w-full">

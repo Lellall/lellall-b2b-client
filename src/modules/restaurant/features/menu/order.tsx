@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { Add, MinusCirlce, Send, Trash } from "iconsax-react";
+import { GripVertical } from "lucide-react";
 import OrderCard from "./components/order-card";
 import PreReceipt from "./pre-receipt";
 import SearchBar from "@/components/search-bar/search-bar";
@@ -30,6 +31,9 @@ const Orders = () => {
   const [createdOrders, setCreatedOrders] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("All");
   const [searchQuery, setSearchQuery] = useState(""); // New: Search query state
+  const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   const { subdomain, user } = useSelector(selectAuth);
   const { data: menuItems = [], isLoading: isLoadingMenu, error: menuError } = useGetAllMenuItemsQuery({ 
@@ -72,6 +76,22 @@ const Orders = () => {
     return darkColors[hash % darkColors.length];
   };
 
+  // Generate color gradient for tags
+  const getTagColor = (tag: string) => {
+    const hash = tag.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const colorGradients = [
+      { from: "from-orange-500", to: "to-red-500", hover: "hover:from-orange-600 hover:to-red-600" }, // Kitchen - warm colors
+      { from: "from-blue-500", to: "to-cyan-500", hover: "hover:from-blue-600 hover:to-cyan-600" }, // Bar - cool colors
+      { from: "from-purple-500", to: "to-pink-500", hover: "hover:from-purple-600 hover:to-pink-600" }, // Dessert
+      { from: "from-green-500", to: "to-emerald-500", hover: "hover:from-green-600 hover:to-emerald-600" }, // Salad
+      { from: "from-indigo-500", to: "to-blue-500", hover: "hover:from-indigo-600 hover:to-blue-600" }, // Beverages
+      { from: "from-amber-500", to: "to-yellow-500", hover: "hover:from-amber-600 hover:to-yellow-600" }, // Appetizers
+      { from: "from-rose-500", to: "to-pink-500", hover: "hover:from-rose-600 hover:to-pink-600" }, // Special
+      { from: "from-teal-500", to: "to-cyan-500", hover: "hover:from-teal-600 hover:to-cyan-600" }, // Other
+    ];
+    return colorGradients[hash % colorGradients.length];
+  };
+
   const updateQuantity = (itemId: string, delta: number) => {
     setOrder((prev) => {
       const currentQty = prev[itemId]?.quantity || 0;
@@ -111,10 +131,27 @@ const Orders = () => {
     };
   };
 
-  const sendOrderToKitchen = async () => {
+  const sendOrderToKitchen = async (tag?: string) => {
+    // If tag is provided, filter order items by that tag
+    let filteredOrder = order;
+    if (tag && activeTab === "All") {
+      const itemsWithTag = menuItems.filter((item: MenuItem) => 
+        item.tags && item.tags.includes(tag)
+      );
+      const itemIdsWithTag = new Set(itemsWithTag.map((item: MenuItem) => item.id));
+      filteredOrder = Object.fromEntries(
+        Object.entries(order).filter(([id]) => itemIdsWithTag.has(id))
+      );
+    }
+
+    if (Object.keys(filteredOrder).length === 0) {
+      alert("No items to send for this tag.");
+      return;
+    }
+
     const orderData = {
       waiterId: user?.id,
-      items: Object.entries(order).map(([id, { quantity }]: [string, any]) => ({
+      items: Object.entries(filteredOrder).map(([id, { quantity }]: [string, any]) => ({
         menuItemId: id,
         quantity,
       })),
@@ -146,7 +183,22 @@ const Orders = () => {
         },
       ]);
       setOrderSent(true);
-      setOrder({});
+      
+      // Remove sent items from order
+      if (tag && activeTab === "All") {
+        setOrder((prev) => {
+          const itemsWithTag = menuItems.filter((item: MenuItem) => 
+            item.tags && item.tags.includes(tag)
+          );
+          const itemIdsWithTag = new Set(itemsWithTag.map((item: MenuItem) => item.id));
+          return Object.fromEntries(
+            Object.entries(prev).filter(([id]) => !itemIdsWithTag.has(id))
+          );
+        });
+      } else {
+        setOrder({});
+      }
+      
       setSpecialNote("");
       setDiscountPercentage(0);
       setSearchQuery(""); // Reset search query after sending order
@@ -184,6 +236,109 @@ const Orders = () => {
     return `Send to ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}`;
   };
 
+  // Get unique tags from items in the order (only for "All" tab)
+  const orderTags = useMemo(() => {
+    if (activeTab !== "All" || Object.keys(order).length === 0) return [];
+    
+    const tagsSet = new Set<string>();
+    Object.keys(order).forEach((itemId) => {
+      const item = menuItems.find((i: MenuItem) => i.id === itemId);
+      if (item && item.tags && item.tags.length > 0) {
+        item.tags.forEach((tag) => tagsSet.add(tag));
+      }
+    });
+    return Array.from(tagsSet);
+  }, [order, menuItems, activeTab]);
+
+  // Count items per tag
+  const itemsByTag = useMemo(() => {
+    if (activeTab !== "All" || Object.keys(order).length === 0) return {};
+    
+    const counts: Record<string, number> = {};
+    Object.keys(order).forEach((itemId) => {
+      const item = menuItems.find((i: MenuItem) => i.id === itemId);
+      if (item && item.tags && item.tags.length > 0) {
+        item.tags.forEach((tag) => {
+          counts[tag] = (counts[tag] || 0) + (order[itemId]?.quantity || 0);
+        });
+      }
+    });
+    return counts;
+  }, [order, menuItems, activeTab]);
+
+  // Get detailed items by tag for summary
+  const itemsDetailsByTag = useMemo(() => {
+    if (activeTab !== "All" || Object.keys(order).length === 0) return {};
+    
+    const details: Record<string, Array<{ name: string; quantity: number }>> = {};
+    Object.entries(order).forEach(([itemId, { quantity, name }]: [string, any]) => {
+      const item = menuItems.find((i: MenuItem) => i.id === itemId);
+      if (item && item.tags && item.tags.length > 0) {
+        item.tags.forEach((tag) => {
+          if (!details[tag]) details[tag] = [];
+          details[tag].push({ name, quantity });
+        });
+      }
+    });
+    return details;
+  }, [order, menuItems, activeTab]);
+
+  // Drag handlers
+  const dragRef = useRef<HTMLDivElement>(null);
+
+  const handleDragStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    setIsDragging(true);
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    
+    if (dragRef.current) {
+      const rect = dragRef.current.getBoundingClientRect();
+      setDragOffset({
+        x: clientX - rect.left,
+        y: clientY - rect.top,
+      });
+    }
+  };
+
+  useEffect(() => {
+    const handleDrag = (e: MouseEvent | TouchEvent) => {
+      if (!isDragging) return;
+      
+      e.preventDefault();
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      
+      if (dragRef.current) {
+        const rect = dragRef.current.getBoundingClientRect();
+        const maxX = window.innerWidth - rect.width;
+        const maxY = window.innerHeight - rect.height;
+        
+        const newX = Math.max(0, Math.min(maxX, clientX - dragOffset.x));
+        const newY = Math.max(0, Math.min(maxY, clientY - dragOffset.y));
+        
+        setDragPosition({ x: newX, y: newY });
+      }
+    };
+
+    const handleDragEnd = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleDrag);
+      document.addEventListener('mouseup', handleDragEnd);
+      document.addEventListener('touchmove', handleDrag, { passive: false });
+      document.addEventListener('touchend', handleDragEnd);
+      
+      return () => {
+        document.removeEventListener('mousemove', handleDrag);
+        document.removeEventListener('mouseup', handleDragEnd);
+        document.removeEventListener('touchmove', handleDrag);
+        document.removeEventListener('touchend', handleDragEnd);
+      };
+    }
+  }, [isDragging, dragOffset]);
+
   if (isLoadingMenu || isLoadingTags) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -210,7 +365,7 @@ const Orders = () => {
   const { subtotal, discountAmount, discountedSubtotal, vatTax, serviceFee, total } = calculateTotal();
 
   return (
-    <div className="min-h-screen p-4 bg-gray-100">
+    <div className="min-h-screen p-4 bg-gray-100 pb-24 sm:pb-6">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col gap-6">
           <div className="flex flex-wrap gap-2 border-b border-gray-200">
@@ -277,7 +432,7 @@ const Orders = () => {
                               className="bg-white bg-opacity-20 p-1 rounded-full hover:bg-opacity-30 w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center"
                               aria-label={`Increase quantity of ${item.name}`}
                             >
-                              <Add size={12} className="sm:w- rumors sm:h-4" />
+                              <Add size={12} className="sm:w-4 sm:h-4" />
                             </button>
                           </div>
                         </div>
@@ -387,7 +542,7 @@ const Orders = () => {
               </div>
               <div className="flex my-4 sm:my-5 flex-col sm:flex-row justify-between gap-2">
                 <Button
-                  onClick={sendOrderToKitchen}
+                  onClick={() => sendOrderToKitchen()}
                   disabled={!Object.keys(order).length || isCreating}
                   className="flex items-center bg-[#05431E] text-white px-3 py-2 rounded-lg hover:bg-[#04391A] text-xs sm:text-sm transition-all disabled:bg-gray-400 justify-center"
                 >
@@ -497,6 +652,121 @@ const Orders = () => {
           </div>
         )}
       </div>
+
+      {/* Floating Action Buttons for Tagged Items (Only in "All" tab) */}
+      {activeTab === "All" && orderTags.length > 0 && Object.keys(order).length > 0 && (
+        <div
+          ref={dragRef}
+          className={`fixed z-50 sm:max-w-md max-h-[85vh] overflow-y-auto transition-transform ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} ${
+            dragPosition.x === 0 && dragPosition.y === 0 
+              ? 'bottom-0 left-0 right-0 sm:bottom-6 sm:left-auto sm:right-6 sm:w-auto' 
+              : ''
+          }`}
+          style={
+            dragPosition.x !== 0 || dragPosition.y !== 0
+              ? {
+                  left: `${dragPosition.x}px`,
+                  top: `${dragPosition.y}px`,
+                  right: 'auto',
+                  bottom: 'auto',
+                  width: 'calc(100% - 2rem)',
+                  maxWidth: '28rem',
+                }
+              : {}
+          }
+        >
+          <div className="bg-white/95 backdrop-blur-lg rounded-t-3xl sm:rounded-3xl shadow-2xl">
+            <div className="p-4 sm:p-5">
+              {/* Drag Handle */}
+              <div
+                onMouseDown={handleDragStart}
+                onTouchStart={handleDragStart}
+                className={`flex items-center gap-2 mb-3 sm:mb-4 select-none transition-all ${
+                  isDragging 
+                    ? 'cursor-grabbing opacity-75' 
+                    : 'cursor-grab hover:bg-gray-50 rounded-lg p-2 -m-2'
+                }`}
+              >
+                <GripVertical className={`w-5 h-5 transition-colors ${isDragging ? 'text-[#05431E]' : 'text-gray-400 hover:text-[#05431E]'}`} />
+                <div className="w-1 h-5 bg-gradient-to-b from-[#05431E] to-[#0E5D37] rounded-full"></div>
+                <h3 className="text-sm sm:text-base font-bold text-gray-900 flex-1">
+                  Quick Send
+                </h3>
+                <span className="text-[10px] text-gray-400 hidden sm:inline">Drag to move</span>
+              </div>
+              
+              {/* Summary Section */}
+              <div className="mb-4 space-y-2.5 max-h-[200px] sm:max-h-[250px] overflow-y-auto pr-1">
+                {orderTags.map((tag) => {
+                  const tagColor = getTagColor(tag);
+                  const items = itemsDetailsByTag[tag] || [];
+                  // Get border color class based on tag color
+                  const borderColorClass = tagColor.from.includes('orange') ? 'border-l-orange-500' :
+                    tagColor.from.includes('blue') && !tagColor.from.includes('indigo') ? 'border-l-blue-500' :
+                    tagColor.from.includes('purple') ? 'border-l-purple-500' :
+                    tagColor.from.includes('green') ? 'border-l-green-500' :
+                    tagColor.from.includes('indigo') ? 'border-l-indigo-500' :
+                    tagColor.from.includes('amber') ? 'border-l-amber-500' :
+                    tagColor.from.includes('rose') ? 'border-l-rose-500' :
+                    'border-l-teal-500';
+                  
+                  return (
+                    <div
+                      key={tag}
+                      className={`bg-gradient-to-r ${tagColor.from}/10 ${tagColor.to}/10 border-l-4 ${borderColorClass} rounded-lg p-2.5 sm:p-3`}
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className={`text-xs sm:text-sm font-semibold bg-gradient-to-r ${tagColor.from} ${tagColor.to} bg-clip-text text-transparent`}>
+                          {tag}
+                        </span>
+                        <span className="text-[10px] sm:text-xs font-bold text-gray-600">
+                          {itemsByTag[tag]} {itemsByTag[tag] === 1 ? 'item' : 'items'}
+                        </span>
+                      </div>
+                      <div className="space-y-1">
+                        {items.slice(0, 3).map((item, idx) => (
+                          <div key={idx} className="flex items-center justify-between text-[10px] sm:text-xs text-gray-700">
+                            <span className="truncate flex-1">{item.name}</span>
+                            <span className="ml-2 font-medium text-gray-900">x{item.quantity}</span>
+                          </div>
+                        ))}
+                        {items.length > 3 && (
+                          <div className="text-[10px] sm:text-xs text-gray-500 italic">
+                            +{items.length - 3} more
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-2.5 sm:gap-3">
+                {orderTags.map((tag) => {
+                  const tagColor = getTagColor(tag);
+                  return (
+                    <button
+                      key={tag}
+                      onClick={() => sendOrderToKitchen(tag)}
+                      disabled={isCreating}
+                      className={`flex-1 sm:flex-none px-4 py-3 sm:px-5 sm:py-3.5 bg-gradient-to-r ${tagColor.from} ${tagColor.to} ${tagColor.hover} disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl sm:rounded-2xl text-xs sm:text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-105 disabled:scale-100 disabled:opacity-60 transform`}
+                    >
+                      <Send size={14} className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      <span className="font-medium">Send to {tag}</span>
+                      {itemsByTag[tag] && (
+                        <span className="bg-white/30 backdrop-blur-sm px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold shadow-sm">
+                          {itemsByTag[tag]}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

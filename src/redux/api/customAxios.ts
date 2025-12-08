@@ -30,6 +30,7 @@ const endpointsRequiringToken = [
   "reservations",
   "^/restaurants/[a-fA-F0-9-]+$",
   "^/restaurants/[^/]+/service-fee$",
+  "^/restaurants/branches/parent/[a-fA-F0-9-]+$",
   "^/supply-request/[a-fA-F0-9-]+$",
   "^/request/[a-fA-F0-9-]+$",
   "^/products/[a-fA-F0-9-]+$",
@@ -46,7 +47,26 @@ const endpointsRequiringToken = [
   "^/ai-reporting/[a-fA-F0-9-]+/top-performers",
   "^/ai-reporting/[a-fA-F0-9-]+/insights",
   "^/ai-reporting/[a-fA-F0-9-]+/seasonal-trends",
-  "/ai-reporting/compare-restaurants"
+  "/ai-reporting/compare-restaurants",
+  "^/attendance",
+  "^/attendance/list/[a-fA-F0-9-]+$",
+  "^/attendance/staff/[a-fA-F0-9-]+/all$",
+  "^/attendance/staff/[a-fA-F0-9-]+/status/",
+  "^/attendance/staff/[a-fA-F0-9-]+/attendance",
+  "^/attendance/staff/[a-fA-F0-9-]+/leaves",
+  "^/attendance/record$",
+  "^/attendance/check-in-out$",
+  "^/attendance/[a-fA-F0-9-]+/status$",
+  "^/attendance/departments",
+  "^/attendance/staff/link-department$",
+  "^/attendance/leave/requests",
+  "^/attendance/salary",
+  "^attendance/salary",
+  "^/accounting",
+  "^/payroll",
+  "^payroll",
+  "^[^/]+/vendor-invoices",
+  "^webhooks/whatsapp"
 ];
 
 const endpointsWithoutToken = ["/auth/login", "/auth/register", "/auth/refresh-token"];
@@ -54,13 +74,36 @@ const endpointsWithoutToken = ["/auth/login", "/auth/register", "/auth/refresh-t
 CustomAxios.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("access_token");
-    const requiresToken = endpointsRequiringToken.some((pattern) => new RegExp(pattern).test(config.url || ""));
-    const skipToken = endpointsWithoutToken.some((endpoint) => config.url?.includes(endpoint));
+    const url = config.url || "";
+    // Normalize URL - ensure it starts with / for pattern matching
+    const normalizedUrl = url.startsWith('/') ? url : `/${url}`;
+    const requiresToken = endpointsRequiringToken.some((pattern) => {
+      const regex = new RegExp(pattern);
+      return regex.test(normalizedUrl) || regex.test(url);
+    });
+    const skipToken = endpointsWithoutToken.some((endpoint) => url.includes(endpoint));
 
     if (token && requiresToken && !skipToken) {
       config.headers.Authorization = `Bearer ${token}`;
     } else {
       delete config.headers.Authorization;
+    }
+
+    // Debug logging for payroll and salary endpoints
+    if (url.includes('payroll') || url.includes('salary')) {
+      console.log(`${url.includes('payroll') ? 'Payroll' : 'Salary'} Request:`, {
+        url,
+        hasToken: !!token,
+        requiresToken,
+        skipToken,
+        willSendToken: !!(token && requiresToken && !skipToken),
+        matchedPattern: endpointsRequiringToken.find((pattern) => new RegExp(pattern).test(url))
+      });
+    }
+
+    // If FormData, don't set Content-Type - let browser set it with boundary
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
     }
 
     return config;

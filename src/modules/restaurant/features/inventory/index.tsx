@@ -27,8 +27,8 @@ const Inventory = () => {
     }
   }, [searchParams]);
 
-  // Check if user is a WAITER
-  const isWaiter = user.role === "WAITER" || user.role === "CASHIER";
+  // Check if user is a WAITER or CASHIER (accountants should see all tabs)
+  const isWaiter = (user.role === "WAITER" || user.role === "CASHIER") && user.role !== "ACCOUNTANT";
   // Check if user is ADMIN or MANAGER (only admins and managers can see deleted orders)
   const canViewDeletedOrders = user.role === "ADMIN" || user.role === "MANAGER" || user.role === "SUPER_ADMIN";
 

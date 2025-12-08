@@ -24,17 +24,19 @@ export const restaurantApi = baseApi.injectEndpoints({
     }),
 
     createUserUnderRestaurant: builder.mutation({
-      query: (data) => ({
+      query: (formData: FormData) => ({
         url: '/restaurants/create-user',
         method: "POST",
-        body: data,
+        body: formData,
         credentials: "include",
+        // Don't set Content-Type header - let browser set it with boundary for multipart/form-data
+        formData: true,
       }),
       invalidatesTags: ['INVENTORY'],
       async onQueryStarted(_args, { queryFulfilled }) {
         try {
           await queryFulfilled;
-          toast.success("User created successfully");
+          toast.success("User created successfully. Please verify your email.");
         } catch (err: any) {
           ErrorHandler(err);
           toast.error(err?.error?.data?.message || "Failed to create user");
@@ -101,8 +103,10 @@ export const restaurantApi = baseApi.injectEndpoints({
         method: "PATCH",
         body: data,
         credentials: "include",
+        // If data is FormData, set formData flag to let browser set Content-Type with boundary
+        formData: data instanceof FormData,
       }),
-      invalidatesTags: ['INVENTORY'],
+      invalidatesTags: ['INVENTORY', 'STAFF'],
       async onQueryStarted(_args, { queryFulfilled }) {
         try {
           await queryFulfilled;

@@ -27,10 +27,22 @@ import { useGetRestaurantBySubdomainQuery } from './redux/api/restaurant/restaur
 import SubdomainNotFound from './SubdomainNotFound';
 import Inventory from './modules/restaurant/features/inventory';
 import Staff from './modules/restaurant/features/staff/staff';
+import AddStaff from './modules/restaurant/features/staff/add-staff';
+import EditStaff from './modules/restaurant/features/staff/edit-staff';
 import VerifyPaymentPage from './modules/restaurant/features/subscriptions/verify-page';
 import Dashboard from './modules/restaurant/features/dashboard/dashboard';
 import SubscriptionExpired from './SubscriptionExpired';
 import Insights from './modules/restaurant/features/insights/insights';
+import Attendance from './modules/human-resource/features/attendance/attendance';
+import HRDashboard from './modules/human-resource/features/dashboard/hr-dashboard';
+import Departments from './modules/human-resource/features/departments/departments';
+import ViewDepartment from './modules/human-resource/features/departments/view-department';
+import ViewStaff from './modules/restaurant/features/staff/view-staff';
+import LeaveTracker from './modules/human-resource/features/leave-tracker/leave-tracker';
+import Payroll from './modules/human-resource/features/payroll/payroll';
+import SalaryManagement from './modules/human-resource/features/salary/salary';
+import VendorInvoices from './modules/restaurant/features/vendor-invoices/vendor-invoices';
+import WhatsAppMessages from './modules/restaurant/features/whatsapp/whatsapp-messages';
 
 const App = () => {
   const { isAuthenticated, user, refreshToken } = useSelector(selectAuth);
@@ -41,9 +53,10 @@ const App = () => {
   // Determine if user is SUPER_ADMIN for admin routes
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
   const isAdminSubdomain = subdomain === 'admin';
+  const isHumanResource = user?.role === 'HUMAN_RESOURCE';
 
   // Check if user is allowed to access the dashboard
-  const canAccessDashboard = user?.role === 'ADMIN' || user?.role === 'MANAGER' || user?.role === "CASHIER" || user?.role === "STORE_KEEPER";
+  const canAccessDashboard = user?.role === 'ADMIN' || user?.role === 'MANAGER' || user?.role === "CASHIER" || user?.role === "STORE_KEEPER" || user?.role === "ACCOUNTANT" || user?.role === "COO";
 
   // Query restaurant data unless accessing admin subdomain with SUPER_ADMIN
   const { data: restaurant, isLoading, isError } = useGetRestaurantBySubdomainQuery(subdomain, {
@@ -87,7 +100,11 @@ const App = () => {
       <Route path="settings" element={<Settings />} />
       <Route path="inventory" element={<Inventory />} />
       <Route path="menu" element={<Menu />} />
+      <Route path="menu-items" element={<Orders />} />
       <Route path="staffs" element={<Staff />} />
+      <Route path="staffs/add" element={<AddStaff />} />
+      <Route path="staffs/:id/edit" element={<EditStaff />} />
+      <Route path="staffs/:id" element={<ViewStaff />} />
       <Route path="reports" element={<Reports />} />
       <Route path="insights" element={<Insights />} />
       <Route path="menu/orders" element={<Orders />} />
@@ -96,6 +113,33 @@ const App = () => {
       <Route path="reservations/:id" element={<Reservation />} />
       <Route path="verify-payment" element={<VerifyPaymentPage />} />
       <Route path="expired" element={<SubscriptionExpired />} />
+      <Route path="attendance" element={<Attendance />} />
+      <Route path="leave-tracker" element={<LeaveTracker />} />
+      <Route path="salary" element={<SalaryManagement />} />
+      <Route path="payroll" element={<Payroll />} />
+      <Route path="vendor-invoices" element={<VendorInvoices />} />
+      <Route path="whatsapp-messages" element={<WhatsAppMessages />} />
+    </>
+  );
+
+  // Define HR routes for HUMAN_RESOURCE users
+  const hrRoutes = (
+    <>
+      <Route index element={<HRDashboard />} />
+      <Route path="attendance" element={<Attendance />} />
+      <Route path="staffs" element={<Staff />} />
+      <Route path="staffs/add" element={<AddStaff />} />
+      <Route path="staffs/:id" element={<ViewStaff />} />
+      <Route path="staffs/:id/edit" element={<EditStaff />} />
+      <Route path="departments" element={<Departments />} />
+      <Route path="departments/:id" element={<ViewDepartment />} />
+      <Route path="leave-tracker" element={<LeaveTracker />} />
+      <Route path="salary" element={<SalaryManagement />} />
+      <Route path="payroll" element={<Payroll />} />
+      <Route path="shops" element={<Shops />} />
+      <Route path="shops/:id" element={<ViewShop />} />
+      <Route path="settings" element={<Settings />} />
+      {/* TODO: Add routes for complaints when components are created */}
     </>
   );
 
@@ -145,7 +189,15 @@ const App = () => {
             </>
           ) : (
             <>
-              {!isSuperAdmin && (
+              {isHumanResource && (
+                <Route element={<ProtectedRoute isAdminRoute={false} />}>
+                  <Route path="/" element={<Layout subdomainData={restaurant} />}>
+                    {hrRoutes}
+                  </Route>
+                </Route>
+              )}
+
+              {!isSuperAdmin && !isHumanResource && (
                 <Route element={<ProtectedRoute isAdminRoute={false} />}>
                   <Route path="/" element={<Layout subdomainData={restaurant} />}>
                     {restaurantRoutes}

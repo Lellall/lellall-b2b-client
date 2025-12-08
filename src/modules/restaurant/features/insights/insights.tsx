@@ -183,7 +183,7 @@ const Insights: React.FC = () => {
     return (
       <div className="space-y-6">
         {/* Top Performers */}
-        <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.05)' }}>
+        <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-3 rounded-xl" style={{ background: 'linear-gradient(to right, #10B981, #059669)' }}>
               <Trophy className="w-6 h-6 text-white" />
@@ -196,7 +196,6 @@ const Insights: React.FC = () => {
               <div
                 key={index}
                 className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200 group"
-                style={{ boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.05)' }}
               >
                 {/* Profile Header */}
                 <div className="flex items-center gap-4 mb-4">
@@ -263,7 +262,7 @@ const Insights: React.FC = () => {
 
         {/* Under Performers */}
         {waiterData.underPerformers && waiterData.underPerformers.length > 0 && (
-          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(239, 68, 68, 0.05)' }}>
+          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 rounded-xl" style={{ background: 'linear-gradient(to right, #EF4444, #DC2626)' }}>
                 <AlertTriangle className="w-6 h-6 text-white" />
@@ -276,7 +275,6 @@ const Insights: React.FC = () => {
                 <div
                   key={index}
                   className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200"
-                  style={{ boxShadow: '5px 5px 80px rgba(239, 68, 68, 0.05)' }}
                 >
                   {/* Profile Header */}
                   <div className="flex items-center gap-4 mb-4">
@@ -350,7 +348,7 @@ const Insights: React.FC = () => {
 
         {/* Training Recommendations & Best Practices */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.05)' }}>
+          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-xl" style={{ background: 'linear-gradient(to right, #6366F1, #8B5CF6)' }}>
                 <Target className="w-5 h-5 text-white" />
@@ -367,7 +365,7 @@ const Insights: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.05)' }}>
+          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-xl" style={{ background: 'linear-gradient(to right, #F59E0B, #D97706)' }}>
                 <Lightbulb className="w-5 h-5 text-white" />
@@ -387,7 +385,7 @@ const Insights: React.FC = () => {
 
         {/* Order Accuracy */}
         {waiterData.orderAccuracy && (
-          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.05)' }}>
+          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-xl" style={{ background: 'linear-gradient(to right, #10B981, #059669)' }}>
                 <BarChart3 className="w-5 h-5 text-white" />
@@ -410,7 +408,7 @@ const Insights: React.FC = () => {
 
         {/* Insights */}
         {waiterData.insights && waiterData.insights.length > 0 && (
-          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.05)' }}>
+          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
             <div className="flex items-center gap-3 mb-4">
               <Lightbulb className="w-6 h-6 text-[#F59E0B]" />
               <h3 className="text-lg font-medium text-[#0F172A]">AI Insights</h3>
@@ -436,7 +434,7 @@ const Insights: React.FC = () => {
     return (
       <div className="space-y-6">
         {/* Superstar Items */}
-        <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.05)' }}>
+        <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-3 rounded-xl" style={{ background: 'linear-gradient(to right, #6366F1, #8B5CF6)' }}>
               <Trophy className="w-6 h-6 text-white" />
@@ -449,7 +447,7 @@ const Insights: React.FC = () => {
               <div
                 key={index}
                 className="p-5 rounded-xl cursor-pointer hover:-translate-y-1 transition-all duration-200"
-                style={{ background: 'linear-gradient(to bottom, #EEF2FF, #E0E7FF)', boxShadow: '2px 2px 40px rgba(99, 102, 241, 0.08)' }}
+                style={{ background: 'linear-gradient(to bottom, #EEF2FF, #E0E7FF)' }}
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div className="p-2 rounded-lg bg-[#6366F1]/20">
@@ -467,7 +465,7 @@ const Insights: React.FC = () => {
         </div>
 
         {/* Emerging Trends */}
-        <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.05)' }}>
+        <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-3 rounded-xl" style={{ background: 'linear-gradient(to right, #10B981, #059669)' }}>
               <TrendingUpIcon className="w-6 h-6 text-white" />
@@ -480,7 +478,7 @@ const Insights: React.FC = () => {
               <div
                 key={index}
                 className="p-5 rounded-xl cursor-pointer hover:-translate-y-1 transition-all duration-200 border-l-4 border-[#10B981]"
-                style={{ background: 'linear-gradient(to right, #ECFDF5, #D1FAE5)', boxShadow: '2px 2px 40px rgba(16, 185, 129, 0.08)' }}
+                style={{ background: 'linear-gradient(to right, #ECFDF5, #D1FAE5)' }}
               >
                 <div className="flex items-center gap-3 mb-2">
                   <Activity className="w-5 h-5 text-[#10B981]" />
@@ -493,7 +491,7 @@ const Insights: React.FC = () => {
 
         {/* Underperformers */}
         {topPerformersData.underperformers && topPerformersData.underperformers.length > 0 && (
-          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(239, 68, 68, 0.05)' }}>
+          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 rounded-xl" style={{ background: 'linear-gradient(to right, #EF4444, #DC2626)' }}>
                 <AlertCircle className="w-6 h-6 text-white" />
@@ -520,7 +518,7 @@ const Insights: React.FC = () => {
 
         {/* Menu Recommendations & Cross-sell Opportunities */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.05)' }}>
+          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-xl" style={{ background: 'linear-gradient(to right, #6366F1, #8B5CF6)' }}>
                 <ChefHat className="w-5 h-5 text-white" />
@@ -537,7 +535,7 @@ const Insights: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.05)' }}>
+          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-xl" style={{ background: 'linear-gradient(to right, #F59E0B, #D97706)' }}>
                 <Zap className="w-5 h-5 text-white" />
@@ -557,7 +555,7 @@ const Insights: React.FC = () => {
 
         {/* Category Insights */}
         {topPerformersData.categoryInsights && topPerformersData.categoryInsights.length > 0 && (
-          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.05)' }}>
+          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-xl" style={{ background: 'linear-gradient(to right, #10B981, #059669)' }}>
                 <BarChart3 className="w-5 h-5 text-white" />
@@ -582,7 +580,7 @@ const Insights: React.FC = () => {
   const renderComparisonsTab = () => (
     <div className="space-y-6">
       {/* Comparison Type Selector */}
-      <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.05)' }}>
+      <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ }}>
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <label className="text-sm font-medium text-[#0F172A]">Comparison Type:</label>
@@ -607,8 +605,8 @@ const Insights: React.FC = () => {
             includeParent ? 'border-2 border-[#6366F1]' : 'bg-white'
           }`}
           style={includeParent 
-            ? { background: 'linear-gradient(to right, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1))', boxShadow: '5px 5px 80px rgba(99, 102, 241, 0.2)' }
-            : { boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.1)' }
+            ? { background: 'linear-gradient(to right, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1))' }
+            : {}
           }
         >
           <div className="flex items-center gap-4">
@@ -637,7 +635,7 @@ const Insights: React.FC = () => {
       )}
 
       {/* Branch Selection */}
-      <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.05)' }}>
+      <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ }}>
         <div className="flex items-center gap-3 mb-6">
           <div className="p-3 rounded-xl" style={{ background: 'linear-gradient(to right, #6366F1, #8B5CF6)' }}>
             <Building2 className="w-6 h-6 text-white" />
@@ -666,8 +664,8 @@ const Insights: React.FC = () => {
                     isSelected ? 'border-2 border-[#6366F1]' : 'bg-white'
                   }`}
                   style={isSelected 
-                    ? { background: 'linear-gradient(to right, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1))', boxShadow: '5px 5px 80px rgba(99, 102, 241, 0.2)' }
-                    : { boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.1)' }
+                    ? { background: 'linear-gradient(to right, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1))' }
+                    : {}
                   }
                 >
                   <div className="flex items-center justify-between mb-3">
@@ -738,7 +736,7 @@ const Insights: React.FC = () => {
                 ? 'bg-gray-400 cursor-not-allowed'
                 : ''
             }`}
-            style={totalSelected >= 2 ? { background: 'linear-gradient(to right, #6366F1, #8B5CF6)', boxShadow: '5px 5px 80px rgba(99, 102, 241, 0.3)' } : {}}
+            style={totalSelected >= 2 ? { background: 'linear-gradient(to right, #6366F1, #8B5CF6)' } : {}}
           >
             {isComparing ? 'Comparing...' : 'Compare Branches'}
           </button>
@@ -750,7 +748,7 @@ const Insights: React.FC = () => {
         <div className="space-y-6">
           {/* Best/Worst */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="rounded-2xl p-6 text-white cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ background: 'linear-gradient(to bottom right, #10B981, #059669)', boxShadow: '5px 5px 80px rgba(16, 185, 129, 0.3)' }}>
+            <div className="rounded-2xl p-6 text-white cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ background: 'linear-gradient(to bottom right, #10B981, #059669)' }}>
               <div className="flex items-center gap-3 mb-2">
                 <Trophy className="w-6 h-6" />
                 <h3 className="text-lg font-semibold">Best Performer</h3>
@@ -758,7 +756,7 @@ const Insights: React.FC = () => {
               <p className="text-2xl font-semibold">{comparisonData.comparison?.best || 'N/A'}</p>
             </div>
 
-            <div className="rounded-2xl p-6 text-white cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ background: 'linear-gradient(to bottom right, #EF4444, #DC2626)', boxShadow: '5px 5px 80px rgba(239, 68, 68, 0.3)' }}>
+            <div className="rounded-2xl p-6 text-white cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ background: 'linear-gradient(to bottom right, #EF4444, #DC2626)' }}>
               <div className="flex items-center gap-3 mb-2">
                 <AlertTriangle className="w-6 h-6" />
                 <h3 className="text-lg font-semibold">Needs Improvement</h3>
@@ -768,7 +766,7 @@ const Insights: React.FC = () => {
           </div>
 
           {/* Differences */}
-          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.05)' }}>
+          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
             <div className="flex items-center gap-3 mb-4">
               <ArrowLeftRight className="w-6 h-6" style={{ color: '#6366F1' }} />
               <h2 className="text-lg font-medium text-[#0F172A]">Key Differences</h2>
@@ -790,7 +788,7 @@ const Insights: React.FC = () => {
 
           {/* Insights */}
           {comparisonData.insights && comparisonData.insights.length > 0 && (
-            <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(251, 191, 36, 0.05)' }}>
+            <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
               <div className="flex items-center gap-3 mb-4">
                 <Lightbulb className="w-6 h-6 text-[#F59E0B]" />
                 <h2 className="text-lg font-medium text-[#0F172A]">AI Insights</h2>
@@ -811,7 +809,7 @@ const Insights: React.FC = () => {
 
           {/* Recommendations */}
           {comparisonData.recommendations && comparisonData.recommendations.length > 0 && (
-            <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(16, 185, 129, 0.05)' }}>
+            <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
               <div className="flex items-center gap-3 mb-4">
                 <Target className="w-6 h-6 text-[#10B981]" />
                 <h2 className="text-lg font-medium text-[#0F172A]">Recommendations</h2>
@@ -841,7 +839,7 @@ const Insights: React.FC = () => {
     return (
       <div className="space-y-6">
         {/* Forecast */}
-        <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(99, 102, 241, 0.05)' }}>
+        <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-3 rounded-xl" style={{ background: 'linear-gradient(to right, #6366F1, #8B5CF6)' }}>
               <TrendingUp className="w-6 h-6 text-white" />
@@ -865,7 +863,7 @@ const Insights: React.FC = () => {
 
         {/* Peak Months */}
         {seasonalTrendsData.peakMonths && seasonalTrendsData.peakMonths.length > 0 && (
-          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(16, 185, 129, 0.05)' }}>
+          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 rounded-xl" style={{ background: 'linear-gradient(to right, #10B981, #059669)' }}>
                 <TrendingUpIcon className="w-6 h-6 text-white" />
@@ -878,7 +876,7 @@ const Insights: React.FC = () => {
                 <div
                   key={index}
                   className="p-5 rounded-xl cursor-pointer hover:-translate-y-1 transition-all duration-200"
-                  style={{ background: 'linear-gradient(to right, #ECFDF5, #D1FAE5)', boxShadow: '2px 2px 40px rgba(16, 185, 129, 0.08)' }}
+                  style={{ background: 'linear-gradient(to right, #ECFDF5, #D1FAE5)' }}
                 >
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-[#10B981]/20">
@@ -894,7 +892,7 @@ const Insights: React.FC = () => {
 
         {/* Low Periods */}
         {seasonalTrendsData.lowPeriods && seasonalTrendsData.lowPeriods.length > 0 && (
-          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(239, 68, 68, 0.05)' }}>
+          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 rounded-xl" style={{ background: 'linear-gradient(to right, #EF4444, #DC2626)' }}>
                 <TrendingDown className="w-6 h-6 text-white" />
@@ -922,7 +920,7 @@ const Insights: React.FC = () => {
 
         {/* Seasonal Trends & Pattern Insights */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.05)' }}>
+          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-xl" style={{ background: 'linear-gradient(to right, #6366F1, #8B5CF6)' }}>
                 <CalendarDays className="w-5 h-5 text-white" />
@@ -939,7 +937,7 @@ const Insights: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.05)' }}>
+          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-xl" style={{ background: 'linear-gradient(to right, #F59E0B, #D97706)' }}>
                 <Lightbulb className="w-5 h-5 text-white" />
@@ -959,7 +957,7 @@ const Insights: React.FC = () => {
 
         {/* Recommendations */}
         {seasonalTrendsData.recommendations && seasonalTrendsData.recommendations.length > 0 && (
-          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(16, 185, 129, 0.05)' }}>
+          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 rounded-xl" style={{ background: 'linear-gradient(to right, #10B981, #059669)' }}>
                 <Target className="w-6 h-6 text-white" />
@@ -972,7 +970,7 @@ const Insights: React.FC = () => {
                 <div
                   key={index}
                   className="flex items-start gap-4 p-5 rounded-xl cursor-pointer hover:-translate-y-0.5 transition-all duration-200"
-                  style={{ background: 'linear-gradient(to right, #ECFDF5, #D1FAE5)', boxShadow: '2px 2px 20px rgba(16, 185, 129, 0.05)' }}
+                  style={{ background: 'linear-gradient(to right, #ECFDF5, #D1FAE5)' }}
                 >
                   <div className="p-2 rounded-lg bg-[#10B981]/20">
                     <CheckCircle className="w-5 h-5 text-[#10B981]" />
@@ -994,7 +992,7 @@ const Insights: React.FC = () => {
     return (
       <div className="space-y-6">
         {/* Trends */}
-        <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.05)' }}>
+        <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-3 rounded-xl" style={{ background: 'linear-gradient(to right, #6366F1, #8B5CF6)' }}>
               <TrendingUpIcon className="w-6 h-6 text-white" />
@@ -1007,7 +1005,7 @@ const Insights: React.FC = () => {
               <div
                 key={index}
                 className="p-5 rounded-xl cursor-pointer hover:-translate-y-1 transition-all duration-200"
-                style={{ background: 'linear-gradient(to right, #EEF2FF, #E0E7FF)', boxShadow: '2px 2px 40px rgba(99, 102, 241, 0.08)' }}
+                style={{ background: 'linear-gradient(to right, #EEF2FF, #E0E7FF)', }}
               >
                 <div className="flex items-center gap-3">
                   <TrendingUp className="w-5 h-5 text-[#6366F1]" />
@@ -1020,7 +1018,7 @@ const Insights: React.FC = () => {
 
         {/* Opportunities */}
         {businessInsightsData.opportunities && businessInsightsData.opportunities.length > 0 && (
-          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(16, 185, 129, 0.05)' }}>
+          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 rounded-xl" style={{ background: 'linear-gradient(to right, #10B981, #059669)' }}>
                 <Target className="w-6 h-6 text-white" />
@@ -1033,7 +1031,7 @@ const Insights: React.FC = () => {
                 <div
                   key={index}
                   className="p-5 rounded-xl cursor-pointer hover:-translate-y-1 transition-all duration-200"
-                  style={{ background: 'linear-gradient(to right, #ECFDF5, #D1FAE5)', boxShadow: '2px 2px 40px rgba(16, 185, 129, 0.08)' }}
+                  style={{ background: 'linear-gradient(to right, #ECFDF5, #D1FAE5)' }}
                 >
                   <div className="flex items-center gap-3">
                     <Lightbulb className="w-5 h-5 text-[#10B981]" />
@@ -1047,7 +1045,7 @@ const Insights: React.FC = () => {
 
         {/* Menu Optimization & Operational */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.05)' }}>
+          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
             <div className="flex items-center gap-3 mb-4">
               <ChefHat className="w-6 h-6" style={{ color: '#6366F1' }} />
               <h3 className="text-lg font-medium text-[#0F172A]">Menu Optimization</h3>
@@ -1062,7 +1060,7 @@ const Insights: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.05)' }}>
+          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
             <div className="flex items-center gap-3 mb-4">
               <Briefcase className="w-6 h-6" style={{ color: '#F59E0B' }} />
               <h3 className="text-lg font-medium text-[#0F172A]">Operational</h3>
@@ -1080,7 +1078,7 @@ const Insights: React.FC = () => {
 
         {/* Risks */}
         {businessInsightsData.risks && businessInsightsData.risks.length > 0 && (
-          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(239, 68, 68, 0.05)' }}>
+          <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 rounded-xl" style={{ background: 'linear-gradient(to right, #EF4444, #DC2626)' }}>
                 <AlertCircle className="w-6 h-6 text-white" />
@@ -1105,7 +1103,7 @@ const Insights: React.FC = () => {
         )}
 
         {/* Action Items */}
-        <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.05)' }}>
+        <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-3 rounded-xl" style={{ background: 'linear-gradient(to right, #10B981, #059669)' }}>
               <Zap className="w-6 h-6 text-white" />
@@ -1118,7 +1116,7 @@ const Insights: React.FC = () => {
               <div
                 key={index}
                 className="flex items-start gap-4 p-5 rounded-xl cursor-pointer hover:-translate-y-0.5 transition-all duration-200"
-                style={{ background: 'linear-gradient(to right, #ECFDF5, #D1FAE5)', boxShadow: '2px 2px 20px rgba(16, 185, 129, 0.05)' }}
+                style={{ background: 'linear-gradient(to right, #ECFDF5, #D1FAE5)' }}
               >
                 <div className="p-2 rounded-lg bg-[#10B981]/20">
                   <CheckCircle className="w-5 h-5 text-[#10B981]" />
@@ -1144,7 +1142,7 @@ const Insights: React.FC = () => {
         </div>
 
         {/* Period Selector */}
-        <div className="bg-white rounded-2xl p-6 mb-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.05)' }}>
+        <div className="bg-white rounded-2xl p-6 mb-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ }}>
           <div className="flex items-center gap-6 flex-wrap">
             <div className="flex items-center gap-4">
               <label className="text-sm font-medium text-[#0F172A]">Analysis Period:</label>
@@ -1174,15 +1172,14 @@ const Insights: React.FC = () => {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-2xl p-2 mb-6 flex gap-2 flex-wrap" style={{ boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.05)' }}>
+        <div className="bg-white rounded-2xl p-2 mb-6 flex gap-2 flex-wrap">
           <button
             onClick={() => setActiveTab('waiter-performance')}
             className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ease-in-out flex items-center gap-2 cursor-pointer ${
               activeTab === 'waiter-performance'
-                ? 'text-white'
+                ? 'text-white bg-[#05431E]'
                 : 'text-[#6B7280] hover:text-[#0F172A] hover:bg-[#F8F9FA]'
             }`}
-            style={activeTab === 'waiter-performance' ? { background: 'linear-gradient(to right,rgb(0, 70, 37),rgb(0, 0, 0))' } : {}}
           >
             <Users className="w-5 h-5" />
             Waiter Performance
@@ -1191,10 +1188,9 @@ const Insights: React.FC = () => {
             onClick={() => setActiveTab('top-performers')}
             className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ease-in-out flex items-center gap-2 cursor-pointer ${
               activeTab === 'top-performers'
-                ? 'text-white'
+                ? 'text-white bg-[#05431E]'
                 : 'text-[#6B7280] hover:text-[#0F172A] hover:bg-[#F8F9FA]'
             }`}
-            style={activeTab === 'top-performers' ? { background: 'linear-gradient(to right,rgb(0, 70, 37),rgb(0, 0, 0))' } : {}}
           >
             <Star className="w-5 h-5" />
             Top Performers
@@ -1203,10 +1199,9 @@ const Insights: React.FC = () => {
             onClick={() => setActiveTab('business-insights')}
             className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ease-in-out flex items-center gap-2 cursor-pointer ${
               activeTab === 'business-insights'
-                ? 'text-white'
+                ? 'text-white bg-[#05431E]'
                 : 'text-[#6B7280] hover:text-[#0F172A] hover:bg-[#F8F9FA]'
             }`}
-            style={activeTab === 'business-insights' ? { background: 'linear-gradient(to right,rgb(0, 70, 37),rgb(0, 0, 0))' } : {}}
           >
             <Lightbulb className="w-5 h-5" />
             Business Insights
@@ -1215,10 +1210,9 @@ const Insights: React.FC = () => {
             onClick={() => setActiveTab('comparisons')}
             className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ease-in-out flex items-center gap-2 cursor-pointer ${
               activeTab === 'comparisons'
-                ? 'text-white'
+                ? 'text-white bg-[#05431E]'
                 : 'text-[#6B7280] hover:text-[#0F172A] hover:bg-[#F8F9FA]'
             }`}
-            style={activeTab === 'comparisons' ? { background: 'linear-gradient(to right,rgb(0, 70, 37),rgb(0, 0, 0))' } : {}}
           >
             <ArrowLeftRight className="w-5 h-5" />
             Comparisons
@@ -1227,10 +1221,9 @@ const Insights: React.FC = () => {
             onClick={() => setActiveTab('seasonal-trends')}
             className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ease-in-out flex items-center gap-2 cursor-pointer ${
               activeTab === 'seasonal-trends'
-                ? 'text-white'
+                ? 'text-white bg-[#05431E]'
                 : 'text-[#6B7280] hover:text-[#0F172A] hover:bg-[#F8F9FA]'
             }`}
-            style={activeTab === 'seasonal-trends' ? { background: 'linear-gradient(to right,rgb(0, 70, 37),rgb(0, 0, 0))' } : {}}
           >
             <CalendarDays className="w-5 h-5" />
             Seasonal Trends
@@ -1239,7 +1232,7 @@ const Insights: React.FC = () => {
 
           {/* Tab Content */}
         {isLoading && activeTab !== 'comparisons' ? (
-          <div className="bg-white rounded-2xl p-12 text-center" style={{ boxShadow: '5px 5px 80px rgba(0, 0, 0, 0.05)' }}>
+          <div className="bg-white rounded-2xl p-12 text-center" style={{ }}>
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-[#0E5D37] border-t-transparent"></div>
             <p className="mt-4 text-[#6B7280]">Loading AI insights...</p>
           </div>

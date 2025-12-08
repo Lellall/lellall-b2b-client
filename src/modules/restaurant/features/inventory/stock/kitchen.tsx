@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import SearchBar from '@/components/search-bar/search-bar';
 import { theme } from '@/theme/theme';
 import { Add, Setting2, Trash } from 'iconsax-react';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useState } from 'react';
 import Modal from '@/components/modal/modal';
 import {
@@ -21,6 +22,7 @@ import MenuItemForm from '../../menu/components/add-items';
 import { CreateMenuForm } from '../../menu/components/create-menu';
 
 const Kitchen = () => {
+  const { canCreate, canUpdate, canDelete } = usePermissions();
   const [counters, setCounters] = useState({});
   const [menuModal, setMenuModal] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -345,34 +347,38 @@ const Kitchen = () => {
                           {item.name}
                         </h3>
                         <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEditClick(item)}
-                            className="text-white hover:text-blue-300 transition-colors duration-200"
-                            title="Edit Item"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="20"
-                              height="20"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
+                          {canUpdate && (
+                            <button
+                              onClick={() => handleEditClick(item)}
+                              className="text-white hover:text-blue-300 transition-colors duration-200"
+                              title="Edit Item"
                             >
-                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => openConfirmModal('menuItem', item.id, item.name)}
-                            disabled={isDeletingItem}
-                            className="text-white hover:text-red-300 transition-colors duration-200"
-                            title="Delete Item"
-                          >
-                            <Trash size="20" />
-                          </button>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                              </svg>
+                            </button>
+                          )}
+                          {canDelete && (
+                            <button
+                              onClick={() => openConfirmModal('menuItem', item.id, item.name)}
+                              disabled={isDeletingItem}
+                              className="text-white hover:text-red-300 transition-colors duration-200"
+                              title="Delete Item"
+                            >
+                              <Trash size="20" />
+                            </button>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center justify-between">

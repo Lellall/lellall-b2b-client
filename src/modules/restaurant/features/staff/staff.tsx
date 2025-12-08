@@ -1,11 +1,12 @@
 import Modal from "@/components/modal/modal";
 import { Button } from "@/components/ui/button";
-import { Trash } from "iconsax-react";
-import { Pencil } from "lucide-react";
+import { Trash, Filter } from "iconsax-react";
+import { Pencil, Eye, Search, Plus } from "lucide-react";
 import React, { useState, useEffect, useMemo } from "react";
 import StaffForm from "./components/staff-form";
 import { useSelector } from "react-redux";
 import { selectAuth } from "@/redux/api/auth/auth.slice";
+import { usePermissions } from "@/hooks/usePermissions";
 import { useNavigate } from "react-router-dom";
 import {
   useCreateUserUnderRestaurantMutation,
@@ -19,179 +20,19 @@ import { ColorRing } from 'react-loader-spinner';
 import { theme } from '@/theme/theme';
 import { toast } from "react-toastify";
 
-// Table Component
-interface TableProps {
-  columns: { key: string; label: string; render?: (value: any, row: any, index: number) => React.ReactNode }[];
-  data: Record<string, any>[];
-  selectable?: boolean;
-  bordered?: boolean;
-}
-
-const Table: React.FC<TableProps> = ({ columns, data, selectable, bordered = false }) => {
-  const [sortKey, setSortKey] = useState<string | null>(null);
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
-  const [selectAll, setSelectAll] = useState(false);
-
-  const handleSort = (key: string) => {
-    const newOrder = sortKey === key && sortOrder === "asc" ? "desc" : "asc";
-    setSortKey(key);
-    setSortOrder(newOrder);
-  };
-
-  const sortedData = useMemo(() => {
-    if (!sortKey) return data;
-    return [...data].sort((a, b) => {
-      const aValue = a[sortKey];
-      const bValue = b[sortKey];
-      if (typeof aValue === "string" && typeof bValue === "string") {
-        return sortOrder === "asc" ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
-      }
-      return sortOrder === "asc" ? (aValue || 0) - (bValue || 0) : (bValue || 0) - (aValue || 0);
-    });
-  }, [data, sortKey, sortOrder]);
-
-  const handleRowSelect = (index: number) => {
-    const newSelectedRows = new Set(selectedRows);
-    if (newSelectedRows.has(index)) {
-      newSelectedRows.delete(index);
-    } else {
-      newSelectedRows.add(index);
-    }
-    setSelectedRows(newSelectedRows);
-    setSelectAll(newSelectedRows.size === data.length);
-  };
-
-  const toggleSelectAll = () => {
-    setSelectedRows(selectAll ? new Set() : new Set(data.map((_, index) => index)));
-    setSelectAll(!selectAll);
-  };
-
-  if (sortedData.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center p-4 bg-white border border-gray-200 rounded-lg">
-        <svg className="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h-2m-2 0H7" />
-        </svg>
-        <h3 className="text-base font-medium text-gray-700">No Staff Found</h3>
-        <p className="text-xs text-gray-500 text-center mt-2">It looks like there are no staff members yet. Click "Add Staff" to get started!</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative w-full">
-      {/* Desktop/Table View (sm and above) */}
-      <div className="hidden sm:block overflow-x-auto">
-        <table className={`w-full bg-white ${bordered ? "border border-gray-200 rounded-lg" : ""} table-auto`}>
-          <thead>
-            <tr className={`${bordered ? "border-b border-gray-200 first:rounded-t-lg" : ""}`}>
-              {selectable && (
-                <th className={`px-4 py-4 text-left text-sm text-gray-700 font-light w-12 ${bordered ? "border-r border-gray-200" : ""}`}>
-                  <input
-                    type="checkbox"
-                    className="rounded h-4 w-4 accent-green-900 focus:ring-green-500"
-                    checked={selectAll}
-                    onChange={toggleSelectAll}
-                  />
-                </th>
-              )}
-              {columns.map((col) => (
-                <th
-                  key={col.key}
-                  className={`px-4 py-4 text-left text-sm text-gray-700 font-light ${col.key === "actions" ? "w-20" : "min-w-[120px]"} ${bordered ? "border-r border-gray-200" : ""} ${col.key === "lastName" || col.key === "phoneNumber" || col.key === "role" ? "hidden lg:table-cell" : ""}`}
-                  onClick={() => col.key !== "actions" && handleSort(col.key)}
-                >
-                  {col.label} {sortKey === col.key && col.key !== "actions" ? (sortOrder === "asc" ? "▲" : "▼") : ""}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {sortedData.map((row, index) => (
-              <tr
-                key={row.id || index}
-                className={`transition-colors duration-200 ${bordered ? "border-b border-gray-200 last:rounded-b-lg" : ""} ${index % 2 === 0 ? "bg-white hover:bg-gray-50" : "bg-gray-100 hover:bg-gray-200"}`}
-              >
-                {selectable && (
-                  <td className={`px-4 text-sm py-4 text-gray-900 font-light w-12 ${bordered ? "border-r border-gray-200" : ""}`}>
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 accent-green-900 focus:ring-green-500"
-                      checked={selectedRows.has(index)}
-                      onChange={() => handleRowSelect(index)}
-                    />
-                  </td>
-                )}
-                {columns.map((col) => (
-                  <td
-                    key={col.key}
-                    className={`px-4 text-sm py-4 text-gray-900 font-light ${col.key === "actions" ? "w-20" : "min-w-[120px] truncate"} ${bordered ? "border-r border-gray-200" : ""} ${col.key === "lastName" || col.key === "phoneNumber" || col.key === "role" ? "hidden lg:table-cell" : ""}`}
-                  >
-                    {col.render ? col.render(row[col.key], row, index) : row[col.key]}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Mobile View (below sm) */}
-      <div className="block sm:hidden space-y-4">
-        {sortedData.map((row, index) => (
-          <div
-            key={row.id || index}
-            className="bg-white border border-gray-200 rounded-lg p-4 flex flex-col gap-2"
-          >
-            {selectable && (
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 accent-green-900 focus:ring-green-500"
-                  checked={selectedRows.has(index)}
-                  onChange={() => handleRowSelect(index)}
-                />
-                <span className="text-sm text-gray-700">Select</span>
-              </div>
-            )}
-            {columns
-              .filter((col) => col.key !== "actions" && col.key !== "lastName" && col.key !== "phoneNumber" && col.key !== "role")
-              .map((col) => (
-                <div key={col.key} className="flex justify-between items-center">
-                  <span className="text-sm text-gray-700 font-medium">{col.label}:</span>
-                  <span className="text-sm text-gray-900 truncate max-w-[60%]">
-                    {col.render ? col.render(row[col.key], row, index) : row[col.key]}
-                  </span>
-                </div>
-              ))}
-            <div className="flex justify-end gap-2">
-              {columns
-                .filter((col) => col.key === "actions")
-                .map((col) => (
-                  <div key={col.key} className="relative">
-                    {col.render && col.render(row[col.key], row, index)}
-                  </div>
-                ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 // Staff Component
 function Staff() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [recordsPerPage, setRecordsPerPage] = useState(10);
   const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [userToDelete, setUserToDelete] = useState(null);
-  const { subdomain } = useSelector(selectAuth);
+  const { subdomain, user } = useSelector(selectAuth);
+  const { canCreate, canUpdate, canDelete } = usePermissions();
 
   const {
     data: restaurant,
@@ -209,17 +50,11 @@ function Staff() {
     { skip: !restaurant?.id }
   );
 
-  const {
-    data: stats,
-    isLoading: isStatsLoading,
-    error: statsError,
-  } = useGetUsersStatsQuery(restaurant?.id, { skip: !restaurant?.id });
-
   const [createUser, { isLoading: isCreating }] = useCreateUserUnderRestaurantMutation();
   const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
 
-  const loaders = { isCreating, isDeleting, isUpdating }
+  const loaders = { isCreating, isDeleting, isUpdating };
 
   const [formValues, setFormValues] = useState({
     firstName: "",
@@ -251,23 +86,34 @@ function Staff() {
     }
   }, [selectedUser, restaurant?.id]);
 
-  const statColors = [
-    "bg-amber-50 border-amber-200 text-amber-900",
-    "bg-red-50 border-red-200 text-red-900",
-    "bg-indigo-50 border-indigo-200 text-indigo-900",
-    "bg-green-50 border-green-200 text-green-900",
-    "bg-orange-50 border-orange-200 text-orange-900",
-  ];
-
   const staffData = Array.isArray(staffDataRaw) ? staffDataRaw : [];
+
+  // Filter staff based on search term
+  const filteredStaff = useMemo(() => {
+    if (!searchTerm.trim()) return staffData;
+    
+    const searchLower = searchTerm.toLowerCase();
+    return staffData.filter((staff) => {
+      const fullName = `${staff.firstName || ''} ${staff.lastName || ''}`.toLowerCase();
+      return (
+        fullName.includes(searchLower) ||
+        staff.email?.toLowerCase().includes(searchLower) ||
+        staff.role?.toLowerCase().includes(searchLower) ||
+        staff.phoneNumber?.toLowerCase().includes(searchLower)
+      );
+    });
+  }, [staffData, searchTerm]);
+
+  // Pagination
+  const totalRecords = filteredStaff.length;
+  const totalPages = Math.ceil(totalRecords / recordsPerPage);
+  const startIndex = (currentPage - 1) * recordsPerPage;
+  const endIndex = startIndex + recordsPerPage;
+  const paginatedStaff = filteredStaff.slice(startIndex, endIndex);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormValues({ ...formValues, [name]: value });
-  };
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
   };
 
   const handleCreateStaff = async (e) => {
@@ -336,58 +182,48 @@ function Staff() {
     }
   };
 
-  const columns = [
-    { key: "firstName", label: "First Name" },
-    { key: "lastName", label: "Last Name", className: "hidden lg:table-cell" },
-    { key: "email", label: "Email" },
-    { key: "phoneNumber", label: "Phone", className: "hidden lg:table-cell" },
-    { key: "role", label: "Role", className: "hidden lg:table-cell" },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (_, row) => (
-        <div className="flex gap-2">
-          <button
-            aria-label="Edit staff"
-            className="text-blue-500 p-2 rounded hover:bg-gray-100"
-            onClick={() => {
-              setSelectedUser(row);
-              setEditModalOpen(true);
-            }}
-          >
-            <Pencil size={18} />
-          </button>
-          <button
-            aria-label="Delete staff"
-            className="text-red-500 p-2 rounded hover:bg-gray-100"
-            onClick={() => {
-              setUserToDelete(row.id);
-              setDeleteConfirmOpen(true);
-            }}
-          >
-            <Trash size={18} />
-          </button>
-        </div>
-      ),
-    },
-  ];
+  const getInitials = (firstName: string, lastName: string) => {
+    const first = firstName?.charAt(0)?.toUpperCase() || '';
+    const last = lastName?.charAt(0)?.toUpperCase() || '';
+    return `${first}${last}` || '??';
+  };
 
-  if (isRestaurantLoading || isStatsLoading || isStaffLoading) {
+  const getFullName = (staff: any) => {
+    return `${staff.firstName || ''} ${staff.lastName || ''}`.trim() || 'N/A';
+  };
+
+  // Mock data for employee ID, department, designation, type - replace with actual data when available
+  const getEmployeeId = (staff: any) => {
+    return staff.employeeId || staff.id?.slice(0, 9) || 'N/A';
+  };
+
+  const getDepartment = (staff: any) => {
+    return staff.department?.name || staff.department || 'N/A';
+  };
+
+  const getDesignation = (staff: any) => {
+    return staff.role || 'N/A';
+  };
+
+  const getType = (staff: any) => {
+    return staff.type || 'Office';
+  };
+
+  if (isRestaurantLoading || isStaffLoading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <ColorRing
           height="80"
           width="80"
-          radius="9"
-          color={theme.colors.active}
-          ariaLabel="three-dots-loading"
+          colors={[theme.colors.active, theme.colors.active, theme.colors.active, theme.colors.active, theme.colors.active]}
+          ariaLabel="loading"
           visible={true}
         />
       </div>
-    )
+    );
   }
 
-  if (restaurantError || statsError || staffError) {
+  if (restaurantError || staffError) {
     return (
       <div className="text-red-500 bg-red-100 p-4 rounded-lg text-center">
         Error loading data. Please try again later.
@@ -395,60 +231,216 @@ function Staff() {
     );
   }
 
-  const totalUsers = stats?.totalUsers || 0;
-  const roleCounts = stats?.roleCounts || {};
-
-  const statsData = [
-    { label: "Total Users", value: totalUsers },
-    ...Object.entries(roleCounts).map(([role, count]) => ({
-      label: role.toLowerCase().replace(/([A-Z])/g, " $1"),
-      value: count || 0,
-    })),
-  ].slice(0, 5);
-
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
-      <div>
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
-          <input
-            placeholder="Search staff"
-            type="text"
-            className="w-full md:max-w-md p-3 border border-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-            onChange={handleSearch}
-            value={searchTerm}
-          />
-          <div className="flex gap-4 justify-end">
-            <Button
-              onClick={() => setModalOpen(true)}
-              variant="primary"
-              size="sm"
-              className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 text-sm"
-            >
-              Add Staff
-            </Button>
+      {/* Header */}
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-semibold text-gray-900">All Employees</h1>
+        </div>
+        <div className="flex items-center gap-4">
+          {/* Search bar in header - can be hidden on mobile */}
+          <div className="hidden md:block relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder="Search"
+              className="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#05431E] focus:border-transparent text-sm"
+            />
+          </div>
+          {/* Notification and Avatar - placeholder */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+              <span className="text-sm font-medium text-gray-600">
+                {user?.firstName?.charAt(0)?.toUpperCase() || 'U'}
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      <main className="mt-8">
-        <div className="bg-white rounded-xl p-4 sm:p-6 w-full">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mt-6">
-            {statsData.map((item, index) => (
-              <div
-                key={index}
-                className={`p-4 rounded-lg text-center font-medium ${statColors[index % statColors.length]}`}
-              >
-                <p className="text-xs sm:text-sm text-gray-600 capitalize">{item.label}</p>
-                <p className="text-lg sm:text-xl font-bold text-gray-900">{item.value}</p>
-              </div>
-            ))}
-          </div>
-          <div className="my-4">
-            <Table selectable columns={columns} data={staffData} className="mt-8" />
-          </div>
+      {/* Action Bar */}
+      <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="relative w-full sm:w-1/3">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <input
+            type="text"
+            placeholder="Search"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#05431E] focus:border-transparent text-sm"
+          />
         </div>
-      </main>
+        <div className="flex gap-3">
+          <button className="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm text-gray-700">
+            <Filter size={18} />
+            Filter
+          </button>
+          {canCreate && (
+            <button
+              onClick={() => navigate('/staffs/add')}
+              className="px-4 py-2 bg-[#05431E] hover:bg-[#043020] text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
+            >
+              <Plus size={18} />
+              Add New Employee
+            </button>
+          )}
+        </div>
+      </div>
 
+      {/* Table */}
+      <div className="bg-white rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Employee Name</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Employee ID</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Department</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Designation</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Type</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Status</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {paginatedStaff.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center">
+                    <p className="text-gray-500">No employees found</p>
+                  </td>
+                </tr>
+              ) : (
+                paginatedStaff.map((staff) => (
+                  <tr key={staff.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                          <span className="text-sm font-medium text-gray-600">
+                            {getInitials(staff.firstName, staff.lastName)}
+                          </span>
+                        </div>
+                        <span className="text-sm font-medium text-gray-900">{getFullName(staff)}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{getEmployeeId(staff)}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{getDepartment(staff)}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{getDesignation(staff)}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{getType(staff)}</td>
+                    <td className="px-6 py-4">
+                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                        Permanent
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => navigate(`/staffs/${staff.id}`)}
+                          className="text-gray-500 hover:text-[#05431E] transition-colors"
+                          aria-label="View staff"
+                        >
+                          <Eye size={18} />
+                        </button>
+                        {canUpdate && (
+                          <button
+                            onClick={() => {
+                              setSelectedUser(staff);
+                              setEditModalOpen(true);
+                            }}
+                            className="text-gray-500 hover:text-blue-600 transition-colors"
+                            aria-label="Edit staff"
+                          >
+                            <Pencil size={18} />
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button
+                            onClick={() => {
+                              setUserToDelete(staff.id);
+                              setDeleteConfirmOpen(true);
+                            }}
+                            className="text-gray-500 hover:text-red-600 transition-colors"
+                            aria-label="Delete staff"
+                          >
+                            <Trash size={18} />
+                          </button>
+                        )}
+          </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Pagination */}
+      <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-700">Showing</span>
+            <select
+              value={recordsPerPage}
+              onChange={(e) => {
+                setRecordsPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="px-3 py-1 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#05431E]"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
+          <span className="text-sm text-gray-700">
+            Showing {startIndex + 1} to {Math.min(endIndex, totalRecords)} out of {totalRecords} records
+          </span>
+          </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-1 border border-gray-200 rounded-lg bg-white text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            ←
+          </button>
+          {Array.from({ length: Math.min(4, totalPages) }, (_, i) => {
+            let pageNum;
+            if (totalPages <= 4) {
+              pageNum = i + 1;
+            } else if (currentPage <= 2) {
+              pageNum = i + 1;
+            } else if (currentPage >= totalPages - 1) {
+              pageNum = totalPages - 3 + i;
+            } else {
+              pageNum = currentPage - 1 + i;
+            }
+            return (
+              <button
+                key={pageNum}
+                onClick={() => setCurrentPage(pageNum)}
+                className={`px-3 py-1 rounded-lg text-sm transition-colors ${
+                  currentPage === pageNum
+                    ? 'bg-[#05431E] text-white'
+                    : 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-700'
+                }`}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+          <button
+            onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 border border-gray-200 rounded-lg bg-white text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            →
+          </button>
+        </div>
+      </div>
+
+      {/* Modals */}
       <div className="overflow-y-auto">
         <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} position="right" className="w-full sm:w-96">
           <StaffForm
@@ -497,8 +489,7 @@ function Staff() {
                     <ColorRing
                       height="16"
                       width="16"
-                      radius="9"
-                      color="#ffffff"
+                      colors={['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff']}
                       ariaLabel="loading"
                       visible={true}
                     />
