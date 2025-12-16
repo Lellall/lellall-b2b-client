@@ -48,7 +48,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,jpg,jpeg,svg,webmanifest}"],
-        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MiB to accommodate larger JS bundles
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MiB to accommodate larger JS bundles (2.1 MB file needs at least 3 MB)
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.pathname.startsWith("/api"),
@@ -90,5 +90,16 @@ export default defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'redux-vendor': ['@reduxjs/toolkit', 'react-redux', 'redux-persist'],
+          'ui-vendor': ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
+          'chart-vendor': ['chart.js', 'react-chartjs-2', '@visx/visx'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000, // Increase warning limit to 1000 KB
   },
 });
