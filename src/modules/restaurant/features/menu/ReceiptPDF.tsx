@@ -38,11 +38,12 @@ interface OrderData {
   paymentType: string;
 }
 
-const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain }: {
+const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain, orderId }: {
   orderData: OrderData;
   reactToPrintFn: () => void;
   bankDetails: BankDetail[] | BankDetail | null;
   subdomain: string;
+  orderId?: string;
 }) => {
   const componentRef = useRef<HTMLDivElement>(null);
   const formatDate = (dateString: string) => {
@@ -65,6 +66,7 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain }: {
       </style>
       <button
         onClick={reactToPrintFn}
+        data-order-id={orderId}
         className="flex text-[10px] sm:text-xs text-[#05431E] hover:underline focus:outline-none"
       >
         <Btn size={14} className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" /> Print

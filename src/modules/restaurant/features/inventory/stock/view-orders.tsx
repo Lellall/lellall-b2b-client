@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { StyledButton } from '@/components/button/button-lellall';
-import { Add, Filter } from 'iconsax-react';
+import { Add, Filter, Receipt } from 'iconsax-react';
 import SearchBar from '@/components/search-bar/search-bar';
 import { useSelector } from 'react-redux';
 import { selectAuth } from '@/redux/api/auth/auth.slice';
 import { useGetOrdersQuery, useUpdateOrdersMutation, useDeleteOrderMutation } from '@/redux/api/order/order.api';
+import { useGetBankDetailsQuery } from '@/redux/api/bank-details/bank-details.api';
 import { ColorRing } from 'react-loader-spinner';
 import Card from '../components/card';
+import CombinedReceipt, { CombinedReceiptHandle } from '../components/combined-receipt';
 import { theme } from '@/theme/theme';
 import ReactPaginate from 'react-paginate';
 import { toast } from 'react-toastify';
@@ -17,6 +19,8 @@ const KitchenView = () => {
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [expandedOrders, setExpandedOrders] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
+  const combinedReceiptRef = useRef<CombinedReceiptHandle | null>(null);
 
   const { data, error, isLoading, isFetching } = useGetOrdersQuery(
     {
@@ -32,6 +36,11 @@ const KitchenView = () => {
 
   const orders = data?.orders || [];
   const meta = data?.meta || { total: 0, page: 1, limit: 10, totalPages: 1 };
+  
+  // Get restaurantId from first order (assuming all orders are from same restaurant)
+  const restaurantId = orders.length > 0 ? orders[0].restaurantId : '';
+  const { data: bankDetailsData } = useGetBankDetailsQuery(restaurantId, { skip: !restaurantId });
+  const bankDetails = bankDetailsData?.bankDetails || null;
 
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
@@ -70,7 +79,40 @@ const KitchenView = () => {
     const newStatus = e.target.value;
     setStatusFilter(newStatus);
     setCurrentPage(0);
+    setSelectedOrders(new Set()); // Clear selection when filter changes
     console.log('Status filter changed to:', newStatus);
+  };
+
+  const toggleOrderSelection = (orderId: string) => {
+    setSelectedOrders((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(orderId)) {
+        newSet.delete(orderId);
+      } else {
+        newSet.add(orderId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedOrders.size === orders.length) {
+      setSelectedOrders(new Set());
+    } else {
+      setSelectedOrders(new Set(orders.map((order) => order.id)));
+    }
+  };
+
+  const handlePrintSelectedReceipts = () => {
+    if (selectedOrders.size === 0) {
+      toast.warning('Please select at least one order to print', { position: 'top-right' });
+      return;
+    }
+
+    // Trigger print directly
+    if (combinedReceiptRef.current) {
+      combinedReceiptRef.current.print();
+    }
   };
 
   const renderLoading = () => (
@@ -128,18 +170,52 @@ const KitchenView = () => {
             </select>
           </div>
         </div>
+        {orders.length > 0 && (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleSelectAll}
+              className="text-sm text-[#05431E] hover:underline focus:outline-none px-2 py-1"
+            >
+              {selectedOrders.size === orders.length ? 'Deselect All' : 'Select All'}
+            </button>
+            {selectedOrders.size > 0 && (
+              <button
+                onClick={handlePrintSelectedReceipts}
+                className="flex items-center gap-2 bg-[#05431E] hover:bg-[#04391A] text-white rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#05431E] transition-colors"
+              >
+                <Receipt size={18} />
+                Print Combined Receipt ({selectedOrders.size})
+              </button>
+            )}
+          </div>
+        )}
       </div>
       {orders.length === 0 ? (
         renderEmpty()
       ) : viewMode === 'cards' ? (
-        <Card
-          orders={orders}
-          expandedOrders={expandedOrders}
-          toggleExpand={toggleExpand}
-          handleStatusUpdate={handleStatusUpdate}
-          handleDeleteOrder={handleDeleteOrder}
-          subdomain={subdomain}
-        />
+        <>
+          {/* Hidden combined receipt for printing */}
+          {selectedOrders.size > 0 && (
+            <div className="hidden">
+              <CombinedReceipt
+                ref={combinedReceiptRef}
+                orders={orders.filter((order) => selectedOrders.has(order.id))}
+                bankDetails={bankDetails}
+                subdomain={subdomain}
+              />
+            </div>
+          )}
+          <Card
+            orders={orders}
+            expandedOrders={expandedOrders}
+            toggleExpand={toggleExpand}
+            handleStatusUpdate={handleStatusUpdate}
+            handleDeleteOrder={handleDeleteOrder}
+            subdomain={subdomain}
+            selectedOrders={selectedOrders}
+            toggleOrderSelection={toggleOrderSelection}
+          />
+        </>
       ) : (
         renderTableView() // Ensure renderTableView is defined
       )}

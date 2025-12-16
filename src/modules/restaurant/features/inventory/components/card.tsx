@@ -39,6 +39,8 @@ interface CardItemProps {
   handleDeleteOrder: (orderId: string, deleteReason?: string) => Promise<void>;
   subdomain: string;
   restaurantId: string;
+  isSelected: boolean;
+  toggleOrderSelection: (orderId: string) => void;
 }
 
 interface CardProps {
@@ -48,6 +50,8 @@ interface CardProps {
   handleDeleteOrder: (orderId: string, deleteReason?: string) => Promise<void>;
   handleStatusUpdate: (orderId: string, status: string) => void;
   subdomain: string;
+  selectedOrders: Set<string>;
+  toggleOrderSelection: (orderId: string) => void;
 }
 
 const CardItem: React.FC<CardItemProps> = ({
@@ -58,6 +62,8 @@ const CardItem: React.FC<CardItemProps> = ({
   handleDeleteOrder,
   subdomain,
   restaurantId,
+  isSelected,
+  toggleOrderSelection,
 }) => {
   const { user } = useSelector(selectAuth);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -166,11 +172,20 @@ const CardItem: React.FC<CardItemProps> = ({
   }
 
   return (
-    <div className="bg-white rounded-lg p-3 sm:p-4 flex flex-col hover:bg-gray-50 transition-all duration-300">
+    <div className={`bg-white rounded-lg p-3 sm:p-4 flex flex-col hover:bg-gray-50 transition-all duration-300 ${isSelected ? 'ring-2 ring-[#05431E] ring-opacity-50 shadow-md border border-[#05431E]' : 'border border-gray-200'}`}>
       <div className="flex justify-between items-center mb-2">
-        <span className="text-xs sm:text-sm font-semibold text-gray-800">
-          #{order.id.substring(0, 6)}
-        </span>
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => toggleOrderSelection(order.id)}
+            className="w-4 h-4 text-[#05431E] border-gray-300 rounded focus:ring-[#05431E] cursor-pointer"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <span className="text-xs sm:text-sm font-semibold text-gray-800">
+            #{order.id.substring(0, 6)}
+          </span>
+        </div>
         <span
           className={`text-[10px] sm:text-xs px-2 py-1 rounded-full ${order.status === 'PENDING'
             ? 'bg-yellow-100 text-yellow-800'
@@ -198,6 +213,7 @@ const CardItem: React.FC<CardItemProps> = ({
             reactToPrintFn={reactToPrintFn}
             bankDetails={bankDetails?.bankDetails}
             subdomain={subdomain}
+            orderId={order.id}
           />
         </div>
       </div>
@@ -375,6 +391,8 @@ const Card: React.FC<CardProps> = ({
   handleDeleteOrder,
   handleStatusUpdate,
   subdomain,
+  selectedOrders,
+  toggleOrderSelection,
 }) => {
   console.log('Orders prop in Card:', orders); // Debug orders prop
   return (
@@ -389,6 +407,8 @@ const Card: React.FC<CardProps> = ({
           handleDeleteOrder={handleDeleteOrder}
           subdomain={subdomain}
           restaurantId={order.restaurantId}
+          isSelected={selectedOrders.has(order.id)}
+          toggleOrderSelection={toggleOrderSelection}
         />
       ))}
     </div>
