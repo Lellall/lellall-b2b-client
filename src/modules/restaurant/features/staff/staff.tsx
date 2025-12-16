@@ -341,7 +341,8 @@ function Staff() {
                         >
                           <Eye size={18} />
                         </button>
-                        {canUpdate && (
+                        {/* Pencil icon hidden */}
+                        {/* {canUpdate && (
                           <button
                             onClick={() => {
                               setSelectedUser(staff);
@@ -352,7 +353,7 @@ function Staff() {
                           >
                             <Pencil size={18} />
                           </button>
-                        )}
+                        )} */}
                         {canDelete && (
                           <button
                             onClick={() => {
