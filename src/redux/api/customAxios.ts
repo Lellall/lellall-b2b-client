@@ -31,6 +31,10 @@ const endpointsRequiringToken = [
   "^/restaurants/[a-fA-F0-9-]+$",
   "^/restaurants/[^/]+/service-fee$",
   "^/restaurants/branches/parent/[a-fA-F0-9-]+$",
+  "^/restaurants/branches/[a-fA-F0-9-]{8}-[a-fA-F0-9-]{4}-[a-fA-F0-9-]{4}-[a-fA-F0-9-]{4}-[a-fA-F0-9-]{12}$",
+  "^/restaurants/branches/[a-fA-F0-9-]+$",
+  "^restaurants/branches/[a-fA-F0-9-]+$",
+  "restaurants/branches",
   "^/supply-request/[a-fA-F0-9-]+$",
   "^/request/[a-fA-F0-9-]+$",
   "^/products/[a-fA-F0-9-]+$",
@@ -79,7 +83,8 @@ CustomAxios.interceptors.request.use(
     const normalizedUrl = url.startsWith('/') ? url : `/${url}`;
     const requiresToken = endpointsRequiringToken.some((pattern) => {
       const regex = new RegExp(pattern);
-      return regex.test(normalizedUrl) || regex.test(url);
+      // Test normalized URL, original URL, and URL with leading slash
+      return regex.test(normalizedUrl) || regex.test(url) || regex.test(`/${url}`);
     });
     const skipToken = endpointsWithoutToken.some((endpoint) => url.includes(endpoint));
 
@@ -98,6 +103,22 @@ CustomAxios.interceptors.request.use(
         skipToken,
         willSendToken: !!(token && requiresToken && !skipToken),
         matchedPattern: endpointsRequiringToken.find((pattern) => new RegExp(pattern).test(url))
+      });
+    }
+
+    // Debug logging for branches endpoints
+    if (url.includes('branches')) {
+      console.log('Branches Request:', {
+        url,
+        normalizedUrl,
+        hasToken: !!token,
+        requiresToken,
+        skipToken,
+        willSendToken: !!(token && requiresToken && !skipToken),
+        matchedPattern: endpointsRequiringToken.find((pattern) => {
+          const regex = new RegExp(pattern);
+          return regex.test(normalizedUrl) || regex.test(url) || regex.test(`/${url}`);
+        })
       });
     }
 

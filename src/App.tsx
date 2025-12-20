@@ -117,6 +117,8 @@ const App = () => {
       <Route path="leave-tracker" element={<LeaveTracker />} />
       <Route path="salary" element={<SalaryManagement />} />
       <Route path="payroll" element={<Payroll />} />
+      <Route path="departments" element={<Departments />} />
+      <Route path="departments/:id" element={<ViewDepartment />} />
       <Route path="vendor-invoices" element={<VendorInvoices />} />
       <Route path="whatsapp-messages" element={<WhatsAppMessages />} />
     </>

@@ -47,8 +47,11 @@ const EditOrderItemsModal: React.FC<EditOrderItemsModalProps> = ({
   isLoading,
   order,
 }) => {
-  const { subdomain } = useSelector(selectAuth);
+  const { subdomain, user } = useSelector(selectAuth);
   const { data: menuItems = [], isLoading: isMenuLoading, error: menuError } = useGetAllMenuItemsQuery({ subdomain });
+  
+  // Check if user is a MANAGER (managers can only add items, not remove existing ones)
+  const isManager = user?.role === 'MANAGER';
 
   // Initialize state with existing order items
   const [items, setItems] = useState<
@@ -73,11 +76,25 @@ const EditOrderItemsModal: React.FC<EditOrderItemsModalProps> = ({
   }, [items]);
 
   // Handle quantity change for existing or new items
+  // Managers cannot reduce quantity of existing items (can only increase or keep same)
   const handleQuantityChange = (index: number, value: string) => {
+    const currentItem = items[index];
+    const originalItem = order.orderItems.find((oi) => oi.id === currentItem.orderItemId);
+    const originalQuantity = originalItem?.quantity || 1;
+    
     setItems((prev) =>
-      prev.map((item, i) =>
-        i === index ? { ...item, quantity: value === '' ? 1 : Math.max(1, Number(value)) } : item,
-      ),
+      prev.map((item, i) => {
+        if (i === index) {
+          const newQuantity = value === '' ? 1 : Math.max(1, Number(value));
+          // If user is a MANAGER and this is an existing item, don't allow reducing below original quantity
+          if (isManager && item.orderItemId && newQuantity < originalQuantity) {
+            toast.warning(`Cannot reduce quantity. Managers can only add items or increase quantities.`, { position: 'top-right' });
+            return { ...item, quantity: originalQuantity };
+          }
+          return { ...item, quantity: newQuantity };
+        }
+        return item;
+      }),
     );
   };
 
@@ -123,7 +140,16 @@ const EditOrderItemsModal: React.FC<EditOrderItemsModalProps> = ({
   };
 
   // Remove an item (existing or newly added)
+  // Managers can only remove newly added items (without orderItemId), not existing ones
   const handleRemoveItem = (index: number) => {
+    const itemToRemove = items[index];
+    
+    // If user is a MANAGER and trying to remove an existing item (has orderItemId), prevent it
+    if (isManager && itemToRemove.orderItemId) {
+      toast.warning('Managers can only add items. Cannot remove existing items from the order.', { position: 'top-right' });
+      return;
+    }
+    
     setItems((prev) => {
       const updatedItems = prev.filter((_, i) => i !== index);
       console.log('Removed item at index:', index, 'Updated items:', updatedItems);
@@ -189,42 +215,57 @@ const EditOrderItemsModal: React.FC<EditOrderItemsModalProps> = ({
         <div className="space-y-4 max-h-96 overflow-y-auto">
           {items.map((item, index) => {
             const menuItem = menuItems.find((mi: MenuItem) => mi.id === item.menuItemId);
+            // Managers cannot remove existing items (items with orderItemId)
+            const canRemove = !isManager || !item.orderItemId;
+            // Get original quantity for existing items (for managers)
+            const originalItem = item.orderItemId ? order.orderItems.find((oi) => oi.id === item.orderItemId) : null;
+            const minQuantity = isManager && item.orderItemId ? (originalItem?.quantity || 1) : 1;
+            
             return (
               <div key={item.orderItemId || `new-${index}`} className="border-b pb-4">
                 <div className="flex justify-between items-center">
                   <p className="text-sm font-medium">{menuItem?.name || 'Unknown Item'}</p>
-                  <button
-                    onClick={() => handleRemoveItem(index)}
-                    className="text-red-500 hover:text-red-600"
-                    aria-label={`Remove ${menuItem?.name || 'item'}`}
-                    disabled={isLoading}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+                  {canRemove && (
+                    <button
+                      onClick={() => handleRemoveItem(index)}
+                      className="text-red-500 hover:text-red-600"
+                      aria-label={`Remove ${menuItem?.name || 'item'}`}
+                      disabled={isLoading}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  )}
+                  {!canRemove && (
+                    <span className="text-xs text-gray-400 italic">Cannot remove</span>
+                  )}
                 </div>
                 <div className="mt-2">
                   <label className="text-xs text-gray-600">Quantity</label>
                   <input
                     type="number"
-                    min="1"
+                    min={minQuantity}
                     value={item.quantity}
                     onChange={(e) => handleQuantityChange(index, e.target.value)}
                     className="w-full border rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#05431E]"
                     disabled={isLoading}
+                    title={isManager && item.orderItemId ? "Managers can only increase quantity, not decrease" : ""}
                   />
+                  {isManager && item.orderItemId && (
+                    <p className="text-xs text-gray-500 mt-1 italic">Can only increase quantity (min: {minQuantity})</p>
+                  )}
                 </div>
               </div>
             );
