@@ -30,7 +30,7 @@ interface OrderCardProps {
   discountPercentage?: number; // New: Optional discount percentage
 }
 
-const statusOptions = ["PENDING", "PREPARING", "READY", "SERVED", "CANCELLED"];
+const statusOptions = ["PENDING", "PREPARING", "READY", "SERVED", "CREDIT", "CANCELLED"];
 
 const OrderCard = ({
   orderNumber,

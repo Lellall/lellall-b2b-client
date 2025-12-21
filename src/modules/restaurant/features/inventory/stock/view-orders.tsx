@@ -165,6 +165,7 @@ const KitchenView = () => {
               <option value="PREPARING">Preparing</option>
               <option value="READY">Ready</option>
               <option value="SERVED">Served</option>
+              <option value="CREDIT">Credit/Unpaid</option>
               <option value="RESERVED">Reserved</option>
               <option value="CANCELLED">Cancelled</option>
             </select>

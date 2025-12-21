@@ -12,7 +12,7 @@ import { selectAuth } from '@/redux/api/auth/auth.slice';
 
 interface Order {
   id: string;
-  status: 'PENDING' | 'PREPARING' | 'SERVED' | 'CANCELLED';
+  status: 'PENDING' | 'PREPARING' | 'SERVED' | 'CANCELLED' | 'CREDIT' | 'UNPAID';
   createdAt: string;
   orderItems: Array<{
     id: string;
@@ -74,6 +74,7 @@ const CardItem: React.FC<CardItemProps> = ({
   const [selectedPaymentType, setSelectedPaymentType] = useState(order.paymentType || "CASH");
   const [selectedStatus, setSelectedStatus] = useState(order.status);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [discountPercentage, setDiscountPercentage] = useState<number>(order.discountPercentage || 0);
   const [updateOrderItems, { isLoading: isUpdatingItems }] = useUpdateOrderItemsMutation();
   const [updateOrderStatus] = useUpdateOrdersMutation();
   const {
@@ -143,9 +144,20 @@ const CardItem: React.FC<CardItemProps> = ({
     }
     setIsUpdating(true);
     try {
+      // Only include discount when closing the order (status = SERVED or CREDIT)
+      const updateData: { status: string; paymentType: string | null; discountPercentage?: number } = {
+        status: selectedStatus,
+        paymentType: selectedPaymentType || null,
+      };
+      
+      // Only send discount when closing the order (SERVED or CREDIT)
+      if ((selectedStatus === 'SERVED' || selectedStatus === 'CREDIT') && discountPercentage > 0) {
+        updateData.discountPercentage = discountPercentage;
+      }
+      
       await updateOrderStatus({
         subdomain,
-        data: { status: selectedStatus, paymentType: selectedPaymentType || null },
+        data: updateData,
         id: order.id,
       }).unwrap();
       toast.success('Order updated successfully', { position: 'top-right' });
@@ -193,7 +205,9 @@ const CardItem: React.FC<CardItemProps> = ({
               ? 'bg-blue-100 text-blue-800'
               : order.status === 'SERVED'
                 ? 'bg-green-100 text-green-800'
-                : 'bg-red-100 text-red-800'
+                : order.status === 'CREDIT' || order.status === 'UNPAID'
+                  ? 'bg-orange-100 text-orange-800'
+                  : 'bg-red-100 text-red-800'
             }`}
         >
           {order.status}
@@ -330,8 +344,32 @@ const CardItem: React.FC<CardItemProps> = ({
             <option value="PENDING">Pending</option>
             <option value="PREPARING">In Process</option>
             <option value="SERVED">Completed</option>
+            <option value="CREDIT">Credit/Unpaid</option>
             <option value="CANCELLED">Cancelled</option>
           </select>
+          {/* Discount field - only shown when closing order (SERVED or CREDIT) */}
+          {(selectedStatus === 'SERVED' || selectedStatus === 'CREDIT') && (
+            <div>
+              <label className="text-[10px] sm:text-xs text-gray-600 mb-1 block">
+                Discount (%)
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                value={discountPercentage}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  if (value >= 0 && value <= 100) {
+                    setDiscountPercentage(value);
+                  }
+                }}
+                className="w-full border rounded-md p-1 text-[10px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-[#05431E]"
+                placeholder="Enter discount (0-100)"
+              />
+            </div>
+          )}
           <button
             type="submit"
             disabled={isUpdating || (selectedStatus === order.status && selectedPaymentType === (order.paymentType || ""))}
