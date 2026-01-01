@@ -102,7 +102,12 @@ const NewSupplyRequestWizard = ({ isModalOpen, setModalOpen }) => {
     );
 
     if (validSupplies.length === 0) {
-      toast.error('Please add at least one complete supply request');
+      const suppliesWithoutVendor = data.newSupplies.filter(s => !s.vendorId || s.vendorId.trim() === '');
+      if (suppliesWithoutVendor.length > 0) {
+        toast.error(`Please add vendors for ${suppliesWithoutVendor.length} item${suppliesWithoutVendor.length > 1 ? 's' : ''}. Go back to Step 1 to add vendors.`);
+      } else {
+        toast.error('Please add at least one complete supply request with all required fields');
+      }
       return;
     }
 
@@ -124,21 +129,82 @@ const NewSupplyRequestWizard = ({ isModalOpen, setModalOpen }) => {
         header: true,
         skipEmptyLines: true,
         complete: (result: { data: any[] }) => {
-          const parsedData = result.data.map(item => ({
-            vendorId: item.vendorId || '',
-            productName: item.productName || '',
-            quantity: parseInt(item.quantity, 10) || 0,
-            unitOfMeasurement: CONTAINER_UNITS.includes(item.unitOfMeasurement) ? item.unitOfMeasurement : 'crate',
-            unitPrice: parseFloat(item.unitPrice || '0') || 0,
-            baseUnit: BASE_UNITS.includes(item.baseUnit) ? item.baseUnit : 'piece',
-            baseQuantityPerUnit: parseFloat(item.baseQuantityPerUnit || '1') || 1,
-            requestMethod: 'BULK' as const,
-            specialNote: item.specialNote || ''
-          }));
+          const parsedData = result.data
+            .map(item => {
+              // Handle different column name variations (case-insensitive)
+              const getValue = (keys: string[]) => {
+                for (const key of keys) {
+                  const value = item[key] || item[key.toLowerCase()] || item[key.toUpperCase()];
+                  if (value !== undefined && value !== null && value !== '') {
+                    return String(value).trim();
+                  }
+                }
+                return '';
+              };
+
+              // Map productName from various possible column names
+              const productName = getValue(['productName', 'product_name', 'Product Name', 'name', 'itemName']);
+              
+              // Map quantity - try quantity first, then use closingStock or openingStock as fallback
+              const quantityStr = getValue(['quantity', 'Quantity', 'qty']);
+              let quantity = parseInt(quantityStr, 10);
+              if (isNaN(quantity) || quantity <= 0) {
+                // Try closingStock or openingStock as fallback
+                const closingStock = parseFloat(getValue(['closingStock', 'closing_stock', 'Closing Stock']) || '0');
+                const openingStock = parseFloat(getValue(['openingStock', 'opening_stock', 'Opening Stock']) || '0');
+                quantity = Math.max(closingStock, openingStock, 1); // Default to 1 if both are 0
+              }
+
+              // Map unitPrice
+              const unitPriceStr = getValue(['unitPrice', 'unit_price', 'Unit Price', 'price']);
+              const unitPrice = parseFloat(unitPriceStr) || 0;
+
+              // Map unitOfMeasurement
+              const unitOfMeasurementStr = getValue(['unitOfMeasurement', 'unit_of_measurement', 'Unit Of Measurement', 'unit']);
+              const unitOfMeasurement = CONTAINER_UNITS.includes(unitOfMeasurementStr) 
+                ? unitOfMeasurementStr 
+                : 'crate';
+
+              // Map baseUnit
+              const baseUnitStr = getValue(['baseUnit', 'base_unit', 'Base Unit']);
+              const baseUnit = BASE_UNITS.includes(baseUnitStr) ? baseUnitStr : 'piece';
+
+              // Map baseQuantityPerUnit
+              const baseQuantityPerUnitStr = getValue(['baseQuantityPerUnit', 'base_quantity_per_unit', 'Base Quantity Per Unit', 'baseQtyPerUnit']);
+              const baseQuantityPerUnit = parseFloat(baseQuantityPerUnitStr) || 1;
+
+              // Map vendorId (might not be in inventory export)
+              const vendorId = getValue(['vendorId', 'vendor_id', 'Vendor ID', 'vendor']);
+
+              // Map specialNote
+              const specialNote = getValue(['specialNote', 'special_note', 'Special Note', 'note', 'notes']);
+
+              return {
+                vendorId,
+                productName,
+                quantity: quantity > 0 ? quantity : 1, // Ensure at least 1
+                unitOfMeasurement,
+                unitPrice,
+                baseUnit,
+                baseQuantityPerUnit: baseQuantityPerUnit > 0 ? baseQuantityPerUnit : 1,
+                requestMethod: 'BULK' as const,
+                specialNote
+              };
+            })
+            .filter(item => item.productName && item.productName.trim() !== ''); // Filter out items without product names
+
+          if (parsedData.length === 0) {
+            toast.error('No valid items found in CSV. Please check the file format.');
+            return;
+          }
+
           setValue('newSupplies', parsedData);
-          toast.success(`Uploaded ${parsedData.length} items from CSV!`);
+          toast.success(`Uploaded ${parsedData.length} item${parsedData.length > 1 ? 's' : ''} from CSV! ${parsedData.some(s => !s.vendorId) ? 'Please select vendors for items.' : ''}`);
         },
-        error: () => toast.error('Failed to parse CSV file')
+        error: (error) => {
+          console.error('CSV parsing error:', error);
+          toast.error('Failed to parse CSV file. Please check the file format.');
+        }
       });
     }
   };
@@ -152,10 +218,25 @@ const NewSupplyRequestWizard = ({ isModalOpen, setModalOpen }) => {
   const nextStep = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     const currentSupplies = getValues('newSupplies');
-    if (currentSupplies.every(supply => !supply.vendorId || !supply.productName || supply.quantity <= 0)) {
-      toast.error('Please fill in at least one complete supply request');
+    
+    // Filter out empty/invalid supplies
+    const validSupplies = currentSupplies.filter(supply => 
+      supply.productName && 
+      supply.productName.trim() !== '' && 
+      supply.quantity > 0
+    );
+
+    if (validSupplies.length === 0) {
+      toast.error('Please fill in at least one complete supply request with product name and quantity');
       return;
     }
+
+    // Check if any supply is missing vendorId
+    const suppliesWithoutVendor = validSupplies.filter(s => !s.vendorId || s.vendorId.trim() === '');
+    if (suppliesWithoutVendor.length > 0) {
+      toast.warn(`${suppliesWithoutVendor.length} item${suppliesWithoutVendor.length > 1 ? 's' : ''} missing vendor. You can add vendors in the review step.`);
+    }
+
     setStep(2);
   };
 
