@@ -62,7 +62,7 @@ const NewSupplyRequestWizard = ({ isModalOpen, setModalOpen }) => {
       newSupplies: [{
         vendorId: "",
         productName: "",
-        quantity: 0,
+        quantity: 1,
         unitOfMeasurement: "crate",
         unitPrice: 0,
         baseUnit: "piece",
@@ -96,13 +96,23 @@ const NewSupplyRequestWizard = ({ isModalOpen, setModalOpen }) => {
       return;
     }
 
-    const validSupplies = data.newSupplies.filter(supply =>
+    // Normalize supplies: default quantities and other fields
+    const normalizedSupplies = data.newSupplies.map(supply => ({
+      ...supply,
+      quantity: supply.quantity > 0 ? supply.quantity : 1,
+      unitOfMeasurement: supply.unitOfMeasurement || 'crate',
+      unitPrice: supply.unitPrice >= 0 ? supply.unitPrice : 0,
+      baseUnit: supply.baseUnit || 'piece',
+      baseQuantityPerUnit: supply.baseQuantityPerUnit > 0 ? supply.baseQuantityPerUnit : 1
+    }));
+
+    const validSupplies = normalizedSupplies.filter(supply =>
       supply.vendorId && supply.productName && supply.quantity > 0 && supply.unitOfMeasurement &&
       supply.unitPrice >= 0 && supply.baseUnit && supply.baseQuantityPerUnit > 0
     );
 
     if (validSupplies.length === 0) {
-      const suppliesWithoutVendor = data.newSupplies.filter(s => !s.vendorId || s.vendorId.trim() === '');
+      const suppliesWithoutVendor = normalizedSupplies.filter(s => !s.vendorId || s.vendorId.trim() === '');
       if (suppliesWithoutVendor.length > 0) {
         toast.error(`Please add vendors for ${suppliesWithoutVendor.length} item${suppliesWithoutVendor.length > 1 ? 's' : ''}. Go back to Step 1 to add vendors.`);
       } else {
@@ -219,15 +229,27 @@ const NewSupplyRequestWizard = ({ isModalOpen, setModalOpen }) => {
     event.preventDefault();
     const currentSupplies = getValues('newSupplies');
     
-    // Filter out empty/invalid supplies
-    const validSupplies = currentSupplies.filter(supply => 
+    // Default quantities to 1 if missing or 0, and ensure other required fields have defaults
+    const normalizedSupplies = currentSupplies.map(supply => ({
+      ...supply,
+      quantity: supply.quantity > 0 ? supply.quantity : 1,
+      unitOfMeasurement: supply.unitOfMeasurement || 'crate',
+      unitPrice: supply.unitPrice >= 0 ? supply.unitPrice : 0,
+      baseUnit: supply.baseUnit || 'piece',
+      baseQuantityPerUnit: supply.baseQuantityPerUnit > 0 ? supply.baseQuantityPerUnit : 1
+    }));
+    
+    // Update form values with normalized data
+    setValue('newSupplies', normalizedSupplies);
+    
+    // Filter out empty/invalid supplies (only need product name)
+    const validSupplies = normalizedSupplies.filter(supply => 
       supply.productName && 
-      supply.productName.trim() !== '' && 
-      supply.quantity > 0
+      supply.productName.trim() !== ''
     );
 
     if (validSupplies.length === 0) {
-      toast.error('Please fill in at least one complete supply request with product name and quantity');
+      toast.error('Please fill in at least one complete supply request with product name');
       return;
     }
 
@@ -467,7 +489,7 @@ const NewSupplyRequestWizard = ({ isModalOpen, setModalOpen }) => {
                   <div className="flex gap-3 mt-4">
                     <button
                       type="button"
-                      onClick={() => appendNew({ vendorId: '', productName: '', quantity: 0, unitOfMeasurement: 'crate', unitPrice: 0, baseUnit: 'piece', baseQuantityPerUnit: 1, requestMethod: 'MANUAL' })}
+                      onClick={() => appendNew({ vendorId: '', productName: '', quantity: 1, unitOfMeasurement: 'crate', unitPrice: 0, baseUnit: 'piece', baseQuantityPerUnit: 1, requestMethod: 'MANUAL' })}
                       className="px-4 py-2 text-sm text-[#05431E] border border-[#05431E] rounded-md hover:bg-[#05431E] hover:text-white transition-all duration-200"
                     >
                       + Add Item
