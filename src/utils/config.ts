@@ -17,7 +17,7 @@ export const configUrl = config[currentEnv as "development" | "production"]
 export const getSubdomainFromUrl = (): string | null => {
   const host = window.location.hostname; // Use hostname instead of href to avoid port issues
   const parts = host.split(".");
-  
+
   // Handle cases like "greenfork-branch2.localhost" or "yax.localhost"
   if (parts.length > 1) {
     const subdomain = parts[0];
@@ -26,7 +26,7 @@ export const getSubdomainFromUrl = (): string | null => {
       return subdomain;
     }
   }
-  
+
   return null;
 };
 

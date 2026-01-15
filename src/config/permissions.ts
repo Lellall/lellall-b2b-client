@@ -26,7 +26,7 @@ export const rolePermissions: RolePermissions = {
   HUMAN_RESOURCE: ['READ', 'CREATE', 'UPDATE', 'DELETE', 'EXPORT'],
   ACCOUNTANT: ['READ', 'CREATE', 'UPDATE', 'DELETE', 'EXPORT'],
   COO: ['READ', 'EXPORT'], // Read-only with export
-  AUDITOR: ['READ', 'EXPORT'], // Read-only with export
+  AUDITOR: ['READ', 'CREATE', 'UPDATE', 'DELETE', 'EXPORT'],
   SUPERVISOR: ['READ', 'EXPORT'], // Read-only with export
   WAITER: ['READ', 'CREATE', 'UPDATE'], // Can create orders
   CASHIER: ['READ', 'CREATE', 'UPDATE'], // Can create orders

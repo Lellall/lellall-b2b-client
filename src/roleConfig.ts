@@ -145,19 +145,16 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
   ],
   AUDITOR: [
     { to: '/', icon: Home, text: 'Dashboard', end: true },
-    { to: '/menu', icon: Element2, text: 'Menu' },
-    { to: '/menu-items', icon: Element2, text: 'Menu Items' },
+    { to: '/menu-items', icon: Element2, text: 'Menu' },
+    { to: '/menu', icon: TrendUp, text: 'Menu Analysis' },
     { to: '/inventory', icon: ArchiveBox, text: 'Inventory & Stock' },
-    { to: '/insights', icon: TrendUp, text: 'Insights & AI' },
-    { to: '/reservations', icon: Calendar2, text: 'Reservations' },
-    { to: '/staffs', icon: UserSearch, text: 'Staffs' },
-    { to: '/attendance', icon: DocumentText, text: 'Attendance' },
     { to: '/salary', icon: DocumentText, text: 'Salary Management' },
     { to: '/payroll', icon: MoneyChange, text: 'Payroll' },
     { to: '/vendor-invoices', icon: DocumentText, text: 'Vendor Invoices' },
-    { to: '/leave-tracker', icon: Calendar2, text: 'Leave Tracker' },
-    { to: '/departments', icon: ArchiveBox, text: 'All Departments' },
+    { to: '/whatsapp-messages', icon: MessageSquare, text: 'WhatsApp Messages' },
+    { to: '/insights', icon: TrendUp, text: 'Insights & AI' },
     { to: '/shops', icon: MessageQuestion, text: 'Shops' },
+    // { to: '/leave-tracker', icon: Calendar2, text: 'Leave Tracker' },
     { to: '/settings', icon: Setting, text: 'Settings' },
   ],
   SUPERVISOR: [
@@ -214,8 +211,8 @@ export const getNavItemsByRole = (role: string, daysLeft: number, planName: stri
     return defaultRoutes;
   }
 
-  // COO, AUDITOR, SUPERVISOR bypass subscription checks and have access to all routes (read-only)
-  if (role === 'COO' || role === 'AUDITOR' || role === 'SUPERVISOR') {
+  // COO, SUPERVISOR bypass subscription checks and have access to all routes (read-only)
+  if (role === 'COO' || role === 'SUPERVISOR') {
     return defaultRoutes;
   }
 
@@ -244,19 +241,19 @@ export const getNavItemsByRole = (role: string, daysLeft: number, planName: stri
 
   // ADMIN and MANAGER bypass subscription checks for WhatsApp messages
   if (role === 'ADMIN' || role === 'MANAGER') {
-    return defaultRoutes.filter((item) => 
+    return defaultRoutes.filter((item) =>
       item.to === '/whatsapp-messages' || allowedRoutes.includes(item.to)
     );
   }
 
-  // ACCOUNTANT bypasses subscription checks
-  if (role === 'ACCOUNTANT') {
+  // ACCOUNTANT & AUDITOR bypasses subscription checks
+  if (role === 'ACCOUNTANT' || role === 'AUDITOR') {
     return defaultRoutes;
   }
 
   // For STORE_KEEPER, always allow dashboard, inventory, settings, and leave-tracker regardless of plan
   if (role === 'STORE_KEEPER') {
-    return defaultRoutes.filter((item) => 
+    return defaultRoutes.filter((item) =>
       item.to === '/' || item.to === '/inventory' || item.to === '/settings' || item.to === '/leave-tracker' || allowedRoutes.includes(item.to)
     );
   }
@@ -317,9 +314,9 @@ export const isRouteAllowed = (
     return true;
   }
 
-  // Special handling for ACCOUNTANT - always allow dashboard, menu, menu-items, inventory, salary, payroll, vendor-invoices, insights, shops, whatsapp-messages, and other accountant routes
-  if (role === 'ACCOUNTANT') {
-    if (path === '/' || path === '/menu' || path.startsWith('/menu') || path === '/menu-items' || path === '/inventory' || path.startsWith('/inventory') || path === '/salary' || path.startsWith('/salary') || path === '/payroll' || path === '/vendor-invoices' || path.startsWith('/vendor-invoices') || path === '/insights' || path.startsWith('/insights') || path === '/shops' || path.startsWith('/shops') || path === '/whatsapp-messages' || path.startsWith('/whatsapp-messages') || path === '/settings' || path === '/leave-tracker') {
+  // Special handling for ACCOUNTANT & AUDITOR - always allow dashboard, menu, menu-items, inventory, salary, payroll, vendor-invoices, insights, shops, whatsapp-messages, and other accountant routes
+  if (role === 'ACCOUNTANT' || role === 'AUDITOR') {
+    if (path === '/' || path === '/menu' || path.startsWith('/menu') || path === '/menu-items' || path === '/inventory' || path.startsWith('/inventory') || path === '/salary' || path.startsWith('/salary') || path === '/payroll' || path === '/vendor-invoices' || path.startsWith('/vendor-invoices') || path === '/insights' || path.startsWith('/insights') || path === '/shops' || path.startsWith('/shops') || path === '/branches' || path.startsWith('/branches') || path === '/whatsapp-messages' || path.startsWith('/whatsapp-messages') || path === '/settings' || path === '/leave-tracker') {
       return true;
     }
   }
@@ -329,8 +326,8 @@ export const isRouteAllowed = (
     return true;
   }
 
-  // Special handling for COO, AUDITOR, SUPERVISOR - read-only access to all routes (except admin routes)
-  if (role === 'COO' || role === 'AUDITOR' || role === 'SUPERVISOR') {
+  // Special handling for COO, SUPERVISOR - read-only access to all routes (except admin routes)
+  if (role === 'COO' || role === 'SUPERVISOR') {
     // Allow all routes except admin routes
     if (!path.startsWith('/admin')) {
       return true;
