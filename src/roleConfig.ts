@@ -73,7 +73,6 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
     { to: '/branches/:branchId', icon: null, text: '' }
   ],
   HUMAN_RESOURCE: [
-    { to: '/', icon: Home, text: 'Dashboard', end: true },
     { to: '/attendance', icon: DocumentText, text: 'Attendance' },
     { to: '/staffs', icon: UserSearch, text: 'All Employees' },
     { to: '/salary', icon: DocumentText, text: 'Salary Management' },
@@ -303,7 +302,7 @@ export const isRouteAllowed = (
 
   // Special handling for HUMAN_RESOURCE - always allow their routes
   if (role === 'HUMAN_RESOURCE') {
-    const hrRoutes = ['/', '/attendance', '/staffs', '/salary', '/payroll', '/leave-tracker', '/departments', '/shops', '/settings'];
+    const hrRoutes = ['/attendance', '/staffs', '/salary', '/payroll', '/leave-tracker', '/departments', '/shops', '/settings'];
     if (hrRoutes.includes(path) || path.startsWith('/staffs') || path.startsWith('/attendance') || path.startsWith('/salary') || path.startsWith('/shops')) {
       return true;
     }

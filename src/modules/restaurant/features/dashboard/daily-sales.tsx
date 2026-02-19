@@ -133,15 +133,7 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
       : total;
   }
 
-  // Prepare data for grand total calculation
-  const apiData = {
-    totalRevenue: soldItemsData?.totalRevenue || '₦0',
-    totalServiceFee: soldItemsData?.totalServiceFee || '₦0',
-    totalVatTax: soldItemsData?.totalVatTax || '₦0',
-  };
 
-  // Calculate grand total using sumCurrencyFields
-  const grandTotal = sumCurrencyFields(apiData, ['totalRevenue', 'totalServiceFee', 'totalVatTax'], true);
 
   // Query for daily sales revenue
   const { data: revenueData, isLoading: isRevenueLoading, error: revenueError } = useGetDailySalesRevenueQuery(
@@ -362,18 +354,7 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
                             <p className="text-sm">Total Revenue</p>
                             <p className="text-lg font-bold">{soldItemsData?.totalRevenue || '₦0'}</p>
                           </div>
-                          <div>
-                            <p className="text-sm">Total VAT Tax</p>
-                            <p className="text-lg font-bold">{soldItemsData?.totalVatTax || '₦0'}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm">Total Service Fee</p>
-                            <p className="text-lg font-bold">{soldItemsData?.totalServiceFee || '₦0'}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm">Grand Total</p>
-                            <p className="text-lg font-bold">{grandTotal}</p>
-                          </div>
+
                         </div>
                       </div>
                     </div>
@@ -637,18 +618,7 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
                         <p className="text-sm text-gray-600">Discounts(₦)</p>
                         <p className="text-lg font-bold text-[#0E5D37]">{soldItemsData?.totalDiscountAmount || '₦0'}</p>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Total VAT Tax</p>
-                        <p className="text-lg font-bold text-[#0E5D37]">{soldItemsData?.totalVatTax || '₦0'}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Total Service Fee</p>
-                        <p className="text-lg font-bold text-[#0E5D37]">{soldItemsData?.totalServiceFee || '₦0'}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Grand Total</p>
-                        <p className="text-lg font-bold text-[#0E5D37]">{grandTotal}</p>
-                      </div>
+
                     </div>
                   </div>
                 </div>

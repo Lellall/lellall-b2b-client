@@ -127,7 +127,7 @@ const App = () => {
   // Define HR routes for HUMAN_RESOURCE users
   const hrRoutes = (
     <>
-      <Route index element={<HRDashboard />} />
+      <Route index element={<Navigate to="/attendance" replace />} />
       <Route path="attendance" element={<Attendance />} />
       <Route path="staffs" element={<Staff />} />
       <Route path="staffs/add" element={<AddStaff />} />

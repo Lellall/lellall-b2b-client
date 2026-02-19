@@ -22,14 +22,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
     if (!subscription) return 0;
     const { trialEndDate, endDate } = subscription;
     let relevantDate: string | null = null;
-    
+
     // Prioritize endDate, fallback to trialEndDate
     if (endDate) {
       relevantDate = endDate;
     } else if (trialEndDate) {
       relevantDate = trialEndDate;
     }
-    
+
     if (!relevantDate) return 0;
     const today = new Date();
     const end = new Date(relevantDate);
@@ -83,6 +83,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
   // Redirect WAITER to /settings if trying to access the root route (/)
   if (userRole === 'WAITER' && currentPath === '/' && daysLeft > 0) {
     return <Navigate to="/settings" replace />;
+  }
+
+  // Redirect HUMAN_RESOURCE to /attendance if trying to access the root route (/)
+  if (userRole === 'HUMAN_RESOURCE' && currentPath === '/') {
+    return <Navigate to="/attendance" replace />;
   }
 
   // Allow leave-tracker for all staff roles (any role that's not SUPER_ADMIN)
