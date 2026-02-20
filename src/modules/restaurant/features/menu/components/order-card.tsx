@@ -51,7 +51,7 @@ const OrderCard = ({
 }: OrderCardProps) => {
   const [selectedStatus, setSelectedStatus] = useState(status);
   const [updateOrderStatus] = useUpdateOrdersMutation();
-  
+
   // Get VAT configuration
   const { data: vatConfig } = useGetVatConfigQuery(subdomain, {
     skip: !subdomain,
@@ -144,22 +144,6 @@ const OrderCard = ({
             <div className="flex items-center gap-4 sm:gap-6">
               <span className="text-[10px] sm:text-sm font-medium">Discount ({discountPercentage}%)</span>
               <span className="text-[10px] sm:text-sm font-semibold">{discountAmount}</span>
-            </div>
-          )}
-          {vatConfig?.vatEnabled && (
-            <div className="flex items-center gap-4 sm:gap-6">
-              <span className="text-[10px] sm:text-sm font-medium">
-                VAT ({(vatConfig.vatRate * 100).toFixed(1)}%)
-              </span>
-              <span className="text-[10px] sm:text-sm font-semibold">{vatTax}</span>
-            </div>
-          )}
-          {serviceFee && serviceFeeRate > 0 && (
-            <div className="flex items-center gap-4 sm:gap-6">
-              <span className="text-[10px] sm:text-sm font-medium">
-                Service Fee ({(serviceFeeRate * 100).toFixed(1)}%)
-              </span>
-              <span className="text-[10px] sm:text-sm font-semibold">{serviceFee}</span>
             </div>
           )}
           <div className="flex items-center gap-4 sm:gap-6">

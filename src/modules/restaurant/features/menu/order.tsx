@@ -36,7 +36,7 @@ const Orders = () => {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   const { subdomain, user } = useSelector(selectAuth);
-  const { data: menuItems = [], isLoading: isLoadingMenu, error: menuError } = useGetAllMenuItemsQuery({ 
+  const { data: menuItems = [], isLoading: isLoadingMenu, error: menuError } = useGetAllMenuItemsQuery({
     subdomain,
     search: searchQuery // Pass search query to the backend
   });
@@ -114,19 +114,13 @@ const Orders = () => {
 
   const calculateTotal = () => {
     const subtotal = Object.values(order).reduce((acc: number, { quantity, price }: any) => acc + quantity * price, 0);
-    const vatRate = 0.075;
-    const serviceFeeRate = subdomain === "355" ? 0 : 0.10;
-    const discountAmount = subtotal * (discountPercentage / 100);
-    const discountedSubtotal = subtotal - discountAmount;
-    const vatTax = discountedSubtotal * vatRate;
-    const serviceFee = subdomain === "355" ? 0 : discountedSubtotal * serviceFeeRate;
-    const total = discountedSubtotal + vatTax + serviceFee;
+    const total = discountedSubtotal;
     return {
       subtotal: Number(subtotal.toFixed(2)),
       discountAmount: Number(discountAmount.toFixed(2)),
       discountedSubtotal: Number(discountedSubtotal.toFixed(2)),
-      vatTax: Number(vatTax.toFixed(2)),
-      serviceFee: Number(serviceFee.toFixed(2)),
+      vatTax: 0,
+      serviceFee: 0,
       total: Number(total.toFixed(2)),
     };
   };
@@ -135,7 +129,7 @@ const Orders = () => {
     // If tag is provided, filter order items by that tag
     let filteredOrder = order;
     if (tag && activeTab === "All") {
-      const itemsWithTag = menuItems.filter((item: MenuItem) => 
+      const itemsWithTag = menuItems.filter((item: MenuItem) =>
         item.tags && item.tags.includes(tag)
       );
       const itemIdsWithTag = new Set(itemsWithTag.map((item: MenuItem) => item.id));
@@ -183,11 +177,11 @@ const Orders = () => {
         },
       ]);
       setOrderSent(true);
-      
+
       // Remove sent items from order
       if (tag && activeTab === "All") {
         setOrder((prev) => {
-          const itemsWithTag = menuItems.filter((item: MenuItem) => 
+          const itemsWithTag = menuItems.filter((item: MenuItem) =>
             item.tags && item.tags.includes(tag)
           );
           const itemIdsWithTag = new Set(itemsWithTag.map((item: MenuItem) => item.id));
@@ -198,7 +192,7 @@ const Orders = () => {
       } else {
         setOrder({});
       }
-      
+
       setSpecialNote("");
       setDiscountPercentage(0);
       setSearchQuery(""); // Reset search query after sending order
@@ -239,7 +233,7 @@ const Orders = () => {
   // Get unique tags from items in the order (only for "All" tab)
   const orderTags = useMemo(() => {
     if (activeTab !== "All" || Object.keys(order).length === 0) return [];
-    
+
     const tagsSet = new Set<string>();
     Object.keys(order).forEach((itemId) => {
       const item = menuItems.find((i: MenuItem) => i.id === itemId);
@@ -253,7 +247,7 @@ const Orders = () => {
   // Count items per tag
   const itemsByTag = useMemo(() => {
     if (activeTab !== "All" || Object.keys(order).length === 0) return {};
-    
+
     const counts: Record<string, number> = {};
     Object.keys(order).forEach((itemId) => {
       const item = menuItems.find((i: MenuItem) => i.id === itemId);
@@ -269,7 +263,7 @@ const Orders = () => {
   // Get detailed items by tag for summary
   const itemsDetailsByTag = useMemo(() => {
     if (activeTab !== "All" || Object.keys(order).length === 0) return {};
-    
+
     const details: Record<string, Array<{ name: string; quantity: number }>> = {};
     Object.entries(order).forEach(([itemId, { quantity, name }]: [string, any]) => {
       const item = menuItems.find((i: MenuItem) => i.id === itemId);
@@ -290,7 +284,7 @@ const Orders = () => {
     setIsDragging(true);
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    
+
     if (dragRef.current) {
       const rect = dragRef.current.getBoundingClientRect();
       setDragOffset({
@@ -303,19 +297,19 @@ const Orders = () => {
   useEffect(() => {
     const handleDrag = (e: MouseEvent | TouchEvent) => {
       if (!isDragging) return;
-      
+
       e.preventDefault();
       const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
       const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-      
+
       if (dragRef.current) {
         const rect = dragRef.current.getBoundingClientRect();
         const maxX = window.innerWidth - rect.width;
         const maxY = window.innerHeight - rect.height;
-        
+
         const newX = Math.max(0, Math.min(maxX, clientX - dragOffset.x));
         const newY = Math.max(0, Math.min(maxY, clientY - dragOffset.y));
-        
+
         setDragPosition({ x: newX, y: newY });
       }
     };
@@ -329,7 +323,7 @@ const Orders = () => {
       document.addEventListener('mouseup', handleDragEnd);
       document.addEventListener('touchmove', handleDrag, { passive: false });
       document.addEventListener('touchend', handleDragEnd);
-      
+
       return () => {
         document.removeEventListener('mousemove', handleDrag);
         document.removeEventListener('mouseup', handleDragEnd);
@@ -524,16 +518,6 @@ const Orders = () => {
                     <p className="text-xs sm:text-sm">₦{discountAmount.toLocaleString()}</p>
                   </div>
                 )}
-                <div className="flex justify-between mt-2">
-                  <p className="text-xs sm:text-sm">VAT (7.5%)</p>
-                  <p className="text-xs sm:text-sm">₦{vatTax.toLocaleString()}</p>
-                </div>
-                {subdomain !== "355" && (
-                  <div className="flex justify-between mt-2">
-                    <p className="text-xs sm:text-sm">Service Fee (10%)</p>
-                    <p className="text-xs sm:text-sm">₦{serviceFee.toLocaleString()}</p>
-                  </div>
-                )}
                 <div className="mt-3 mb-3 border-t border-[#05431E] border-t-[0.5px] border-dashed" />
                 <div className="flex justify-between">
                   <p className="text-xs sm:text-sm font-semibold">Total</p>
@@ -578,8 +562,6 @@ const Orders = () => {
                     }))}
                     subtotal={`₦${createdOrder.subtotal.toLocaleString()}`}
                     discountAmount={createdOrder.discountAmount ? `₦${createdOrder.discountAmount.toLocaleString()}` : undefined}
-                    vatTax={`₦${createdOrder.vatTax.toLocaleString()}`}
-                    serviceFee={subdomain !== "355" ? `₦${createdOrder.serviceFee.toLocaleString()}` : undefined}
                     total={`₦${createdOrder.total.toLocaleString()}`}
                     status={createdOrder.status}
                     subdomain={subdomain}
@@ -627,16 +609,6 @@ const Orders = () => {
                     <span>₦{receipt.discountAmount.toLocaleString()}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-[10px] sm:text-sm text-gray-700 mt-1">
-                  <span>VAT (7.5%)</span>
-                  <span>₦{receipt.vatTax.toLocaleString()}</span>
-                </div>
-                {subdomain !== "355" && (
-                  <div className="flex justify-between text-[10px] sm:text-sm text-gray-700 mt-1">
-                    <span>Service Fee (10%)</span>
-                    <span>₦{receipt.serviceFee.toLocaleString()}</span>
-                  </div>
-                )}
                 <div className="flex justify-between text-[10px] sm:text-sm font-semibold text-gray-800 mt-1">
                   <span>Total</span>
                   <span>₦{receipt.total.toLocaleString()}</span>
@@ -657,21 +629,20 @@ const Orders = () => {
       {activeTab === "All" && orderTags.length > 0 && Object.keys(order).length > 0 && (
         <div
           ref={dragRef}
-          className={`fixed z-50 sm:max-w-md max-h-[85vh] overflow-y-auto transition-transform ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} ${
-            dragPosition.x === 0 && dragPosition.y === 0 
-              ? 'bottom-0 left-0 right-0 sm:bottom-6 sm:left-auto sm:right-6 sm:w-auto' 
+          className={`fixed z-50 sm:max-w-md max-h-[85vh] overflow-y-auto transition-transform ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} ${dragPosition.x === 0 && dragPosition.y === 0
+              ? 'bottom-0 left-0 right-0 sm:bottom-6 sm:left-auto sm:right-6 sm:w-auto'
               : ''
-          }`}
+            }`}
           style={
             dragPosition.x !== 0 || dragPosition.y !== 0
               ? {
-                  left: `${dragPosition.x}px`,
-                  top: `${dragPosition.y}px`,
-                  right: 'auto',
-                  bottom: 'auto',
-                  width: 'calc(100% - 2rem)',
-                  maxWidth: '28rem',
-                }
+                left: `${dragPosition.x}px`,
+                top: `${dragPosition.y}px`,
+                right: 'auto',
+                bottom: 'auto',
+                width: 'calc(100% - 2rem)',
+                maxWidth: '28rem',
+              }
               : {}
           }
         >
@@ -681,11 +652,10 @@ const Orders = () => {
               <div
                 onMouseDown={handleDragStart}
                 onTouchStart={handleDragStart}
-                className={`flex items-center gap-2 mb-3 sm:mb-4 select-none transition-all ${
-                  isDragging 
-                    ? 'cursor-grabbing opacity-75' 
+                className={`flex items-center gap-2 mb-3 sm:mb-4 select-none transition-all ${isDragging
+                    ? 'cursor-grabbing opacity-75'
                     : 'cursor-grab hover:bg-gray-50 rounded-lg p-2 -m-2'
-                }`}
+                  }`}
               >
                 <GripVertical className={`w-5 h-5 transition-colors ${isDragging ? 'text-[#05431E]' : 'text-gray-400 hover:text-[#05431E]'}`} />
                 <div className="w-1 h-5 bg-gradient-to-b from-[#05431E] to-[#0E5D37] rounded-full"></div>
@@ -694,7 +664,7 @@ const Orders = () => {
                 </h3>
                 <span className="text-[10px] text-gray-400 hidden sm:inline">Drag to move</span>
               </div>
-              
+
               {/* Summary Section */}
               <div className="mb-4 space-y-2.5 max-h-[200px] sm:max-h-[250px] overflow-y-auto pr-1">
                 {orderTags.map((tag) => {
@@ -703,13 +673,13 @@ const Orders = () => {
                   // Get border color class based on tag color
                   const borderColorClass = tagColor.from.includes('orange') ? 'border-l-orange-500' :
                     tagColor.from.includes('blue') && !tagColor.from.includes('indigo') ? 'border-l-blue-500' :
-                    tagColor.from.includes('purple') ? 'border-l-purple-500' :
-                    tagColor.from.includes('green') ? 'border-l-green-500' :
-                    tagColor.from.includes('indigo') ? 'border-l-indigo-500' :
-                    tagColor.from.includes('amber') ? 'border-l-amber-500' :
-                    tagColor.from.includes('rose') ? 'border-l-rose-500' :
-                    'border-l-teal-500';
-                  
+                      tagColor.from.includes('purple') ? 'border-l-purple-500' :
+                        tagColor.from.includes('green') ? 'border-l-green-500' :
+                          tagColor.from.includes('indigo') ? 'border-l-indigo-500' :
+                            tagColor.from.includes('amber') ? 'border-l-amber-500' :
+                              tagColor.from.includes('rose') ? 'border-l-rose-500' :
+                                'border-l-teal-500';
+
                   return (
                     <div
                       key={tag}
