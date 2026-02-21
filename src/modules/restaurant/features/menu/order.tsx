@@ -114,6 +114,8 @@ const Orders = () => {
 
   const calculateTotal = () => {
     const subtotal = Object.values(order).reduce((acc: number, { quantity, price }: any) => acc + quantity * price, 0);
+    const discountAmount = subtotal * (discountPercentage / 100);
+    const discountedSubtotal = subtotal - discountAmount;
     const total = discountedSubtotal;
     return {
       subtotal: Number(subtotal.toFixed(2)),
@@ -630,8 +632,8 @@ const Orders = () => {
         <div
           ref={dragRef}
           className={`fixed z-50 sm:max-w-md max-h-[85vh] overflow-y-auto transition-transform ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} ${dragPosition.x === 0 && dragPosition.y === 0
-              ? 'bottom-0 left-0 right-0 sm:bottom-6 sm:left-auto sm:right-6 sm:w-auto'
-              : ''
+            ? 'bottom-0 left-0 right-0 sm:bottom-6 sm:left-auto sm:right-6 sm:w-auto'
+            : ''
             }`}
           style={
             dragPosition.x !== 0 || dragPosition.y !== 0
@@ -653,8 +655,8 @@ const Orders = () => {
                 onMouseDown={handleDragStart}
                 onTouchStart={handleDragStart}
                 className={`flex items-center gap-2 mb-3 sm:mb-4 select-none transition-all ${isDragging
-                    ? 'cursor-grabbing opacity-75'
-                    : 'cursor-grab hover:bg-gray-50 rounded-lg p-2 -m-2'
+                  ? 'cursor-grabbing opacity-75'
+                  : 'cursor-grab hover:bg-gray-50 rounded-lg p-2 -m-2'
                   }`}
               >
                 <GripVertical className={`w-5 h-5 transition-colors ${isDragging ? 'text-[#05431E]' : 'text-gray-400 hover:text-[#05431E]'}`} />

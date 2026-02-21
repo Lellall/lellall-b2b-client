@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Receipt as Btn } from 'iconsax-react';
 import { useGetDailySalesRevenueQuery, useGetDailySoldItemsQuery, useLazyDownloadDailySoldItemsCsvQuery, useGetPaymentTypeSummaryQuery } from '@/redux/api/order/order.api';
+import { useGetVatConfigQuery } from '@/redux/api/vat/vat.api';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { toast } from 'react-toastify';
@@ -134,15 +135,27 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
   }
 
 
-  // Prepare data for grand total calculation
-  const apiData = {
-    totalRevenue: soldItemsData?.totalRevenue || '₦0',
-    totalServiceFee: soldItemsData?.totalServiceFee || '₦0',
-    totalVatTax: soldItemsData?.totalVatTax || '₦0',
-  };
+  // Fetch VAT config
+  const { data: vatConfig } = useGetVatConfigQuery(subdomain);
+  const vatEnabled = vatConfig?.vatEnabled ?? false;
 
-  // Calculate grand total using sumCurrencyFields
-  const grandTotal = sumCurrencyFields(apiData, ['totalRevenue', 'totalServiceFee', 'totalVatTax'], true);
+  // Helper: parse a currency string like "₦1,234.56" → number
+  const parseAmount = (val: string | undefined): number =>
+    parseFloat((val || '0').replace(/[₦,]/g, '')) || 0;
+
+  // When VAT is enabled it is already baked into item prices.
+  // We extract it out so the operator can see the net revenue.
+  const rawRevenue = parseAmount(soldItemsData?.totalRevenue);
+  const rawVat = parseAmount(soldItemsData?.totalVatTax);
+  const adjustedRevenue = vatEnabled ? rawRevenue - rawVat : rawRevenue;
+
+  const formatCurrency = (val: number): string =>
+    `₦${val.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  // Grand Total: if VAT disabled → show totalRevenue as-is; if enabled → net of VAT
+  const rawServiceFee = parseAmount((soldItemsData as any)?.totalServiceFee);
+  const grandTotalNum = vatEnabled ? rawRevenue - rawVat + rawServiceFee : rawRevenue;
+  const grandTotal = formatCurrency(grandTotalNum);
   // Query for daily sales revenue
   const { data: revenueData, isLoading: isRevenueLoading, error: revenueError } = useGetDailySalesRevenueQuery(
     {
@@ -359,13 +372,17 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
                             <p className="text-lg font-bold">{soldItemsData?.totalItemsSold || 0}</p>
                           </div>
                           <div>
-                            <p className="text-sm">Total Revenue</p>
-                            <p className="text-lg font-bold">{soldItemsData?.totalRevenue || '₦0'}</p>
+                            <p className="text-sm">Total Revenue{vatEnabled ? ' (excl. VAT)' : ''}</p>
+                            <p className="text-lg font-bold">
+                              {vatEnabled ? formatCurrency(adjustedRevenue) : (soldItemsData?.totalRevenue || '₦0')}
+                            </p>
                           </div>
-                          <div>
-                            <p className="text-sm">Total VAT Tax</p>
-                            <p className="text-lg font-bold">{soldItemsData?.totalVatTax || '₦0'}</p>
-                          </div>
+                          {vatEnabled && (
+                            <div>
+                              <p className="text-sm">Total VAT Tax</p>
+                              <p className="text-lg font-bold">{soldItemsData?.totalVatTax || '₦0'}</p>
+                            </div>
+                          )}
                           <div>
                             <p className="text-sm">Total Service Fee</p>
                             <p className="text-lg font-bold">{soldItemsData?.totalServiceFee || '₦0'}</p>
@@ -630,17 +647,21 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
                         <p className="text-lg font-bold text-[#0E5D37]">{soldItemsData?.totalItemsSold || 0}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-600">Total Revenue</p>
-                        <p className="text-lg font-bold text-[#0E5D37]">{soldItemsData?.totalRevenue || '₦0'}</p>
+                        <p className="text-sm text-gray-600">Total Revenue{vatEnabled ? ' (excl. VAT)' : ''}</p>
+                        <p className="text-lg font-bold text-[#0E5D37]">
+                          {vatEnabled ? formatCurrency(adjustedRevenue) : (soldItemsData?.totalRevenue || '₦0')}
+                        </p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-600">Discounts(₦)</p>
                         <p className="text-lg font-bold text-[#0E5D37]">{soldItemsData?.totalDiscountAmount || '₦0'}</p>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Total VAT Tax</p>
-                        <p className="text-lg font-bold text-[#0E5D37]">{soldItemsData?.totalVatTax || '₦0'}</p>
-                      </div>
+                      {vatEnabled && (
+                        <div>
+                          <p className="text-sm text-gray-600">Total VAT Tax</p>
+                          <p className="text-lg font-bold text-[#0E5D37]">{soldItemsData?.totalVatTax || '₦0'}</p>
+                        </div>
+                      )}
                       <div>
                         <p className="text-sm text-gray-600">Total Service Fee</p>
                         <p className="text-lg font-bold text-[#0E5D37]">{soldItemsData?.totalServiceFee || '₦0'}</p>
