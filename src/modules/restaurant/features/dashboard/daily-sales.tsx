@@ -505,7 +505,7 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
                 </div>
 
                 {/* Main Revenue */}
-                {isRevenueLoading ? (
+                {isItemsLoading ? (
                   <div className="flex items-center gap-2 text-gray-500 text-sm">
                     <svg
                       className="animate-spin h-5 w-5 text-[#0E5D37]"
@@ -532,13 +532,15 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
                     </svg>
                     Loading...
                   </div>
-                ) : revenueError ? (
+                ) : itemsError ? (
                   <p className="text-red-600 bg-red-50 p-3 rounded-lg text-sm">
-                    Error loading revenue: {revenueError.message || "Unknown error"}
+                    Error loading revenue: {itemsError.message || "Unknown error"}
                   </p>
                 ) : (
                   <p className="text-5xl font-bold text-[#0E5D37] mb-12 tracking-tight">
-                    {revenueData?.revenue || "₦0"}
+                    {vatEnabled
+                      ? formatCurrency(adjustedRevenue)
+                      : (soldItemsData?.totalRevenue || "₦0")}
                   </p>
                 )}
 
@@ -558,7 +560,7 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
                               ? Bank
                               : item.paymentType === "ONLINE"
                                 ? Wallet2
-                                : WalletRemove; // fallback for null/unknown
+                                : WalletRemove;
 
                       return (
                         <div key={index} className="space-y-2">
@@ -572,7 +574,7 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
                             {item.orderCount}
                           </p>
                           <p className="text-lg font-semibold text-[#0E5D37]">
-                            ₦{item.totalRevenue?.toLocaleString()}
+                            ₦{(vatEnabled ? item.totalRevenue : item.totalSubtotal)?.toLocaleString()}
                           </p>
                         </div>
                       );
