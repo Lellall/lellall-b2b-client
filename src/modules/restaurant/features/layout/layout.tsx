@@ -12,6 +12,7 @@ import { selectAuth, logout } from '@/redux/api/auth/auth.slice';
 import { persistor } from '@/redux/store';
 import { RootState, AppDispatch } from '@/redux/store';
 import { getNavItemsByRole, NavItemConfig } from '@/roleConfig';
+import { getSubdomainFromUrl } from '@/utils/config';
 
 interface UserData {
   id: string;
@@ -58,7 +59,7 @@ const LayoutWrapper = styled.div`
 
 const Sidebar = styled.div.withConfig({
   shouldForwardProp: (prop) => !['isMobile', 'isSidebarOpen'].includes(prop),
-})<SidebarProps>`
+}) <SidebarProps>`
   width: ${(props) => (props.isMobile ? (props.isSidebarOpen ? '250px' : '0') : props.isSidebarOpen ? '250px' : '80px')};
   background-color: ${(props) => props.theme.colors.primary};
   color: ${(props) => props.theme.colors.primaryFont};
@@ -104,7 +105,7 @@ const Backdrop = styled.div<{ isOpen: boolean }>`
 
 const LogoWrapper = styled.div.withConfig({
   shouldForwardProp: (prop) => !['isSidebarOpen'].includes(prop),
-})<LogoWrapperProps>`
+}) <LogoWrapperProps>`
   display: flex;
   align-items: center;
   justify-content: ${(props) => (props.isSidebarOpen ? 'flex-start' : 'center')};
@@ -183,7 +184,7 @@ const Icon = styled.div`
 
 const Text = styled.span.withConfig({
   shouldForwardProp: (prop) => !['isSidebarOpen'].includes(prop),
-})<TextProps>`
+}) <TextProps>`
   font-size: 14px;
   font-weight: 400;
   display: ${(props) => (props.isSidebarOpen ? 'inline' : 'none')};
@@ -233,13 +234,13 @@ const SubscriptionCircle = styled.div<{ status: string }>`
     height: 24px;
     border-radius: 50%;
     background-color: ${({ status }) =>
-      status === 'TRIAL'
-        ? 'rgba(255, 165, 0, 0.5)'
-        : status === 'ACTIVE'
+    status === 'TRIAL'
+      ? 'rgba(255, 165, 0, 0.5)'
+      : status === 'ACTIVE'
         ? 'rgba(0, 204, 0, 0.5)'
         : status === 'EXPIRED'
-        ? 'rgba(255, 51, 51, 0.5)'
-        : 'rgba(128, 128, 128, 0.5)'};
+          ? 'rgba(255, 51, 51, 0.5)'
+          : 'rgba(128, 128, 128, 0.5)'};
     z-index: -1;
   }
 `;
@@ -338,7 +339,8 @@ const Layout: React.FC<LayoutProps> = ({ subdomainData }) => {
 
   const userRole = user.role || 'WAITER';
   const currentSubscription = user?.ownedRestaurant?.subscription || user?.restaurant?.subscription || subscription;
-  const daysLeft = calculateDaysLeft(currentSubscription);
+  let daysLeft = calculateDaysLeft(currentSubscription);
+
   // Determine status based on endDate, not the subscription status field
   const getStatusForDisplay = (subscription: any): string => {
     if (!subscription) return 'EXPIRED';
@@ -347,8 +349,18 @@ const Layout: React.FC<LayoutProps> = ({ subdomainData }) => {
     if (hasValidEndDate || hasValidTrialDate) return 'ACTIVE';
     return 'EXPIRED';
   };
-  const status = getStatusForDisplay(currentSubscription);
-  const planName = currentSubscription?.plan?.name || 'No Plan';
+
+  let status = getStatusForDisplay(currentSubscription);
+  let planName = currentSubscription?.plan?.name || 'No Plan';
+
+  // Temporary 30-day override for no5ive (overcharge compensation — expires 2026-04-04)
+  const currentSubdomain = getSubdomainFromUrl() || user?.ownedRestaurant?.subdomain || user?.restaurant?.subdomain || '';
+  const OVERRIDE_EXPIRY = new Date('2026-04-04T23:59:59Z');
+  if (currentSubdomain?.toLowerCase() === 'no5ive' && new Date() < OVERRIDE_EXPIRY) {
+    daysLeft = Math.ceil((OVERRIDE_EXPIRY.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    status = 'ACTIVE';
+    planName = planName !== 'No Plan' ? planName : 'Business Plan';
+  }
 
   // Log for debugging
   useEffect(() => {

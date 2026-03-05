@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { selectAuth } from '@/redux/api/auth/auth.slice';
 import { isRouteAllowed, getNavItemsByRole } from '@/roleConfig';
 import LostScreen from '@/lost-screen';
+import { getSubdomainFromUrl } from '@/utils/config';
 
 interface ProtectedRouteProps {
   isAdminRoute: boolean;
@@ -41,8 +42,19 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
   const currentSubscription = isSuperAdmin
     ? null
     : user?.ownedRestaurant?.subscription || user?.restaurant?.subscription || subscription;
-  const daysLeft = isSuperAdmin ? Infinity : calculateDaysLeft(currentSubscription);
-  const planName = isSuperAdmin ? 'Super Admin' : currentSubscription?.plan?.name;
+  let daysLeft = isSuperAdmin ? Infinity : calculateDaysLeft(currentSubscription);
+  let planName = isSuperAdmin ? 'Super Admin' : currentSubscription?.plan?.name;
+
+  // Temporary 30-day override for no5ive (overcharge compensation — expires 2026-04-04)
+  const currentSubdomain = getSubdomainFromUrl() || user?.ownedRestaurant?.subdomain || user?.restaurant?.subdomain || '';
+  const OVERRIDE_EXPIRY = new Date('2026-04-04T23:59:59Z');
+  const isNo5iveOverride = currentSubdomain?.toLowerCase() === 'no5ive' && new Date() < OVERRIDE_EXPIRY;
+
+  if (isNo5iveOverride) {
+    const overrideDaysLeft = Math.ceil((OVERRIDE_EXPIRY.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    daysLeft = overrideDaysLeft;
+    planName = planName || 'Business Plan'; // fallback to a plan with full routes
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
