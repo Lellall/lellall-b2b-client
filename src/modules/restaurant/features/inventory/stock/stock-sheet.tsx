@@ -8,7 +8,7 @@ import { Filter, ExportCircle } from 'iconsax-react';
 import { theme } from '@/theme/theme';
 import { format } from 'date-fns';
 import { ColorRing } from 'react-loader-spinner';
-import { moneyFormatter } from '@/utils/moneyFormatter';
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import ReactPaginate from 'react-paginate';
@@ -121,6 +121,7 @@ const paginationStyles = `
 `;
 
 const StockSheet = () => {
+  const { formatCurrency } = useCurrency();
   const columns = [
     { key: 'productName', label: 'Name', className: 'table-cell' },
     { key: 'openingStock', label: 'O/Stock', className: 'hidden lg:table-cell' },
@@ -186,10 +187,10 @@ const StockSheet = () => {
       added: round(item.added),
       quantityUsed: round(item.quantityUsed),
       closingStock: round(item.closingStock),
-      unitPrice: moneyFormatter(item.unitPrice),
+      unitPrice: formatCurrency(item.unitPrice),
       grandTotal: round(item.grandTotal),
     }));
-  }, [stockSheetData]);
+  }, [stockSheetData, formatCurrency]);
 
   if (isLoading) {
     return (
@@ -225,7 +226,7 @@ const StockSheet = () => {
   ];
 
   const statsData = [
-    { label: 'Total Stock Value', value: stats?.totalStockValue ?? '-' },
+    { label: 'Total Stock Value', value: stats?.totalStockValue ? formatCurrency(stats.totalStockValue) : '-' },
     { label: 'Total Added Stock', value: round(stats?.totalAddedStock) },
     { label: 'Total Quantity Used', value: round(stats?.totalQuantityUsed) },
     { label: 'Average Daily Usage', value: `${round(stats?.averageDailyUsage)}%` },

@@ -4,6 +4,8 @@ import { selectAuth } from '@/redux/api/auth/auth.slice';
 import { useGetDeletedOrdersQuery, useRestoreOrderMutation } from '@/redux/api/order/order.api';
 import ReactPaginate from 'react-paginate';
 import { Trash2, User, Clock, Calendar, RotateCcw, AlertCircle } from 'lucide-react';
+import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 interface DeletedOrder {
   id: string;
@@ -46,6 +48,7 @@ interface DeletedOrder {
 }
 
 const DeletedOrders = () => {
+  const { formatCurrency } = useCurrency();
   const { subdomain, user } = useSelector(selectAuth);
   const [currentPage, setCurrentPage] = useState(0);
   const [expandedOrders, setExpandedOrders] = useState<string[]>([]);
@@ -375,7 +378,7 @@ const DeletedOrders = () => {
                             <div className="flex items-center gap-2">
                               <span className="text-xs text-gray-500">x{item.quantity}</span>
                               <span className="text-sm font-semibold text-gray-900">
-                                ₦{(item.menuItem.price * item.quantity).toLocaleString()}
+                                {formatCurrency((item.menuItem.price * item.quantity).toLocaleString())}
                               </span>
                             </div>
                           </div>
@@ -393,7 +396,7 @@ const DeletedOrders = () => {
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Discount ({order.discountPercentage}%)</span>
                         <span className="font-semibold text-green-600">
-                          -₦{(order.discountAmount || 0).toLocaleString()}
+                          -{formatCurrency((order.discountAmount || 0).toLocaleString())}
                         </span>
                       </div>
                     )}
@@ -402,7 +405,7 @@ const DeletedOrders = () => {
                         Total
                       </span>
                       <span className="bg-gradient-to-r from-green-800 to-black bg-clip-text text-transparent">
-                        ₦{calculateTotal(order).toLocaleString()}
+                        {formatCurrency(calculateTotal(order).toLocaleString())}
                       </span>
                     </div>
                   </div>

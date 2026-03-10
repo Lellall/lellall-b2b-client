@@ -9,6 +9,8 @@ import EditOrderItemsModal from './edit-modal';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
 import { selectAuth } from '@/redux/api/auth/auth.slice';
+import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 interface Order {
   id: string;
@@ -66,6 +68,7 @@ const CardItem: React.FC<CardItemProps> = ({
   toggleOrderSelection,
 }) => {
   const { user } = useSelector(selectAuth);
+  const { formatCurrency } = useCurrency();
   const contentRef = useRef<HTMLDivElement>(null);
   const reactToPrintFn = useReactToPrint({ contentRef });
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -149,12 +152,12 @@ const CardItem: React.FC<CardItemProps> = ({
         status: selectedStatus,
         paymentType: selectedPaymentType || null,
       };
-      
+
       // Only send discount when closing the order (SERVED or CREDIT)
       if ((selectedStatus === 'SERVED' || selectedStatus === 'CREDIT') && discountPercentage > 0) {
         updateData.discountPercentage = discountPercentage;
       }
-      
+
       await updateOrderStatus({
         subdomain,
         data: updateData,
@@ -280,25 +283,25 @@ const CardItem: React.FC<CardItemProps> = ({
         <div className="text-xs sm:text-sm text-gray-800">
           <div className="flex justify-between text-xs">
             <span>Subtotal</span>
-            <span>₦{order.subtotal.toLocaleString()}</span>
+            <span>{formatCurrency(order.subtotal.toLocaleString())}</span>
           </div>
           <div className="flex justify-between mt-1 text-xs">
             <span>Discount ({order.discountPercentage ?? 0}%)</span>
-            <span>₦{(order.discountAmount ?? 0).toLocaleString()}</span>
+            <span>{formatCurrency((order.discountAmount ?? 0).toLocaleString())}</span>
           </div>
           <div className="flex justify-between mt-1 text-xs">
             <span>VAT</span>
-            <span>₦{order.vatTax.toLocaleString()}</span>
+            <span>{formatCurrency(order.vatTax.toLocaleString())}</span>
           </div>
           {subdomain !== "355" && (
             <div className="flex justify-between mt-1 text-xs">
               <span>Service Fee</span>
-              <span>₦{order.serviceFee.toLocaleString()}</span>
+              <span>{formatCurrency(order.serviceFee.toLocaleString())}</span>
             </div>
           )}
           <div className="flex justify-between mt-1 font-semibold">
             <span>Total</span>
-            <span>₦{order.total.toLocaleString()}</span>
+            <span>{formatCurrency(order.total.toLocaleString())}</span>
           </div>
         </div>
         <form onSubmit={handleFormSubmit} className="mt-2 space-y-2">

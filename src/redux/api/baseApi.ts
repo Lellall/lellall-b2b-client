@@ -13,10 +13,10 @@ interface CustomAxiosProps {
 const baseQuery = async ({ url, method = "GET", body, params, formData }: CustomAxiosProps) => {
   try {
     // Pass data directly - customAxios will handle Content-Type for FormData
-    const result = await CustomAxios({ 
-      url, 
-      method, 
-      params, 
+    const result = await CustomAxios({
+      url,
+      method,
+      params,
       data: body
     });
     return { data: result.data };
@@ -33,7 +33,7 @@ export const baseApi = createApi({
   baseQuery,
   reducerPath: "api",
   endpoints: () => ({}),
-  tagTypes: ["PRODUCTS", "ORDERS", "SHOPS", "TRANSACTION", "TEMPLATE", "INVENTORY", "MENU", "SUBSCRIPTION_PLAN", "SUPPLY_REQUEST", "VENDORS", "VatConfig", "ServiceFeeConfig", "BRANCHES", "BANK_DETAILS", "ATTENDANCE", "DEPARTMENT", "LEAVE", "ACCOUNTING", "PAYROLL", "VENDOR_INVOICES", "PAID_INVOICES", "WHATSAPP_MESSAGES"],
+  tagTypes: ["PRODUCTS", "ORDERS", "SHOPS", "TRANSACTION", "TEMPLATE", "INVENTORY", "MENU", "SUBSCRIPTION_PLAN", "SUPPLY_REQUEST", "VENDORS", "VatConfig", "ServiceFeeConfig", "BRANCHES", "BANK_DETAILS", "ATTENDANCE", "DEPARTMENT", "LEAVE", "ACCOUNTING", "PAYROLL", "VENDOR_INVOICES", "PAID_INVOICES", "WHATSAPP_MESSAGES", "CURRENCY"],
 });
 
 export default baseApi;

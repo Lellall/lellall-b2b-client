@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button"
+import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 const products = [
   {
     id: 1,
     name: "Maggi",
-    price: "₦430",
+    price: formatCurrency(430),
     o_stock: "43 Packets",
     c_stock: "12 Packets",
     q_used: "6",
@@ -13,7 +15,7 @@ const products = [
   {
     id: 2,
     name: "Bru",
-    price: "₦257",
+    price: formatCurrency(257),
     o_stock: "22 Packets",
     c_stock: "8 Packets",
     q_used: "12",
@@ -22,7 +24,7 @@ const products = [
   {
     id: 3,
     name: "Red Bull",
-    price: "₦405",
+    price: formatCurrency(405),
     o_stock: "36 Packets",
     c_stock: "15 Packets",
     q_used: "2",
@@ -31,7 +33,7 @@ const products = [
   {
     id: 4,
     name: "Bourn Vita",
-    price: "₦502",
+    price: formatCurrency(502),
     o_stock: "14 Packets",
     c_stock: "6 Packets",
     q_used: "6",
@@ -40,7 +42,7 @@ const products = [
   {
     id: 5,
     name: "Horlicks",
-    price: "₦530",
+    price: formatCurrency(530),
     o_stock: "5 Packets",
     c_stock: "5 Packets",
     q_used: "1",
@@ -49,6 +51,7 @@ const products = [
 ]
 
 const ProductsTable = () => {
+  const { formatCurrency } = useCurrency();
   const getStatusColor = (status: string) => {
     switch (status) {
       case "in-stock":

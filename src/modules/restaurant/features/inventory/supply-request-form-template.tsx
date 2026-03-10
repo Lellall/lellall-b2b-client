@@ -7,6 +7,8 @@ import { useGetVendorsQuery } from '@/redux/api/vendors/vendors.api';
 import { useGetSupplyRequestTemplatesQuery, useApplySupplyRequestTemplateMutation } from '@/redux/api/inventory/inventory.api';
 import { toast } from 'react-toastify';
 import { ColorRing } from 'react-loader-spinner';
+import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 // Define unit constants matching backend
 const CONTAINER_UNITS = [
@@ -66,6 +68,7 @@ const TemplateSupplyRequestWizard: React.FC<TemplateSupplyRequestWizardProps> = 
     inventory = [],
 }) => {
     const { subdomain } = useSelector(selectAuth);
+    const { formatCurrency, currencySymbol } = useCurrency();
     const [step, setStep] = useState(1);
     const [expandedItems, setExpandedItems] = useState<number[]>([]);
     const primaryColor = '#05431E';
@@ -452,7 +455,7 @@ const TemplateSupplyRequestWizard: React.FC<TemplateSupplyRequestWizardProps> = 
                                                             )}
                                                         </div>
                                                         <div>
-                                                            <label className="block text-xs font-medium text-gray-700 mb-1">Unit Price (₦)</label>
+                                                            <label className="block text-xs font-medium text-gray-700 mb-1">Unit Price ({currencySymbol})</label>
                                                             <Controller
                                                                 name={`supplies.${index}.unitPrice`}
                                                                 control={control}
@@ -564,7 +567,7 @@ const TemplateSupplyRequestWizard: React.FC<TemplateSupplyRequestWizardProps> = 
                                                 You have {getValues('supplies').length} supply request(s) to review
                                             </p>
                                             <p className="text-lg font-medium text-[#05431E]">
-                                                Total Cost: ₦{totalCost.toFixed(2)}
+                                                Total Cost: {formatCurrency(totalCost.toFixed(2))}
                                             </p>
                                         </div>
                                     </div>
@@ -593,7 +596,7 @@ const TemplateSupplyRequestWizard: React.FC<TemplateSupplyRequestWizardProps> = 
                                                             </div>
                                                             <div className="flex items-center gap-4">
                                                                 <p className="text-lg font-semibold text-[#05431E]">
-                                                                    ₦{(item.quantity * item.unitPrice).toFixed(2)}
+                                                                    {formatCurrency((item.quantity * item.unitPrice).toFixed(2))}
                                                                 </p>
                                                                 <span className={`transform transition-transform duration-200 ${expandedItems.includes(index) ? 'rotate-180' : ''}`}>
                                                                     ▼
@@ -606,7 +609,7 @@ const TemplateSupplyRequestWizard: React.FC<TemplateSupplyRequestWizardProps> = 
                                                                     <p><span className="font-medium text-gray-700">Quantity:</span> {item.quantity} {item.unitOfMeasurement}</p>
                                                                     <p><span className="font-medium text-gray-700">Base Unit:</span> {item.baseQuantityPerUnit} {item.baseUnit}/unit</p>
                                                                     <p><span className="font-medium text-gray-700">Total Base:</span> {(item.quantity * item.baseQuantityPerUnit).toFixed(2)} {item.baseUnit}</p>
-                                                                    <p><span className="font-medium text-gray-700">Unit Price:</span> ₦{item.unitPrice.toFixed(2)}</p>
+                                                                    <p><span className="font-medium text-gray-700">Unit Price:</span> {formatCurrency(item.unitPrice.toFixed(2))}</p>
                                                                     <p><span className="font-medium text-gray-700">Method:</span> {item.requestMethod}</p>
                                                                     {inventoryItem && (
                                                                         <p><span className="font-medium text-gray-700">Current Stock:</span> {inventoryItem.closingStock} {inventoryItem.unitOfMeasurement}</p>

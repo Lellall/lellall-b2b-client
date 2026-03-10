@@ -8,6 +8,8 @@ import Table from "@/components/ui/table";
 import { useGetOrdersByRestaurantQuery } from "@/redux/api/order/order.api";
 import { ColorRing } from 'react-loader-spinner';
 import ReactPaginate from 'react-paginate';
+import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 // Pagination styles from InventoryComponent
 const paginationStyles = `
@@ -121,6 +123,7 @@ interface RestaurantOrdersProps {
 }
 
 const RestaurantOrders = ({ restaurantId }: RestaurantOrdersProps) => {
+  const { formatCurrency } = useCurrency();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [selectedStatus, setSelectedStatus] = useState<string>("");
@@ -227,7 +230,7 @@ const RestaurantOrders = ({ restaurantId }: RestaurantOrdersProps) => {
         }, 0) || 0;
         
         return (
-          <span className="font-medium">₦{calculatedTotal.toLocaleString()}</span>
+          <span className="font-medium">{formatCurrency(calculatedTotal.toLocaleString())}</span>
         );
       }
     },

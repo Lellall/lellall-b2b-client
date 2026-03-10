@@ -3,10 +3,12 @@ import { useSelector } from 'react-redux';
 import { selectAuth } from '@/redux/api/auth/auth.slice';
 import { useGetWaiterPerformanceQuery, useGetTopPerformersQuery, useGetBusinessInsightsQuery, useCompareRestaurantsMutation, useGetSeasonalTrendsQuery } from '@/redux/api/restaurant/restaurant.api';
 import { useGetBranchesQuery, Branch } from '@/redux/api/branches/branches.api';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Calendar, 
+import { useCurrency } from "@/contexts/CurrencyContext";
+
+import {
+  TrendingUp,
+  TrendingDown,
+  Calendar,
   Target,
   AlertCircle,
   CheckCircle,
@@ -85,27 +87,27 @@ interface SeasonalTrendsData {
 
 const Insights: React.FC = () => {
   const { user } = useSelector(selectAuth);
+  const { formatCurrency } = useCurrency();
   const [activeTab, setActiveTab] = useState<'waiter-performance' | 'top-performers' | 'business-insights' | 'comparisons' | 'seasonal-trends'>('waiter-performance');
   const [days, setDays] = useState(30);
   const [months, setMonths] = useState(12);
   const [comparisonType, setComparisonType] = useState<'revenue' | 'orders' | 'growth'>('revenue');
   const [selectedBranches, setSelectedBranches] = useState<string[]>([]);
   const [includeParent, setIncludeParent] = useState(false);
-  
+
   const restaurantId = user?.ownedRestaurants?.[0]?.id || user?.restaurantId;
   const parentRestaurant = user?.ownedRestaurants?.[0];
 
-  // Helper to format currency (extract number from string like "₦450,000" or "₦2824890.00")
-  const formatCurrency = (value: string | undefined): string => {
-    if (!value) return '₦0.00';
+  const formatCurrencyLocal = (value?: string | number) => {
+    if (!value) return formatCurrency(0);
     // Remove currency symbol and any existing formatting, but keep decimal point
-    const cleaned = value.replace(/[₦,]/g, '').trim();
-    if (!cleaned) return value;
+    const cleaned = value.toString().replace(/[^\d.-]/g, '').trim();
+    if (!cleaned) return value.toString();
     // Parse as float to preserve decimal places
     const num = parseFloat(cleaned);
-    if (isNaN(num)) return value;
-    // Format with 2 decimal places
-    return `₦${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    if (isNaN(num)) return value.toString();
+    // Format with Context
+    return formatCurrency(num);
   };
 
   // Helper to get initials for avatar
@@ -117,61 +119,61 @@ const Insights: React.FC = () => {
       .toUpperCase()
       .slice(0, 2);
   };
-  
+
   // Fetch branches
   const parentId = user?.ownedRestaurants?.[0]?.id || user?.restaurantId || '';
   const { data: branches = [], isLoading: branchesLoading } = useGetBranchesQuery(parentId, {
     skip: !parentId,
   });
-  
+
   const { data: waiterData, isLoading: isLoadingWaiter } = useGetWaiterPerformanceQuery(
     { restaurantId, days },
     { skip: !restaurantId || activeTab !== 'waiter-performance' }
   );
-  
+
   const { data: topPerformersData, isLoading: isLoadingTopPerformers } = useGetTopPerformersQuery(
     { restaurantId, days },
     { skip: !restaurantId || activeTab !== 'top-performers' }
   );
-  
+
   const { data: businessInsightsData, isLoading: isLoadingBusinessInsights } = useGetBusinessInsightsQuery(
     { restaurantId, days },
     { skip: !restaurantId || activeTab !== 'business-insights' }
   );
-  
+
   const { data: seasonalTrendsData, isLoading: isLoadingSeasonalTrends } = useGetSeasonalTrendsQuery(
     { restaurantId, months },
     { skip: !restaurantId || activeTab !== 'seasonal-trends' }
   );
-  
+
   // Comparison mutation
   const [compareRestaurants, { data: comparisonData, isLoading: isComparing }] = useCompareRestaurantsMutation();
 
   const isLoading = isLoadingWaiter || isLoadingTopPerformers || isLoadingBusinessInsights || isComparing || isLoadingSeasonalTrends;
-  
+
   const totalSelected = selectedBranches.length + (includeParent ? 1 : 0);
-  
+
   const toggleBranchSelection = (branchId: string) => {
-    setSelectedBranches(prev => 
-      prev.includes(branchId) 
+    setSelectedBranches(prev =>
+      prev.includes(branchId)
         ? prev.filter(id => id !== branchId)
         : [...prev, branchId]
     );
   };
-  
+
   const handleCompare = async () => {
     if (totalSelected < 2) return;
-    
-    const restaurantIds = includeParent && restaurantId 
+
+    const restaurantIds = includeParent && restaurantId
       ? [restaurantId, ...selectedBranches]
       : selectedBranches;
-    
+
     await compareRestaurants({
       restaurantIds,
       comparisonType,
     });
   };
-  
+
   const removeBranch = (branchId: string) => {
     setSelectedBranches(prev => prev.filter(id => id !== branchId));
   };
@@ -179,7 +181,7 @@ const Insights: React.FC = () => {
   // Render Waiter Performance Tab
   const renderWaiterPerformanceTab = () => {
     if (!waiterData) return null;
-    
+
     return (
       <div className="space-y-6">
         {/* Top Performers */}
@@ -190,7 +192,7 @@ const Insights: React.FC = () => {
             </div>
             <h2 className="text-xl font-medium text-[#0F172A]">Top Performers</h2>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {waiterData.topPerformers?.map((waiter, index) => (
               <div
@@ -200,20 +202,20 @@ const Insights: React.FC = () => {
                 {/* Profile Header */}
                 <div className="flex items-center gap-4 mb-4">
                   {/* Avatar */}
-                  <div 
+                  <div
                     className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-xl font-bold flex-shrink-0"
                     style={{ background: 'linear-gradient(135deg, #10B981, #059669)' }}
                   >
                     {getInitials(waiter.waiter)}
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
                     <h3 className="text-base font-semibold text-[#0F172A] truncate">{waiter.waiter}</h3>
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-[#10B981] bg-[#10B981]/10 mt-1">
                       {waiter.performance}
                     </span>
                   </div>
-                  
+
                   <div className="p-2 rounded-lg bg-[#FEF3C7]/20">
                     <Star className="w-5 h-5" style={{ color: '#F59E0B' }} />
                   </div>
@@ -228,9 +230,9 @@ const Insights: React.FC = () => {
                       </div>
                       <span className="text-xs font-medium text-[#6B7280]">Revenue</span>
                     </div>
-                    <span className="text-sm font-semibold text-[#0F172A]">{formatCurrency(waiter.revenueGenerated)}</span>
+                    <span className="text-sm font-semibold text-[#0F172A]">{formatCurrencyLocal(waiter.revenueGenerated)}</span>
                   </div>
-                  
+
                   <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-[#EEF2FF] to-[#E0E7FF]">
                     <div className="flex items-center gap-2">
                       <div className="p-2 rounded-lg bg-[#6366F1]/20">
@@ -241,7 +243,7 @@ const Insights: React.FC = () => {
                     <span className="text-sm font-semibold text-[#0F172A]">{waiter.orderAccuracy}</span>
                   </div>
                 </div>
-                
+
                 {/* Strengths */}
                 {waiter.strengths && waiter.strengths.length > 0 && (
                   <div>
@@ -269,7 +271,7 @@ const Insights: React.FC = () => {
               </div>
               <h2 className="text-xl font-medium text-[#0F172A]">Need Improvement</h2>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {waiterData.underPerformers.map((waiter, index) => (
                 <div
@@ -279,20 +281,20 @@ const Insights: React.FC = () => {
                   {/* Profile Header */}
                   <div className="flex items-center gap-4 mb-4">
                     {/* Avatar */}
-                    <div 
+                    <div
                       className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-xl font-bold flex-shrink-0"
                       style={{ background: 'linear-gradient(135deg, #EF4444, #DC2626)' }}
                     >
                       {getInitials(waiter.waiter)}
                     </div>
-                    
+
                     <div className="flex-1 min-w-0">
                       <h3 className="text-base font-semibold text-[#0F172A] truncate">{waiter.waiter}</h3>
                       <div className="text-xs text-[#6B7280] mt-1">
                         Needs Improvement
                       </div>
                     </div>
-                    
+
                     <div className="p-2 rounded-lg bg-[#FEF2F2]">
                       <AlertTriangle className="w-5 h-5 text-[#EF4444]" />
                     </div>
@@ -310,7 +312,7 @@ const Insights: React.FC = () => {
                       <span className="text-sm font-semibold text-[#EF4444]">{waiter.conversionRate}</span>
                     </div>
                   </div>
-                  
+
                   {/* Issues */}
                   {waiter.issues && waiter.issues.length > 0 && (
                     <div className="mb-4">
@@ -325,7 +327,7 @@ const Insights: React.FC = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Recommendations */}
                   {waiter.recommendations && waiter.recommendations.length > 0 && (
                     <div>
@@ -430,7 +432,7 @@ const Insights: React.FC = () => {
   // Render Top Performers Tab
   const renderTopPerformersTab = () => {
     if (!topPerformersData) return null;
-    
+
     return (
       <div className="space-y-6">
         {/* Superstar Items */}
@@ -441,7 +443,7 @@ const Insights: React.FC = () => {
             </div>
             <h2 className="text-xl font-medium text-[#0F172A]">Superstar Items</h2>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {topPerformersData.superstarItems?.map((item, index) => (
               <div
@@ -472,7 +474,7 @@ const Insights: React.FC = () => {
             </div>
             <h2 className="text-xl font-medium text-[#0F172A]">Emerging Trends</h2>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {topPerformersData.emergingTrends?.map((trend, index) => (
               <div
@@ -498,7 +500,7 @@ const Insights: React.FC = () => {
               </div>
               <h2 className="text-xl font-medium text-[#0F172A]">Underperformers</h2>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {topPerformersData.underperformers.map((item, index) => (
                 <div
@@ -580,7 +582,7 @@ const Insights: React.FC = () => {
   const renderComparisonsTab = () => (
     <div className="space-y-6">
       {/* Comparison Type Selector */}
-      <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ }}>
+      <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{}}>
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <label className="text-sm font-medium text-[#0F172A]">Comparison Type:</label>
@@ -601,18 +603,16 @@ const Insights: React.FC = () => {
       {parentRestaurant && (
         <div
           onClick={() => setIncludeParent(!includeParent)}
-          className={`p-6 rounded-2xl cursor-pointer transition-all duration-200 hover:-translate-y-1 ${
-            includeParent ? 'border-2 border-[#6366F1]' : 'bg-white'
-          }`}
-          style={includeParent 
+          className={`p-6 rounded-2xl cursor-pointer transition-all duration-200 hover:-translate-y-1 ${includeParent ? 'border-2 border-[#6366F1]' : 'bg-white'
+            }`}
+          style={includeParent
             ? { background: 'linear-gradient(to right, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1))' }
             : {}
           }
         >
           <div className="flex items-center gap-4">
-            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-              includeParent ? 'border-[#6366F1] bg-[#6366F1]' : 'border-gray-300'
-            }`}>
+            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${includeParent ? 'border-[#6366F1] bg-[#6366F1]' : 'border-gray-300'
+              }`}>
               {includeParent && <CheckCircle className="w-3 h-3 text-white" />}
             </div>
             <div className="p-3 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#8B5CF6]">
@@ -635,7 +635,7 @@ const Insights: React.FC = () => {
       )}
 
       {/* Branch Selection */}
-      <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ }}>
+      <div className="bg-white rounded-2xl p-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{}}>
         <div className="flex items-center gap-3 mb-6">
           <div className="p-3 rounded-xl" style={{ background: 'linear-gradient(to right, #6366F1, #8B5CF6)' }}>
             <Building2 className="w-6 h-6 text-white" />
@@ -643,7 +643,7 @@ const Insights: React.FC = () => {
           <h2 className="text-2xl font-semibold text-[#0F172A]">Select Branches to Compare</h2>
         </div>
         <p className="text-[#6B7280] mb-4">Select branches to compare their performance</p>
-        
+
         {branchesLoading ? (
           <div className="text-center py-8">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-[#6366F1] border-t-transparent"></div>
@@ -660,19 +660,17 @@ const Insights: React.FC = () => {
                 <div
                   key={branch.id}
                   onClick={() => toggleBranchSelection(branch.id)}
-                  className={`p-5 rounded-2xl cursor-pointer transition-all duration-200 ${
-                    isSelected ? 'border-2 border-[#6366F1]' : 'bg-white'
-                  }`}
-                  style={isSelected 
+                  className={`p-5 rounded-2xl cursor-pointer transition-all duration-200 ${isSelected ? 'border-2 border-[#6366F1]' : 'bg-white'
+                    }`}
+                  style={isSelected
                     ? { background: 'linear-gradient(to right, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1))' }
                     : {}
                   }
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                        isSelected ? 'border-[#6366F1] bg-[#6366F1]' : 'border-gray-300'
-                      }`}>
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${isSelected ? 'border-[#6366F1] bg-[#6366F1]' : 'border-gray-300'
+                        }`}>
                         {isSelected && <CheckCircle className="w-3 h-3 text-white" />}
                       </div>
                       <div className="p-2 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#8B5CF6]">
@@ -731,11 +729,10 @@ const Insights: React.FC = () => {
           <button
             onClick={handleCompare}
             disabled={totalSelected < 2 || isComparing}
-            className={`px-8 py-3 rounded-xl font-medium text-white transition-all duration-200 ${
-              totalSelected < 2
-                ? 'bg-gray-400 cursor-not-allowed'
-                : ''
-            }`}
+            className={`px-8 py-3 rounded-xl font-medium text-white transition-all duration-200 ${totalSelected < 2
+              ? 'bg-gray-400 cursor-not-allowed'
+              : ''
+              }`}
             style={totalSelected >= 2 ? { background: 'linear-gradient(to right, #6366F1, #8B5CF6)' } : {}}
           >
             {isComparing ? 'Comparing...' : 'Compare Branches'}
@@ -835,7 +832,7 @@ const Insights: React.FC = () => {
   // Render Seasonal Trends Tab
   const renderSeasonalTrendsTab = () => {
     if (!seasonalTrendsData) return null;
-    
+
     return (
       <div className="space-y-6">
         {/* Forecast */}
@@ -846,16 +843,15 @@ const Insights: React.FC = () => {
             </div>
             <h2 className="text-xl font-medium text-[#0F172A]">Next Month Forecast</h2>
           </div>
-          
+
           <div className="p-5 rounded-xl bg-gradient-to-r from-[#EEF2FF] to-[#E0E7FF] border-l-4 border-[#6366F1]">
             <p className="text-lg font-medium text-[#0F172A] mb-2">{seasonalTrendsData.forecast?.nextMonth || 'No forecast available'}</p>
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-              seasonalTrendsData.forecast?.confidence === 'high' 
-                ? 'bg-[#10B981]/20 text-[#10B981]' 
-                : seasonalTrendsData.forecast?.confidence === 'medium'
+            <span className={`px-3 py-1 rounded-full text-sm font-medium ${seasonalTrendsData.forecast?.confidence === 'high'
+              ? 'bg-[#10B981]/20 text-[#10B981]'
+              : seasonalTrendsData.forecast?.confidence === 'medium'
                 ? 'bg-[#F59E0B]/20 text-[#F59E0B]'
                 : 'bg-[#6B7280]/20 text-[#6B7280]'
-            }`}>
+              }`}>
               Confidence: {seasonalTrendsData.forecast?.confidence || 'medium'}
             </span>
           </div>
@@ -870,7 +866,7 @@ const Insights: React.FC = () => {
               </div>
               <h2 className="text-xl font-medium text-[#0F172A]">Peak Months</h2>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {seasonalTrendsData.peakMonths.map((month, index) => (
                 <div
@@ -899,7 +895,7 @@ const Insights: React.FC = () => {
               </div>
               <h2 className="text-xl font-medium text-[#0F172A]">Low Periods</h2>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {seasonalTrendsData.lowPeriods.map((period, index) => (
                 <div
@@ -964,7 +960,7 @@ const Insights: React.FC = () => {
               </div>
               <h2 className="text-xl font-medium text-[#0F172A]">Recommendations</h2>
             </div>
-            
+
             <div className="space-y-3">
               {seasonalTrendsData.recommendations.map((recommendation, index) => (
                 <div
@@ -988,7 +984,7 @@ const Insights: React.FC = () => {
   // Render Business Insights Tab
   const renderBusinessInsightsTab = () => {
     if (!businessInsightsData) return null;
-    
+
     return (
       <div className="space-y-6">
         {/* Trends */}
@@ -999,7 +995,7 @@ const Insights: React.FC = () => {
             </div>
             <h2 className="text-xl font-medium text-[#0F172A]">Business Trends</h2>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {businessInsightsData.trends?.map((trend, index) => (
               <div
@@ -1025,7 +1021,7 @@ const Insights: React.FC = () => {
               </div>
               <h2 className="text-xl font-medium text-[#0F172A]">Opportunities</h2>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {businessInsightsData.opportunities.map((opp, index) => (
                 <div
@@ -1085,7 +1081,7 @@ const Insights: React.FC = () => {
               </div>
               <h2 className="text-xl font-medium text-[#0F172A]">Risks</h2>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {businessInsightsData.risks.map((risk, index) => (
                 <div
@@ -1110,7 +1106,7 @@ const Insights: React.FC = () => {
             </div>
             <h2 className="text-xl font-medium text-[#0F172A]">Action Items</h2>
           </div>
-          
+
           <div className="space-y-3">
             {businessInsightsData.actionItems?.map((item, index) => (
               <div
@@ -1142,7 +1138,7 @@ const Insights: React.FC = () => {
         </div>
 
         {/* Period Selector */}
-        <div className="bg-white rounded-2xl p-6 mb-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{ }}>
+        <div className="bg-white rounded-2xl p-6 mb-6 cursor-pointer hover:-translate-y-1 transition-all duration-200" style={{}}>
           <div className="flex items-center gap-6 flex-wrap">
             <div className="flex items-center gap-4">
               <label className="text-sm font-medium text-[#0F172A]">Analysis Period:</label>
@@ -1175,64 +1171,59 @@ const Insights: React.FC = () => {
         <div className="bg-white rounded-2xl p-2 mb-6 flex gap-2 flex-wrap">
           <button
             onClick={() => setActiveTab('waiter-performance')}
-            className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ease-in-out flex items-center gap-2 cursor-pointer ${
-              activeTab === 'waiter-performance'
-                ? 'text-white bg-[#05431E]'
-                : 'text-[#6B7280] hover:text-[#0F172A] hover:bg-[#F8F9FA]'
-            }`}
+            className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ease-in-out flex items-center gap-2 cursor-pointer ${activeTab === 'waiter-performance'
+              ? 'text-white bg-[#05431E]'
+              : 'text-[#6B7280] hover:text-[#0F172A] hover:bg-[#F8F9FA]'
+              }`}
           >
             <Users className="w-5 h-5" />
             Waiter Performance
           </button>
           <button
             onClick={() => setActiveTab('top-performers')}
-            className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ease-in-out flex items-center gap-2 cursor-pointer ${
-              activeTab === 'top-performers'
-                ? 'text-white bg-[#05431E]'
-                : 'text-[#6B7280] hover:text-[#0F172A] hover:bg-[#F8F9FA]'
-            }`}
+            className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ease-in-out flex items-center gap-2 cursor-pointer ${activeTab === 'top-performers'
+              ? 'text-white bg-[#05431E]'
+              : 'text-[#6B7280] hover:text-[#0F172A] hover:bg-[#F8F9FA]'
+              }`}
           >
             <Star className="w-5 h-5" />
             Top Performers
           </button>
           <button
             onClick={() => setActiveTab('business-insights')}
-            className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ease-in-out flex items-center gap-2 cursor-pointer ${
-              activeTab === 'business-insights'
-                ? 'text-white bg-[#05431E]'
-                : 'text-[#6B7280] hover:text-[#0F172A] hover:bg-[#F8F9FA]'
-            }`}
+            className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ease-in-out flex items-center gap-2 cursor-pointer ${activeTab === 'business-insights'
+              ? 'text-white bg-[#05431E]'
+              : 'text-[#6B7280] hover:text-[#0F172A] hover:bg-[#F8F9FA]'
+              }`}
           >
             <Lightbulb className="w-5 h-5" />
             Business Insights
           </button>
           <button
             onClick={() => setActiveTab('comparisons')}
-            className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ease-in-out flex items-center gap-2 cursor-pointer ${
-              activeTab === 'comparisons'
-                ? 'text-white bg-[#05431E]'
-                : 'text-[#6B7280] hover:text-[#0F172A] hover:bg-[#F8F9FA]'
-            }`}
+            className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ease-in-out flex items-center gap-2 cursor-pointer ${activeTab === 'comparisons'
+              ? 'text-white bg-[#05431E]'
+              : 'text-[#6B7280] hover:text-[#0F172A] hover:bg-[#F8F9FA]'
+              }`}
           >
             <ArrowLeftRight className="w-5 h-5" />
             Comparisons
           </button>
           <button
             onClick={() => setActiveTab('seasonal-trends')}
-            className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ease-in-out flex items-center gap-2 cursor-pointer ${
-              activeTab === 'seasonal-trends'
-                ? 'text-white bg-[#05431E]'
-                : 'text-[#6B7280] hover:text-[#0F172A] hover:bg-[#F8F9FA]'
-            }`}
+            className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ease-in-out flex items-center gap-2 cursor-pointer ${activeTab === 'seasonal-trends'
+              ? 'text-white bg-[#05431E]'
+              : 'text-[#6B7280] hover:text-[#0F172A] hover:bg-[#F8F9FA]'
+              }`}
           >
             <CalendarDays className="w-5 h-5" />
             Seasonal Trends
           </button>
         </div>
 
-          {/* Tab Content */}
+        {/* Tab Content */}
         {isLoading && activeTab !== 'comparisons' ? (
-          <div className="bg-white rounded-2xl p-12 text-center" style={{ }}>
+          <div className="bg-white rounded-2xl p-12 text-center" style={{}}>
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-[#0E5D37] border-t-transparent"></div>
             <p className="mt-4 text-[#6B7280]">Loading AI insights...</p>
           </div>

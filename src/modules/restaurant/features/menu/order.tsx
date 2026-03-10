@@ -11,6 +11,8 @@ import { useSelector } from "react-redux";
 import { selectAuth } from "@/redux/api/auth/auth.slice";
 import { ColorRing } from "react-loader-spinner";
 import { PrintableInvoice } from "./rafawa";
+import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 interface MenuItem {
   id: string;
@@ -22,6 +24,7 @@ interface MenuItem {
 }
 
 const Orders = () => {
+  const { formatCurrency } = useCurrency();
   const [order, setOrder] = useState({});
   const [orderSent, setOrderSent] = useState(false);
   const [receipt, setReceipt] = useState(null);
@@ -410,7 +413,7 @@ const Orders = () => {
                     >
                       <div className="flex flex-col space-y-1">
                         <h3 className="text-xs sm:text-sm font-semibold truncate">{item.name}</h3>
-                        <p className="text-[10px] sm:text-xs font-medium">₦{item.price.toLocaleString()}</p>
+                        <p className="text-[10px] sm:text-xs font-medium">{formatCurrency(item.price.toLocaleString())}</p>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-1">
                             <button
@@ -458,7 +461,7 @@ const Orders = () => {
                       </p>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <p className="text-[10px] sm:text-xs">₦{(price * quantity).toLocaleString()}</p>
+                      <p className="text-[10px] sm:text-xs">{formatCurrency((price * quantity).toLocaleString())}</p>
                       <button
                         onClick={() => removeItem(id)}
                         className="text-red-500 hover:text-red-600"
@@ -512,18 +515,18 @@ const Orders = () => {
               <div className="bg-[#FAFBFF] p-3 sm:p-4 rounded-lg">
                 <div className="flex justify-between">
                   <p className="text-xs sm:text-sm">Subtotal</p>
-                  <p className="text-xs sm:text-sm">₦{subtotal.toLocaleString()}</p>
+                  <p className="text-xs sm:text-sm">{formatCurrency(subtotal.toLocaleString())}</p>
                 </div>
                 {discountPercentage > 0 && (
                   <div className="flex justify-between mt-2">
                     <p className="text-xs sm:text-sm">Discount ({discountPercentage}%)</p>
-                    <p className="text-xs sm:text-sm">₦{discountAmount.toLocaleString()}</p>
+                    <p className="text-xs sm:text-sm">{formatCurrency(discountAmount.toLocaleString())}</p>
                   </div>
                 )}
                 <div className="mt-3 mb-3 border-t border-[#05431E] border-t-[0.5px] border-dashed" />
                 <div className="flex justify-between">
                   <p className="text-xs sm:text-sm font-semibold">Total</p>
-                  <p className="text-xs sm:text-sm font-semibold">₦{total.toLocaleString()}</p>
+                  <p className="text-xs sm:text-sm font-semibold">{formatCurrency(total.toLocaleString())}</p>
                 </div>
               </div>
               <div className="flex my-4 sm:my-5 flex-col sm:flex-row justify-between gap-2">
@@ -560,11 +563,11 @@ const Orders = () => {
                     items={createdOrder.items.map((item: any) => ({
                       name: menuItems.find((i: MenuItem) => i.id === item.menuItemId)?.name || "Unknown",
                       qty: item.quantity.toString(),
-                      price: `₦${(menuItems.find((i: MenuItem) => i.id === item.menuItemId)?.price * item.quantity).toLocaleString()}`,
+                      price: formatCurrency((menuItems.find((i: MenuItem) => i.id === item.menuItemId)?.price * item.quantity).toLocaleString()),
                     }))}
-                    subtotal={`₦${createdOrder.subtotal.toLocaleString()}`}
-                    discountAmount={createdOrder.discountAmount ? `₦${createdOrder.discountAmount.toLocaleString()}` : undefined}
-                    total={`₦${createdOrder.total.toLocaleString()}`}
+                    subtotal={formatCurrency(createdOrder.subtotal.toLocaleString())}
+                    discountAmount={createdOrder.discountAmount ? formatCurrency(createdOrder.discountAmount.toLocaleString()) : undefined}
+                    total={formatCurrency(createdOrder.total.toLocaleString())}
                     status={createdOrder.status}
                     subdomain={subdomain}
                     id={createdOrder.id}
@@ -596,24 +599,24 @@ const Orders = () => {
                     className="flex justify-between text-[10px] sm:text-sm text-gray-700"
                   >
                     <span className="truncate max-w-[150px] sm:max-w-[200px]">{item.name} (x{item.quantity})</span>
-                    <span>₦{item.subtotal.toLocaleString()}</span>
+                    <span>{formatCurrency(item.subtotal.toLocaleString())}</span>
                   </li>
                 ))}
               </ul>
               <div className="border-t border-gray-200 pt-2">
                 <div className="flex justify-between text-[10px] sm:text-sm text-gray-700">
                   <span>Subtotal</span>
-                  <span>₦{receipt.subtotal.toLocaleString()}</span>
+                  <span>{formatCurrency(receipt.subtotal.toLocaleString())}</span>
                 </div>
                 {receipt.discountPercentage > 0 && (
                   <div className="flex justify-between text-[10px] sm:text-sm text-gray-700 mt-1">
                     <span>Discount ({receipt.discountPercentage}%)</span>
-                    <span>₦{receipt.discountAmount.toLocaleString()}</span>
+                    <span>{formatCurrency(receipt.discountAmount.toLocaleString())}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-[10px] sm:text-sm font-semibold text-gray-800 mt-1">
                   <span>Total</span>
-                  <span>₦{receipt.total.toLocaleString()}</span>
+                  <span>{formatCurrency(receipt.total.toLocaleString())}</span>
                 </div>
               </div>
               <Button

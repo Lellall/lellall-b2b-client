@@ -5,7 +5,7 @@ import Select from "react-select";
 import { useGetAllMenuItemsQuery } from '@/redux/api/menu/menu.api';
 import { useSelector } from 'react-redux';
 import { selectAuth } from '@/redux/api/auth/auth.slice';
-
+import { useCurrency } from "@/contexts/CurrencyContext";
 interface OrderItem {
   id: string;
   orderId: string;
@@ -48,8 +48,9 @@ const EditOrderItemsModal: React.FC<EditOrderItemsModalProps> = ({
   order,
 }) => {
   const { subdomain, user } = useSelector(selectAuth);
+  const { formatCurrency } = useCurrency();
   const { data: menuItems = [], isLoading: isMenuLoading, error: menuError } = useGetAllMenuItemsQuery({ subdomain });
-  
+
   // Check if user is a MANAGER (managers can only add items, not remove existing ones)
   const isManager = user?.role === 'MANAGER';
 
@@ -81,7 +82,7 @@ const EditOrderItemsModal: React.FC<EditOrderItemsModalProps> = ({
     const currentItem = items[index];
     const originalItem = order.orderItems.find((oi) => oi.id === currentItem.orderItemId);
     const originalQuantity = originalItem?.quantity || 1;
-    
+
     setItems((prev) =>
       prev.map((item, i) => {
         if (i === index) {
@@ -143,13 +144,13 @@ const EditOrderItemsModal: React.FC<EditOrderItemsModalProps> = ({
   // Managers can only remove newly added items (without orderItemId), not existing ones
   const handleRemoveItem = (index: number) => {
     const itemToRemove = items[index];
-    
+
     // If user is a MANAGER and trying to remove an existing item (has orderItemId), prevent it
     if (isManager && itemToRemove.orderItemId) {
       toast.warning('Managers can only add items. Cannot remove existing items from the order.', { position: 'top-right' });
       return;
     }
-    
+
     setItems((prev) => {
       const updatedItems = prev.filter((_, i) => i !== index);
       console.log('Removed item at index:', index, 'Updated items:', updatedItems);
@@ -220,7 +221,7 @@ const EditOrderItemsModal: React.FC<EditOrderItemsModalProps> = ({
             // Get original quantity for existing items (for managers)
             const originalItem = item.orderItemId ? order.orderItems.find((oi) => oi.id === item.orderItemId) : null;
             const minQuantity = isManager && item.orderItemId ? (originalItem?.quantity || 1) : 1;
-            
+
             return (
               <div key={item.orderItemId || `new-${index}`} className="border-b pb-4">
                 <div className="flex justify-between items-center">
@@ -283,7 +284,7 @@ const EditOrderItemsModal: React.FC<EditOrderItemsModalProps> = ({
                 onChange={(option) => handleNewMenuItemChange(option?.value || "")}
                 options={availableMenuItems.map((menuItem) => ({
                   value: menuItem.id,
-                  label: `${menuItem.name} (₦${menuItem.price.toLocaleString()})`
+                  label: `${menuItem.name} (${formatCurrency(menuItem.price)})`
                 }))}
                 isDisabled={isLoading}
                 placeholder="Select an item"
@@ -335,8 +336,8 @@ const EditOrderItemsModal: React.FC<EditOrderItemsModalProps> = ({
             onClick={handleSubmit}
             disabled={isLoading || !items.every((item) => item.quantity && item.quantity > 0)}
             className={`px-4 py-2 text-sm text-white rounded-md focus:outline-none ${isLoading || !items.every((item) => item.quantity && item.quantity > 0)
-                ? 'bg-gray-400'
-                : 'bg-[#05431E] hover:bg-[#04381A]'
+              ? 'bg-gray-400'
+              : 'bg-[#05431E] hover:bg-[#04381A]'
               }`}
           >
             {isLoading ? 'Saving...' : 'Save'}

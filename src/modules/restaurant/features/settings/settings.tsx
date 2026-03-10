@@ -11,7 +11,8 @@ import { useGetServiceFeeConfigQuery, useUpdateServiceFeeConfigMutation, Service
 import { getSubdomainFromUrl } from "@/utils/config";
 import { toast } from "react-toastify";
 import BankDetailsManager from "./components/bank-details-manager";
-
+import { useGetRestaurantCurrencyQuery, useUpdateRestaurantCurrencyMutation } from "@/redux/api/restaurant/restaurant.api";
+import { useCurrency } from "@/contexts/CurrencyContext";
 const Settings = () => {
   const [theme, setTheme] = useState("light");
   const [activeSection, setActiveSection] = useState("profile");
@@ -54,6 +55,45 @@ const Settings = () => {
     skip: !subdomain,
   });
   const [updateServiceFeeConfig, { isLoading: serviceFeeUpdating }] = useUpdateServiceFeeConfigMutation();
+
+  // Currency config
+  const { data: currencyData, isLoading: currencyLoading } = useGetRestaurantCurrencyQuery(subdomain || "", {
+    skip: !subdomain,
+  });
+  const [updateCurrencyConfig, { isLoading: currencyUpdating }] = useUpdateRestaurantCurrencyMutation();
+
+  const [currencyConfig, setCurrencyConfig] = useState({
+    currencyCode: 'NGN',
+    currencySymbol: '₦',
+  });
+
+  useEffect(() => {
+    if (currencyData) {
+      setCurrencyConfig({
+        currencyCode: currencyData.currencyCode || 'NGN',
+        currencySymbol: currencyData.currencySymbol || '₦',
+      });
+    }
+  }, [currencyData]);
+
+  const handleCurrencySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (!subdomain) {
+        toast.error("Subdomain not found");
+        return;
+      }
+
+      await updateCurrencyConfig({
+        subdomain,
+        data: currencyConfig,
+      }).unwrap();
+
+      // We don't need to manually update Context, RTK Query invalidation handles it!
+    } catch (error) {
+      console.error("Currency update failed:", error);
+    }
+  };
 
   // Check if user has permission to access VAT and service fee settings
   const canAccessFinancialSettings = user?.role === "ADMIN" || user?.role === "MANAGER";
@@ -141,12 +181,12 @@ const Settings = () => {
         toast.error("Subdomain not found");
         return;
       }
-      
+
       await updateVatConfig({
         subdomain,
         data: vatConfig,
       }).unwrap();
-      
+
       toast.success("VAT configuration updated successfully!");
     } catch (error) {
       console.error("VAT update failed:", error);
@@ -170,7 +210,7 @@ const Settings = () => {
         toast.error("Subdomain not found");
         return;
       }
-      
+
       await updateServiceFeeConfig({
         subdomain,
         data: {
@@ -178,7 +218,7 @@ const Settings = () => {
           userId: user?.id || "",
         },
       }).unwrap();
-      
+
       toast.success("Service fee configuration updated successfully!");
     } catch (error) {
       console.error("Service fee update failed:", error);
@@ -205,17 +245,15 @@ const Settings = () => {
                 Theme
                 <div className="mt-2 flex items-center space-x-2 bg-gray-100 p-1 rounded-lg">
                   <button
-                    className={`flex-1 px-3 py-2 rounded-lg text-sm ${
-                      theme === "light" ? "bg-white shadow-md" : "text-gray-500"
-                    }`}
+                    className={`flex-1 px-3 py-2 rounded-lg text-sm ${theme === "light" ? "bg-white shadow-md" : "text-gray-500"
+                      }`}
                     onClick={() => setTheme("light")}
                   >
                     <Sun className="inline w-4 h-4 mr-1" /> Light
                   </button>
                   <button
-                    className={`flex-1 px-3 py-2 rounded-lg text-sm ${
-                      theme === "dark" ? "bg-white shadow-md" : "text-gray-500"
-                    }`}
+                    className={`flex-1 px-3 py-2 rounded-lg text-sm ${theme === "dark" ? "bg-white shadow-md" : "text-gray-500"
+                      }`}
                     onClick={() => setTheme("dark")}
                   >
                     <Moon className="inline w-4 h-4 mr-1" /> Dark
@@ -225,47 +263,54 @@ const Settings = () => {
 
               {/* Menu */}
               <div className="space-y-2">
-                <button 
-                  className={`flex items-center w-full px-4 py-3 rounded-lg text-sm ${
-                    activeSection === "profile" 
-                      ? "bg-gray-100 text-green-900 font-medium" 
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
+                <button
+                  className={`flex items-center w-full px-4 py-3 rounded-lg text-sm ${activeSection === "profile"
+                    ? "bg-gray-100 text-green-900 font-medium"
+                    : "text-gray-700 hover:bg-gray-100"
+                    }`}
                   onClick={() => setActiveSection("profile")}
                 >
                   <User className="w-5 h-5 mr-3" /> My Profile
                 </button>
                 {canAccessFinancialSettings && (
-                  <button 
-                    className={`flex items-center w-full px-4 py-3 rounded-lg text-sm ${
-                      activeSection === "vat" 
-                        ? "bg-gray-100 text-green-900 font-medium" 
-                        : "text-gray-700 hover:bg-gray-100"
-                    }`}
+                  <button
+                    className={`flex items-center w-full px-4 py-3 rounded-lg text-sm ${activeSection === "vat"
+                      ? "bg-gray-100 text-green-900 font-medium"
+                      : "text-gray-700 hover:bg-gray-100"
+                      }`}
                     onClick={() => setActiveSection("vat")}
                   >
                     <SettingsIcon className="w-5 h-5 mr-3" /> VAT Settings
                   </button>
                 )}
                 {canAccessFinancialSettings && (
-                  <button 
-                    className={`flex items-center w-full px-4 py-3 rounded-lg text-sm ${
-                      activeSection === "service-fee" 
-                        ? "bg-gray-100 text-green-900 font-medium" 
-                        : "text-gray-700 hover:bg-gray-100"
-                    }`}
+                  <button
+                    className={`flex items-center w-full px-4 py-3 rounded-lg text-sm ${activeSection === "service-fee"
+                      ? "bg-gray-100 text-green-900 font-medium"
+                      : "text-gray-700 hover:bg-gray-100"
+                      }`}
                     onClick={() => setActiveSection("service-fee")}
                   >
                     <Wallet className="w-5 h-5 mr-3" /> Service Fee
                   </button>
                 )}
                 {canAccessFinancialSettings && (
-                  <button 
-                    className={`flex items-center w-full px-4 py-3 rounded-lg text-sm ${
-                      activeSection === "bank-details" 
-                        ? "bg-gray-100 text-green-900 font-medium" 
-                        : "text-gray-700 hover:bg-gray-100"
-                    }`}
+                  <button
+                    className={`flex items-center w-full px-4 py-3 rounded-lg text-sm ${activeSection === "currency"
+                      ? "bg-gray-100 text-green-900 font-medium"
+                      : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                    onClick={() => setActiveSection("currency")}
+                  >
+                    <Wallet className="w-5 h-5 mr-3" /> Currency
+                  </button>
+                )}
+                {canAccessFinancialSettings && (
+                  <button
+                    className={`flex items-center w-full px-4 py-3 rounded-lg text-sm ${activeSection === "bank-details"
+                      ? "bg-gray-100 text-green-900 font-medium"
+                      : "text-gray-700 hover:bg-gray-100"
+                      }`}
                     onClick={() => setActiveSection("bank-details")}
                   >
                     <Building2 className="w-5 h-5 mr-3" /> Bank Details
@@ -533,6 +578,85 @@ const Settings = () => {
                       className="px-4 py-2 sm:px-6 sm:py-3 bg-green-800 text-white rounded-lg hover:bg-green-900 transition-colors text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {serviceFeeUpdating ? "Saving..." : "Save Service Fee Settings"}
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
+
+            {activeSection === "currency" && (
+              <>
+                <div className="text-xl sm:text-2xl p-2 text-green-800 font-semibold">
+                  Currency Configuration
+                </div>
+                <div className="text-sm text-gray-600 mb-6">
+                  Set the default currency format and symbol for your restaurant
+                </div>
+
+                <form onSubmit={handleCurrencySubmit}>
+                  <div className="space-y-6">
+                    <div className="p-4 border border-gray-200 rounded-lg">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Currency Code (e.g., NGN, USD, GBP, EUR)
+                      </label>
+                      <select
+                        value={currencyConfig.currencyCode}
+                        onChange={(e) => {
+                          const code = e.target.value;
+                          let symbol = '₦';
+                          if (code === 'USD') symbol = '$';
+                          if (code === 'GBP') symbol = '£';
+                          if (code === 'EUR') symbol = '€';
+                          if (code === 'GHS') symbol = 'GH₵';
+                          if (code === 'KES') symbol = 'KSh';
+                          if (code === 'NGN') symbol = '₦';
+
+                          setCurrencyConfig(prev => ({
+                            ...prev,
+                            currencyCode: code,
+                            currencySymbol: symbol
+                          }));
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+                      >
+                        <option value="NGN">NGN - Nigerian Naira</option>
+                        <option value="USD">USD - US Dollar</option>
+                        <option value="GBP">GBP - British Pound</option>
+                        <option value="EUR">EUR - Euro</option>
+                        <option value="GHS">GHS - Ghanaian Cedi</option>
+                        <option value="KES">KES - Kenyan Shilling</option>
+                      </select>
+
+                      <label className="block text-sm font-medium text-gray-700 mt-4 mb-2">
+                        Currency Symbol
+                      </label>
+                      <input
+                        type="text"
+                        value={currencyConfig.currencySymbol}
+                        onChange={(e) => setCurrencyConfig(prev => ({ ...prev, currencySymbol: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="e.g., ₦, $, £"
+                      />
+                    </div>
+
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Preview</h4>
+                      <div className="text-sm text-gray-600">
+                        <p>Format Example: <span className="font-medium">{
+                          new Intl.NumberFormat(undefined, { style: "currency", currency: currencyConfig.currencyCode || 'NGN' }).format(1250.50).replace(/^[A-Z]{3}/, currencyConfig.currencySymbol) ||
+                          `${currencyConfig.currencySymbol}1,250.50`
+                        }</span></p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={currencyUpdating || currencyLoading}
+                      className="px-4 py-2 sm:px-6 sm:py-3 bg-green-800 text-white rounded-lg hover:bg-green-900 transition-colors text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {currencyUpdating ? "Saving..." : "Save Currency Settings"}
                     </button>
                   </div>
                 </form>

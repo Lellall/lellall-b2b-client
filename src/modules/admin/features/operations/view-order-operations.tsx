@@ -4,7 +4,8 @@ import OrderCard from './components/card.component';
 import ListCard, { Item } from '@/components/ui/list-group';
 import Breadcrumb from '@/components/ui/breadcrumb';
 import { useGetSupplyRequestByIdQuery, useGenerateInvoiceMutation } from '@/redux/api/inventory/inventory.api';
-import { moneyFormatter } from '@/utils/moneyFormatter';
+import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 
 interface Item {
@@ -86,10 +87,10 @@ const Modal: React.FC<{
                       <td className="px-4 py-3 text-gray-700">{item.name}</td>
                       <td className="px-4 py-3 text-right text-gray-700">{item.rawQuantity}</td>
                       <td className="px-4 py-3 text-right text-gray-700">
-                        ₦{item.unitPrice ? item.unitPrice.toLocaleString() : 'N/A'}
+                        {formatCurrency(item.unitPrice ? item.unitPrice.toLocaleString() : 'N/A')}
                       </td>
                       <td className="px-4 py-3 text-right text-gray-700">
-                        ₦{item.rawQuantity && item.unitPrice ? (item.rawQuantity * item.unitPrice).toLocaleString() : 'N/A'}
+                        {formatCurrency(item.rawQuantity && item.unitPrice ? (item.rawQuantity * item.unitPrice).toLocaleString() : 'N/A')}
                       </td>
                     </tr>
                   ))}
@@ -146,6 +147,7 @@ const Modal: React.FC<{
 };
 
 const ViewOrderOperations = () => {
+  const { formatCurrency } = useCurrency();
   const { date, id } = useParams<{ date: string; id: string }>();
   const userId = '9c228302-4eed-46f3-853a-9a13cfa24d14';
   const subdomain = 'yax';
@@ -165,7 +167,7 @@ const ViewOrderOperations = () => {
     if (data && data.items && Array.isArray(data.items)) {
       const productItems = data.items.map((item) => ({
         name: item.productName,
-        quantity: `${moneyFormatter(item.quantity * item.unitPrice)}`,
+        quantity: `${formatCurrency(item.quantity * item.unitPrice)}`,
         rawQuantity: item.quantity, // Store raw quantity for invoice
         unitPrice: item.unitPrice, // Store unit price for invoice
       }));

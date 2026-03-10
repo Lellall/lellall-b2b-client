@@ -1,5 +1,7 @@
 import { useRef, forwardRef, useImperativeHandle } from 'react';
 import { useReactToPrint } from 'react-to-print';
+import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 interface BankDetail {
   id: string;
@@ -211,8 +213,8 @@ const CombinedReceipt = forwardRef<CombinedReceiptHandle, CombinedReceiptProps>(
                   <tr key={`${item.id}-${index}`} className="border-b border-gray-200">
                     <td className="p-1 truncate">{item.menuItem.name}</td>
                     <td className="p-1">{item.quantity}</td>
-                    <td className="p-1">₦{item.menuItem.price.toFixed(2)}</td>
-                    <td className="p-1">₦{(item.quantity * item.menuItem.price).toFixed(2)}</td>
+                    <td className="p-1">{formatCurrency(item.menuItem.price.toFixed(2))}</td>
+                    <td className="p-1">{formatCurrency((item.quantity * item.menuItem.price).toFixed(2))}</td>
                   </tr>
                 ))}
               </tbody>
@@ -220,21 +222,21 @@ const CombinedReceipt = forwardRef<CombinedReceiptHandle, CombinedReceiptProps>(
             <hr className="border-gray-300 my-1" />
             <div className="text-left">
               <p>
-                <span className="font-semibold">Subtotal:</span> ₦{combinedSubtotal.toFixed(2)}
+                <span className="font-semibold">Subtotal:</span> {formatCurrency(combinedSubtotal.toFixed(2))}
               </p>
               <p>
-                <span className="font-semibold">Discount ({combinedDiscountPercentage.toFixed(1)}%):</span> ₦{combinedDiscountAmount.toFixed(2)}
+                <span className="font-semibold">Discount ({combinedDiscountPercentage.toFixed(1)}%):</span> {formatCurrency(combinedDiscountAmount.toFixed(2))}
               </p>
               <p>
-                <span className="font-semibold">VAT:</span> ₦{combinedVatTax.toFixed(2)}
+                <span className="font-semibold">VAT:</span> {formatCurrency(combinedVatTax.toFixed(2))}
               </p>
               {subdomain !== "355" && (
                 <p>
-                  <span className="font-semibold">Service Fee:</span> ₦{combinedServiceFee.toFixed(2)}
+                  <span className="font-semibold">Service Fee:</span> {formatCurrency(combinedServiceFee.toFixed(2))}
                 </p>
               )}
               <p className="font-semibold">
-                <span className="font-semibold">Total:</span> ₦{combinedTotal.toFixed(2)}
+                <span className="font-semibold">Total:</span> {formatCurrency(combinedTotal.toFixed(2))}
               </p>
               {subdomain === "355" ? (
                 <div className="text-right" style={{ marginTop: '-10px' }}>

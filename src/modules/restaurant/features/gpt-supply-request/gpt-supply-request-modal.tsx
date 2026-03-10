@@ -7,6 +7,7 @@ import ReviewStep from './review-step';
 import VendorStep from './vendor-step';
 import { TypeAnimation } from 'react-type-animation';
 import { CloseCircle, Edit, Eye, Send } from 'iconsax-react';
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface SupplyRequestModalProps {
     isOpen: boolean;
@@ -23,6 +24,7 @@ const SupplyRequestModal: React.FC<SupplyRequestModalProps> = ({
     restaurantId,
     userId,
 }) => {
+    const { currencySymbol } = useCurrency();
     const [step, setStep] = useState(1);
     const [prompt, setPrompt] = useState('');
     const [response, setResponse] = useState<CreateSupplyRequestResponse | null>(null);
@@ -82,7 +84,7 @@ const SupplyRequestModal: React.FC<SupplyRequestModalProps> = ({
                                 <TypeAnimation
                                     sequence={[
                                         5000, // Wait for title and subtitle to finish
-                                        'Just tell me your supply needs (e.g., "50 kg of rice at N6500, can be used 50 times before it finishes"), and I’ll get the process started for you!',
+                                        `Just tell me your supply needs (e.g., "50 kg of rice at ${currencySymbol}6500, can be used 50 times before it finishes"), and I’ll get the process started for you!`,
                                         1000,
                                     ]}
                                     wrapper="p"

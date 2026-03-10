@@ -10,9 +10,12 @@ import InfoCard from "../shops/components/info-card";
 import users from '@/assets/users.svg';
 import confirmed from '@/assets/confirmed.svg';
 import failed from '@/assets/failed.svg';
+import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 
 const Reports = () => {
+  const { formatCurrency } = useCurrency();
     const tabs: Tab[] = [
         { name: "Reservations Reports", active: true },
         { name: "Revenue Reports", active: false },
@@ -34,10 +37,10 @@ const Reports = () => {
     ];
 
     const data = [
-        { reservationId: "#12354564", customerName: "Watson Joyce", phoneNumber: "+1 (123) 123 4654", reservationDate: "28.03.2024", checkIn: "03:18 PM", checkOut: "05:00 PM", total: "₦250.00" },
-        { reservationId: "#335545d64", customerName: "Karen Boyd", phoneNumber: "+1 (123) 123 4654", reservationDate: "28.03.2024", checkIn: "03:18 PM", checkOut: "05:00 PM", total: "₦250.00" },
-        { reservationId: "#445545d64", customerName: "Zayyad Baba", phoneNumber: "+1 (123) 123 4654", reservationDate: "28.03.2024", checkIn: "03:18 PM", checkOut: "05:00 PM", total: "₦250.00" },
-        { reservationId: "#785545d64", customerName: "Dr Umar Isa", phoneNumber: "+1 (123) 123 4654", reservationDate: "28.03.2024", checkIn: "03:18 PM", checkOut: "05:00 PM", total: "₦250.00" },
+        { reservationId: "#12354564", customerName: "Watson Joyce", phoneNumber: "+1 (123) 123 4654", reservationDate: "28.03.2024", checkIn: "03:18 PM", checkOut: "05:00 PM", total: formatCurrency(250.00) },
+        { reservationId: "#335545d64", customerName: "Karen Boyd", phoneNumber: "+1 (123) 123 4654", reservationDate: "28.03.2024", checkIn: "03:18 PM", checkOut: "05:00 PM", total: formatCurrency(250.00) },
+        { reservationId: "#445545d64", customerName: "Zayyad Baba", phoneNumber: "+1 (123) 123 4654", reservationDate: "28.03.2024", checkIn: "03:18 PM", checkOut: "05:00 PM", total: formatCurrency(250.00) },
+        { reservationId: "#785545d64", customerName: "Dr Umar Isa", phoneNumber: "+1 (123) 123 4654", reservationDate: "28.03.2024", checkIn: "03:18 PM", checkOut: "05:00 PM", total: formatCurrency(250.00) },
     ];
 
     const handleDateChange = (range: { startDate: Date; endDate: Date }) => {

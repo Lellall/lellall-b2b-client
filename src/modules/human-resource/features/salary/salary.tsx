@@ -20,9 +20,12 @@ import {
 import { useGetAllEmployeesQuery } from '@/redux/api/payroll/payroll.api';
 import { ColorRing } from 'react-loader-spinner';
 import { toast } from 'react-toastify';
+import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 const SalaryManagement: React.FC = () => {
   const { subdomain } = useSelector(selectAuth);
+  const { formatCurrency, currencySymbol } = useCurrency();
   const { canCreate, canUpdate, canDelete } = usePermissions();
   const [searchTerm, setSearchTerm] = useState('');
   const [monthFilter, setMonthFilter] = useState<number>(new Date().getMonth() + 1);
@@ -99,7 +102,7 @@ const SalaryManagement: React.FC = () => {
   // Filter salaries by search term
   const filteredSalaries = useMemo(() => {
     if (!searchTerm) return salaries;
-    
+
     return salaries.filter((salary) => {
       const name = `${salary.user.firstName} ${salary.user.lastName}`.toLowerCase();
       const employeeId = salary.user.employeeId?.toLowerCase() || '';
@@ -126,8 +129,8 @@ const SalaryManagement: React.FC = () => {
     };
   }, [filteredSalaries]);
 
-  const formatCurrency = (amount: number) => {
-    return `₦${amount.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const formatCurrencyLocal = (amount: number) => {
+    return formatCurrency(amount);
   };
 
   const handleCreateSalary = async () => {
@@ -270,7 +273,7 @@ const SalaryManagement: React.FC = () => {
         <div className="bg-white rounded-lg p-6">
           <div className="flex items-center justify-between mb-2">
             <div className="text-sm text-gray-500">Total Base Salary</div>
-            <span className="text-lg">₦</span>
+            <span className="text-lg">{currencySymbol}</span>
           </div>
           <div className="text-2xl font-semibold text-gray-900">{formatCurrency(summary.totalBaseSalary)}</div>
         </div>
@@ -284,7 +287,7 @@ const SalaryManagement: React.FC = () => {
         <div className="bg-white rounded-lg p-6">
           <div className="flex items-center justify-between mb-2">
             <div className="text-sm text-gray-500">Total Net Salary</div>
-            <span className="text-lg text-[#05431E]">₦</span>
+            <span className="text-lg text-[#05431E]">{currencySymbol}</span>
           </div>
           <div className="text-2xl font-semibold text-[#05431E]">{formatCurrency(summary.totalNetSalary)}</div>
         </div>
@@ -474,7 +477,7 @@ const SalaryManagement: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Create Salary</h2>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Employee *</label>
@@ -554,7 +557,7 @@ const SalaryManagement: React.FC = () => {
             <p className="text-sm text-gray-600 mb-4">
               For: {selectedSalary.user.firstName} {selectedSalary.user.lastName}
             </p>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Type *</label>
@@ -634,7 +637,7 @@ const SalaryManagement: React.FC = () => {
             <p className="text-sm text-gray-600 mb-4">
               For: {selectedSalary.user.firstName} {selectedSalary.user.lastName}
             </p>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Base Salary *</label>

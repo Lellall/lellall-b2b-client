@@ -12,6 +12,8 @@ import { useSelector } from 'react-redux';
 import { selectAuth } from '@/redux/api/auth/auth.slice';
 import { ColorRing } from 'react-loader-spinner';
 import { theme } from '@/theme/theme';
+import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 
 const localizer = momentLocalizer(moment);
@@ -793,7 +795,7 @@ export default function StyledCalendar() {
                                         <EventDetailsLabel>Contact:</EventDetailsLabel>
                                         <span>{selectedEvent.customerEmail || 'N/A'} | {selectedEvent.customerPhone || 'N/A'}</span>
                                         <EventDetailsLabel>Deposit:</EventDetailsLabel>
-                                        <span>₦{selectedEvent.deposit || 0}</span>
+                                        <span>{formatCurrency(selectedEvent.deposit || 0)}</span>
                                         <EventDetailsLabel>Payment:</EventDetailsLabel>
                                         <span>{selectedEvent.paymentType}</span>
                                         <EventDetailsLabel>Menu Items:</EventDetailsLabel>
@@ -969,7 +971,7 @@ export default function StyledCalendar() {
                                                 </FormGroup>
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                                                     <FormGroup>
-                                                        <Label>Deposit (₦)</Label>
+                                                        <Label>Deposit ({currencySymbol})</Label>
                                                         <Input
                                                             name="deposit"
                                                             type="number"
@@ -1053,7 +1055,7 @@ export default function StyledCalendar() {
                                                     </ReviewItem>
                                                     <ReviewItem>
                                                         <span>Deposit</span>
-                                                        <span className="font-weight-400">₦{formData.deposit}</span>
+                                                        <span className="font-weight-400">{formatCurrency(formData.deposit)}</span>
                                                     </ReviewItem>
                                                     <ReviewItem>
                                                         <span>Payment</span>
@@ -1084,7 +1086,7 @@ export default function StyledCalendar() {
                                                                     selected={formData.orderItems?.some(i => i.menuItemId === item.id) || false}
                                                                     onClick={() => handleMenuItemToggle(item)}
                                                                 >
-                                                                    <span>{item.name} (₦{item.price})</span>
+                                                                    <span>{item.name} ({formatCurrency(item.price)})</span>
                                                                     {formData.orderItems?.some(i => i.menuItemId === item.id) && (
                                                                         <Input
                                                                             type="number"
@@ -1103,7 +1105,7 @@ export default function StyledCalendar() {
                                                                 <p className="text-10px sm:text-11px font-medium mb-1 sm:mb-2">Selected:</p>
                                                                 {formData.orderItems.map(item => (
                                                                     <div key={item.menuItemId} className="flex justify-between items-center py-0.5 sm:py-1">
-                                                                        <span className="text-11px sm:text-12px font-weight-300">{item.name} - ₦{item.price} x {item.quantity}</span>
+                                                                        <span className="text-11px sm:text-12px font-weight-300">{item.name} - {formatCurrency(item.price)} x {item.quantity}</span>
                                                                         <button
                                                                             onClick={() => handleMenuItemToggle(item)}
                                                                             className="text-red-500 hover:text-red-600"
