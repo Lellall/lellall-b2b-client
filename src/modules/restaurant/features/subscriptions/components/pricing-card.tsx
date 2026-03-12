@@ -161,6 +161,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
     onChoose,
     isPaymentLoading,
 }) => {
+    const { formatCurrency } = useCurrency();
     return (
         <CardContainer background={background} color={color} isCurrent={isCurrent} isRecommended={isRecommended} className="p-6 rounded-lg">
             {isCurrent && <CurrentBadge>Current Plan</CurrentBadge>}
