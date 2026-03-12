@@ -54,6 +54,7 @@ export interface CombinedReceiptHandle {
 
 const CombinedReceipt = forwardRef<CombinedReceiptHandle, CombinedReceiptProps>(
   ({ orders, bankDetails, subdomain, onClose }, ref) => {
+    const { formatCurrency } = useCurrency();
     const componentRef = useRef<HTMLDivElement>(null);
     const reactToPrintFn = useReactToPrint({ contentRef: componentRef });
 
