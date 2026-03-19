@@ -58,7 +58,7 @@ const Settings = () => {
 
   // Currency config
   const { data: currencyData, isLoading: currencyLoading } = useGetRestaurantCurrencyQuery(subdomain || "", {
-    skip: !subdomain,
+    skip: !isAuthenticated || !subdomain,
   });
   const [updateCurrencyConfig, { isLoading: currencyUpdating }] = useUpdateRestaurantCurrencyMutation();
 

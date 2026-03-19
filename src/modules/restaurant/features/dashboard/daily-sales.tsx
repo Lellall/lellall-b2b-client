@@ -54,12 +54,26 @@ const datePickerStyles = `
 const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => {
   const componentRef = useRef<HTMLDivElement>(null);
   const [bgColor, setBgColor] = useState('#ffffff'); // Default white background
-  const [selectedStartDate, setSelectedStartDate] = useState<Date>(new Date());
-  const [selectedEndDate, setSelectedEndDate] = useState<Date | null>(null);
-  const [inputStartTime, setInputStartTime] = useState<string>('');
-  const [inputEndTime, setInputEndTime] = useState<string>('');
-  const [queryStartTime, setQueryStartTime] = useState<string | undefined>(undefined);
-  const [queryEndTime, setQueryEndTime] = useState<string | undefined>(undefined);
+  const [selectedStartDate, setSelectedStartDate] = useState<Date>(() => {
+    if (subdomain === "burger-hub") {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      return yesterday;
+    }
+    return new Date();
+  });
+  const [selectedEndDate, setSelectedEndDate] = useState<Date | null>(() => {
+    if (subdomain === "burger-hub") {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return tomorrow;
+    }
+    return null;
+  });
+  const [inputStartTime, setInputStartTime] = useState<string>(subdomain === "burger-hub" ? "09:00" : "");
+  const [inputEndTime, setInputEndTime] = useState<string>(subdomain === "burger-hub" ? "06:00" : "");
+  const [queryStartTime, setQueryStartTime] = useState<string | undefined>(subdomain === "burger-hub" ? "09:00" : undefined);
+  const [queryEndTime, setQueryEndTime] = useState<string | undefined>(subdomain === "burger-hub" ? "06:00" : undefined);
   const { formatCurrency, currencySymbol } = useCurrency();
   const reactToPrintFn = useReactToPrint({ contentRef: componentRef });
 
@@ -425,56 +439,83 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
                   popperClassName="z-50"
                 />
               </div>
-              {/* <div className="flex items-center gap-2">
-                <label className="text-sm font-semibold text-gray-700">End Date:</label>
-                <DatePicker
-                  selected={selectedEndDate}
-                  onChange={(date: Date | null) => {
-                    if (!date || isNaN(date.getTime())) {
-                      setSelectedEndDate(null);
-                      toast.info('End date cleared', { position: 'top-right' });
-                      return;
-                    }
-                    if (date < selectedStartDate) {
-                      toast.error('End date cannot be before start date', { position: 'top-right' });
-                      return;
-                    }
-                    setSelectedEndDate(date);
-                  }}
-                  dateFormat="yyyy-MM-dd"
-                  placeholderText="Optional"
-                  className="p-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0E5D37] bg-white transition-colors w-40"
-                  wrapperClassName="w-40"
-                  popperClassName="z-50"
-                  isClearable
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-semibold text-gray-700">Start Time:</label>
-                <input
-                  type="text"
-                  value={inputStartTime}
-                  onChange={(e) => setInputStartTime(e.target.value)}
-                  placeholder="HH:mm"
-                  className="p-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0E5D37] bg-white transition-colors w-20"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-semibold text-gray-700">End Time:</label>
-                <input
-                  type="text"
-                  value={inputEndTime}
-                  onChange={(e) => setInputEndTime(e.target.value)}
-                  placeholder="HH:mm"
-                  className="p-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0E5D37] bg-white transition-colors w-20"
-                />
-              </div>
-              <button
-                onClick={handleApplyTimeRange}
-                className="bg-[#0E5D37] text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#0A4B2A] transition-colors"
-              >
-                Apply Time
-              </button> */}
+
+              {subdomain === 'burger-hub' && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-semibold text-gray-700">End Date:</label>
+                    <DatePicker
+                      selected={selectedEndDate}
+                      onChange={(date: Date | null) => {
+                        if (!date || isNaN(date.getTime())) {
+                          setSelectedEndDate(null);
+                          toast.info('End date cleared', { position: 'top-right' });
+                          return;
+                        }
+                        if (date < selectedStartDate) {
+                          toast.error('End date cannot be before start date', { position: 'top-right' });
+                          return;
+                        }
+                        setSelectedEndDate(date);
+                      }}
+                      dateFormat="yyyy-MM-dd"
+                      placeholderText="Optional"
+                      className="p-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0E5D37] bg-white transition-colors w-40"
+                      wrapperClassName="w-40"
+                      popperClassName="z-50"
+                      isClearable
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-semibold text-gray-700">Start Time:</label>
+                    <input
+                      type="text"
+                      value={inputStartTime}
+                      onChange={(e) => setInputStartTime(e.target.value)}
+                      placeholder="HH:mm"
+                      className="p-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0E5D37] bg-white transition-colors w-20"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-semibold text-gray-700">End Time:</label>
+                    <input
+                      type="text"
+                      value={inputEndTime}
+                      onChange={(e) => setInputEndTime(e.target.value)}
+                      placeholder="HH:mm"
+                      className="p-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0E5D37] bg-white transition-colors w-20"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleApplyTimeRange}
+                      className="bg-[#0E5D37] text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#0A4B2A] transition-colors"
+                    >
+                      Apply Time
+                    </button>
+                    <button
+                      onClick={() => {
+                        const yesterday = new Date();
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        const tomorrow = new Date();
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+
+                        setSelectedStartDate(yesterday);
+                        setSelectedEndDate(tomorrow);
+                        setInputStartTime('09:00');
+                        setInputEndTime('06:00');
+ 
+                        setQueryStartTime('09:00');
+                        setQueryEndTime('06:00');
+                        toast.success('Shift Report (Prev 9AM - Next Day 6AM) applied');
+                      }}
+                      className="bg-white border border-[#0E5D37] text-[#0E5D37] text-sm font-semibold px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      Shift Report
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -649,22 +690,22 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
                       <div>
                         <p className="text-sm text-gray-600">Total Revenue{vatEnabled ? ' (excl. VAT)' : ''}</p>
                         <p className="text-lg font-bold text-[#0E5D37]">
-                          {vatEnabled ? formatCurrency(adjustedRevenue) : (soldItemsData?.totalRevenue ? formatCurrency(Number(soldItemsData.totalRevenue) || 0) : formatCurrency(0))}
+                          {vatEnabled ? formatCurrency(adjustedRevenue) : (soldItemsData?.totalRevenue ? formatCurrency(parseAmount(soldItemsData.totalRevenue)) : formatCurrency(0))}
                         </p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-600">Discounts({currencySymbol})</p>
-                        <p className="text-lg font-bold text-[#0E5D37]">{soldItemsData?.totalDiscountAmount ? formatCurrency(Number(soldItemsData.totalDiscountAmount) || 0) : formatCurrency(0)}</p>
+                        <p className="text-lg font-bold text-[#0E5D37]">{soldItemsData?.totalDiscountAmount ? formatCurrency(parseAmount(soldItemsData.totalDiscountAmount)) : formatCurrency(0)}</p>
                       </div>
                       {vatEnabled && (
                         <div>
                           <p className="text-sm text-gray-600">Total VAT Tax</p>
-                          <p className="text-lg font-bold text-[#0E5D37]">{soldItemsData?.totalVatTax ? formatCurrency(Number(soldItemsData.totalVatTax) || 0) : formatCurrency(0)}</p>
+                          <p className="text-lg font-bold text-[#0E5D37]">{soldItemsData?.totalVatTax ? formatCurrency(parseAmount(soldItemsData.totalVatTax)) : formatCurrency(0)}</p>
                         </div>
                       )}
                       <div>
                         <p className="text-sm text-gray-600">Total Service Fee</p>
-                        <p className="text-lg font-bold text-[#0E5D37]">{soldItemsData?.totalServiceFee ? formatCurrency(Number(soldItemsData.totalServiceFee) || 0) : formatCurrency(0)}</p>
+                        <p className="text-lg font-bold text-[#0E5D37]">{soldItemsData?.totalServiceFee ? formatCurrency(parseAmount(soldItemsData.totalServiceFee)) : formatCurrency(0)}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-600">Grand Total</p>

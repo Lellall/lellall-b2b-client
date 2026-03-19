@@ -242,11 +242,11 @@ export const orderApi = baseApi.injectEndpoints({
         const queryParams = new URLSearchParams();
         if (startTime) queryParams.set('startTime', startTime);
         if (endTime) queryParams.set('endTime', endTime);
-
-        const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-
+        // If endDate is provided, we use it as a query param if the path format doesn't work 
+        // but Swagger shows it as path. Let's keep it as path for daily-revenue.
+        
         return {
-          url: `/orders/${subdomain}/daily-revenue/${startDate}${endDate ? `/${endDate}` : ''}${queryString}`,
+          url: `/orders/${subdomain}/daily-revenue/${startDate}${endDate ? `/${endDate}` : ''}?${queryParams.toString()}`,
           method: "GET",
           credentials: "include",
         };
@@ -276,12 +276,13 @@ export const orderApi = baseApi.injectEndpoints({
         }
 
         const queryParams = new URLSearchParams();
+        if (endDate) queryParams.set('endDate', endDate);
         if (startTime) queryParams.set('startTime', startTime);
         if (endTime) queryParams.set('endTime', endTime);
         queryParams.set('format', 'json');
 
         return {
-          url: `/orders/${subdomain}/daily-sold-items/${startDate}${endDate ? `/${endDate}` : ''}?${queryParams.toString()}`,
+          url: `/orders/${subdomain}/daily-sold-items/${startDate}?${queryParams.toString()}`,
           method: 'GET',
           credentials: 'include',
         };
@@ -307,11 +308,12 @@ export const orderApi = baseApi.injectEndpoints({
 
         const queryParams = new URLSearchParams();
         queryParams.set('format', 'csv');
+        if (endDate) queryParams.set('endDate', endDate);
         if (startTime) queryParams.set('startTime', startTime);
         if (endTime) queryParams.set('endTime', endTime);
 
         return {
-          url: `/orders/${subdomain}/daily-sold-items/${startDate}${endDate ? `/${endDate}` : ''}?${queryParams.toString()}`,
+          url: `/orders/${subdomain}/daily-sold-items/${startDate}?${queryParams.toString()}`,
           method: 'GET',
           credentials: 'include',
           responseHandler: (response) => response.text(),
