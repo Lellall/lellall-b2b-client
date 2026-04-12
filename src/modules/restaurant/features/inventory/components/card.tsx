@@ -343,7 +343,9 @@ const CardItem: React.FC<CardItemProps> = ({
           >
             <option value="PENDING">Pending</option>
             <option value="PREPARING">In Process</option>
-            <option value="SERVED">Completed</option>
+            {!(user?.role === 'WAITER' && subdomain !== 'burger-hub') && (
+              <option value="SERVED">Completed</option>
+            )}
             <option value="CREDIT">Credit/Unpaid</option>
             <option value="CANCELLED">Cancelled</option>
           </select>

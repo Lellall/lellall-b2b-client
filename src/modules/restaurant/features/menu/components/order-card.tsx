@@ -62,6 +62,15 @@ const OrderCard = ({
     skip: !subdomain,
   });
 
+  const { user } = useSelector(selectAuth);
+
+  const allowedStatusOptions = statusOptions.filter((s) => {
+    if (user?.role === "WAITER" && subdomain !== "burger-hub") {
+      return s !== "SERVED";
+    }
+    return true;
+  });
+
   // Extract service fee rate from config
   const serviceFeeRate = serviceFeeConfig?.rate || 0;
 
@@ -101,7 +110,7 @@ const OrderCard = ({
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="bg-white border border-gray-200 rounded-xl shadow-xl mt-1 sm:mt-2">
-            {statusOptions.map((status) => (
+            {allowedStatusOptions.map((status) => (
               <SelectItem
                 key={status}
                 value={status}

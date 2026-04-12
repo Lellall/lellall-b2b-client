@@ -119,6 +119,16 @@ export const orderApi = baseApi.injectEndpoints({
         url: `/orders/${subdomain}/${orderId}/receipt/pdf`,
       }),
     }),
+    fetchReceiptHtml: builder.query<string, { subdomain: string; orderId: string }>({
+      queryFn: async ({ subdomain, orderId }, _api, _extra, baseQuery) => {
+        const result = await baseQuery({
+          url: `/orders/${subdomain}/${orderId}/receipt/print`,
+          responseHandler: (response) => response.text(), // get raw HTML, not JSON
+        });
+        if (result.error) return { error: result.error };
+        return { data: result.data as string };
+      },
+    }),
     getSalesStats: builder.query({
       query: (subdomain: string) => ({
         url: `/orders/${subdomain}/stats/sales`,
@@ -482,6 +492,7 @@ export const {
   useCreateOrdersMutation,
   useUpdateOrdersMutation,
   useGetReceiptTextMutationMutation,
+  useLazyFetchReceiptHtmlQuery,
   useGetSalesStatsQuery,
   useGetMonthlyRevenueBreakdownQuery,
   useGetMonthlyExpensesQuery,

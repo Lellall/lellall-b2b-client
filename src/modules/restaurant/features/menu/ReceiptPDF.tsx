@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { Receipt as Btn } from 'iconsax-react';
+import { useLazyFetchReceiptHtmlQuery } from '@/redux/api/order/order.api';
 
 interface BankDetail {
   id: string;
@@ -46,6 +47,39 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain, orderId }:
   orderId?: string;
 }) => {
   const componentRef = useRef<HTMLDivElement>(null);
+  const [fetchReceiptHtml] = useLazyFetchReceiptHtmlQuery();
+
+  const handlePrint = async () => {
+    if (subdomain.toLowerCase() === 'satisfait' && orderId) {
+      try {
+        const htmlContent = await fetchReceiptHtml({ subdomain, orderId }).unwrap();
+        
+        // Use an invisible iframe for seamless printing without popup blockers
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+        
+        if (iframe.contentWindow) {
+          iframe.contentWindow.document.open();
+          iframe.contentWindow.document.write(htmlContent);
+          iframe.contentWindow.document.close();
+          
+          // Clean up the iframe after giving the browser time to print
+          setTimeout(() => {
+            if (iframe.parentNode) {
+              iframe.parentNode.removeChild(iframe);
+            }
+          }, 10000);
+        }
+      } catch (err) {
+        console.error("Failed to fetch receipt html:", err);
+        reactToPrintFn();
+      }
+    } else {
+      reactToPrintFn();
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('en-US', {
       dateStyle: 'medium',
@@ -65,7 +99,7 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain, orderId }:
         `}
       </style>
       <button
-        onClick={reactToPrintFn}
+        onClick={handlePrint}
         data-order-id={orderId}
         className="flex text-[10px] sm:text-xs text-[#05431E] hover:underline focus:outline-none"
       >
