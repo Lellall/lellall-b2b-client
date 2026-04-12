@@ -43,6 +43,7 @@ import Payroll from './modules/human-resource/features/payroll/payroll';
 import SalaryManagement from './modules/human-resource/features/salary/salary';
 import VendorInvoices from './modules/restaurant/features/vendor-invoices/vendor-invoices';
 import WhatsAppMessages from './modules/restaurant/features/whatsapp/whatsapp-messages';
+import { CurrencyProvider } from './contexts/CurrencyContext';
 
 const App = () => {
   const { isAuthenticated, user, refreshToken } = useSelector(selectAuth);
@@ -159,68 +160,70 @@ const App = () => {
   );
 
   return (
-    <Router>
-      <Suspense fallback={<div>loading....</div>}>
-        <Routes>
-          {!isAuthenticated ? (
-            <>
-              <Route
-                path="/*"
-                element={
-                  <AuthLayout>
-                    <Login subdomain={restaurant} />
-                  </AuthLayout>
-                }
-              />
-              <Route
-                path="/register"
-                element={
-                  <AuthLayout>
-                    <Registration />
-                  </AuthLayout>
-                }
-              />
-              <Route
-                path="/reset"
-                element={
-                  <AuthLayout>
-                    <ForgottenPassword />
-                  </AuthLayout>
-                }
-              />
-            </>
-          ) : (
-            <>
-              {isHumanResource && (
-                <Route element={<ProtectedRoute isAdminRoute={false} />}>
-                  <Route path="/" element={<Layout subdomainData={restaurant} />}>
-                    {hrRoutes}
+    <CurrencyProvider>
+      <Router>
+        <Suspense fallback={<div>loading....</div>}>
+          <Routes>
+            {!isAuthenticated ? (
+              <>
+                <Route
+                  path="/*"
+                  element={
+                    <AuthLayout>
+                      <Login subdomain={restaurant} />
+                    </AuthLayout>
+                  }
+                />
+                <Route
+                  path="/register"
+                  element={
+                    <AuthLayout>
+                      <Registration />
+                    </AuthLayout>
+                  }
+                />
+                <Route
+                  path="/reset"
+                  element={
+                    <AuthLayout>
+                      <ForgottenPassword />
+                    </AuthLayout>
+                  }
+                />
+              </>
+            ) : (
+              <>
+                {isHumanResource && (
+                  <Route element={<ProtectedRoute isAdminRoute={false} />}>
+                    <Route path="/" element={<Layout subdomainData={restaurant} />}>
+                      {hrRoutes}
+                    </Route>
                   </Route>
-                </Route>
-              )}
+                )}
 
-              {!isSuperAdmin && !isHumanResource && (
-                <Route element={<ProtectedRoute isAdminRoute={false} />}>
-                  <Route path="/" element={<Layout subdomainData={restaurant} />}>
-                    {restaurantRoutes}
+                {!isSuperAdmin && !isHumanResource && (
+                  <Route element={<ProtectedRoute isAdminRoute={false} />}>
+                    <Route path="/" element={<Layout subdomainData={restaurant} />}>
+                      {restaurantRoutes}
+                    </Route>
                   </Route>
-                </Route>
-              )}
+                )}
 
-              {isSuperAdmin && (
-                <Route element={<ProtectedRoute isAdminRoute={true} />}>
-                  <Route path="/" element={<AdminLayout subdomainData={restaurant} />}>
-                    {adminRoutes}
+                {isSuperAdmin && (
+                  <Route element={<ProtectedRoute isAdminRoute={true} />}>
+                    <Route path="/" element={<AdminLayout subdomainData={restaurant} />}>
+                      {adminRoutes}
+                    </Route>
                   </Route>
-                </Route>
-              )}
-              <Route path="*" element={<NotFound />} />
-            </>
-          )}
-        </Routes>
-      </Suspense>
-      <ToastContainer />
-    </Router>
+                )}
+                <Route path="*" element={<NotFound />} />
+              </>
+            )}
+          </Routes>
+        </Suspense>
+        <ToastContainer />
+      </Router>
+    </CurrencyProvider>
   );
 };
 

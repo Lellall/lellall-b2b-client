@@ -131,7 +131,7 @@ const Dashboard = () => {
   const { width } = useWindowSize();
   const navigate = useNavigate();
 
-  const { data: salesStats, isLoading: isSalesLoading } = useGetSalesStatsQuery(subdomain);
+  const { data: salesStats, isLoading: isSalesLoading } = useGetSalesStatsQuery(subdomain, { refetchOnMountOrArgChange: true });
   const { data: revenueData, isLoading: isRevenueLoading } = useGetMonthlyRevenueBreakdownQuery(subdomain);
   const { data: inventoryStats, isLoading: isInventoryLoading } = useGetInventoryStatsQuery(subdomain);
   const { data: reservationStats, isLoading: isReservationsLoading } = useGetReservationByStatsQuery(subdomain);

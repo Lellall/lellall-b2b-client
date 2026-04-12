@@ -20,8 +20,11 @@ import { toast } from 'react-toastify';
 import Orders from '../../menu/order';
 import MenuItemForm from '../../menu/components/add-items';
 import { CreateMenuForm } from '../../menu/components/create-menu';
+import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 const Kitchen = () => {
+  const { formatCurrency } = useCurrency();
   const { canCreate, canUpdate, canDelete } = usePermissions();
   const [counters, setCounters] = useState({});
   const [menuModal, setMenuModal] = useState(false);
@@ -383,7 +386,7 @@ const Kitchen = () => {
                       </div>
                       <div className="flex items-center justify-between">
                         <p className="text-lg font-medium text-white drop-shadow-md">
-                          ₦{item.price.toLocaleString()}
+                          {formatCurrency(item.price.toLocaleString())}
                         </p>
                         <span className="text-xs px-2 py-1 rounded-full bg-white bg-opacity-90 text-gray-800">
                           #{item.id.slice(0, 4)}

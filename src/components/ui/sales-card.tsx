@@ -1,6 +1,8 @@
 // src/components/ui/sales-card.tsx
 import React from 'react';
 import styled, { keyframes } from 'styled-components';
+import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 interface SalesCardProps {
   title: string;
@@ -99,14 +101,22 @@ const BarChart = styled.div`
   }
 `;
 
-const SalesCard: React.FC<SalesCardProps> = ({ title, amount, backgroundColor, currencySymbol = '₦' }) => {
+const SalesCard: React.FC<SalesCardProps> = ({ title, amount, backgroundColor, currencySymbol }) => {
+  const { currencySymbol: globalCurrencySymbol, formatCurrency } = useCurrency();
+  const displaySymbol = currencySymbol || globalCurrencySymbol;
   const barHeights = ['20px', '32px', '24px', '36px', '28px', '16px', '30px'];
+
+  // Strip any existing currency symbol/formatting from the API string and re-format
+  const rawNum = typeof amount === 'string'
+    ? parseFloat(amount.replace(/[^\d.-]/g, ''))
+    : Number(amount);
+  const formattedAmount = isNaN(rawNum) ? formatCurrency(0) : formatCurrency(rawNum);
 
   return (
     <CardContainer backgroundColor={backgroundColor}>
-      <CurrencyBadge>{currencySymbol}</CurrencyBadge>
+      <CurrencyBadge>{displaySymbol}</CurrencyBadge>
       <Title>{title}</Title>
-      <Amount>{amount}</Amount>
+      <Amount>{formattedAmount}</Amount>
       <BarChart>
         {barHeights.map((height, index) => (
           <div key={index} style={{ height }} />

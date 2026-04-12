@@ -7,6 +7,8 @@ import { toast } from 'react-toastify';
 import { ColorRing } from 'react-loader-spinner';
 import Papa from 'papaparse';
 import { useRequestSupplyMutation } from '@/redux/api/inventory/inventory.api';
+import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 // Define unit constants matching backend
 const CONTAINER_UNITS = [
@@ -20,6 +22,7 @@ const BASE_UNITS = [
 ];
 
 const Modal = ({ isOpen, onClose, children }) => {
+  const { formatCurrency, currencySymbol } = useCurrency();
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center z-50 transition-opacity duration-300">
@@ -52,6 +55,7 @@ type NewSupplyFormData = {
 
 const NewSupplyRequestWizard = ({ isModalOpen, setModalOpen }) => {
   const { subdomain } = useSelector(selectAuth);
+  const { formatCurrency, currencySymbol } = useCurrency();
   const [step, setStep] = useState(1);
   const [expandedItems, setExpandedItems] = useState<number[]>([]);
   const primaryColor = '#05431E';
@@ -154,7 +158,7 @@ const NewSupplyRequestWizard = ({ isModalOpen, setModalOpen }) => {
 
               // Map productName from various possible column names
               const productName = getValue(['productName', 'product_name', 'Product Name', 'name', 'itemName']);
-              
+
               // Map quantity - try quantity first, then use closingStock or openingStock as fallback
               const quantityStr = getValue(['quantity', 'Quantity', 'qty']);
               let quantity = parseInt(quantityStr, 10);
@@ -171,8 +175,8 @@ const NewSupplyRequestWizard = ({ isModalOpen, setModalOpen }) => {
 
               // Map unitOfMeasurement
               const unitOfMeasurementStr = getValue(['unitOfMeasurement', 'unit_of_measurement', 'Unit Of Measurement', 'unit']);
-              const unitOfMeasurement = CONTAINER_UNITS.includes(unitOfMeasurementStr) 
-                ? unitOfMeasurementStr 
+              const unitOfMeasurement = CONTAINER_UNITS.includes(unitOfMeasurementStr)
+                ? unitOfMeasurementStr
                 : 'crate';
 
               // Map baseUnit
@@ -228,7 +232,7 @@ const NewSupplyRequestWizard = ({ isModalOpen, setModalOpen }) => {
   const nextStep = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     const currentSupplies = getValues('newSupplies');
-    
+
     // Default quantities to 1 if missing or 0, and ensure other required fields have defaults
     const normalizedSupplies = currentSupplies.map(supply => ({
       ...supply,
@@ -238,13 +242,13 @@ const NewSupplyRequestWizard = ({ isModalOpen, setModalOpen }) => {
       baseUnit: supply.baseUnit || 'piece',
       baseQuantityPerUnit: supply.baseQuantityPerUnit > 0 ? supply.baseQuantityPerUnit : 1
     }));
-    
+
     // Update form values with normalized data
     setValue('newSupplies', normalizedSupplies);
-    
+
     // Filter out empty/invalid supplies (only need product name)
-    const validSupplies = normalizedSupplies.filter(supply => 
-      supply.productName && 
+    const validSupplies = normalizedSupplies.filter(supply =>
+      supply.productName &&
       supply.productName.trim() !== ''
     );
 
@@ -426,7 +430,7 @@ const NewSupplyRequestWizard = ({ isModalOpen, setModalOpen }) => {
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Unit Price (₦)</label>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Unit Price ({currencySymbol})</label>
                             <Controller
                               name={`newSupplies.${index}.unitPrice`}
                               control={control}
@@ -543,7 +547,7 @@ const NewSupplyRequestWizard = ({ isModalOpen, setModalOpen }) => {
                         You have {getValues('newSupplies').length} supply request(s) to review
                       </p>
                       <p className="text-lg font-medium text-[#05431E]">
-                        Total Cost: ₦{totalCost.toFixed(2)}
+                        Total Cost: {formatCurrency(totalCost.toFixed(2))}
                       </p>
                     </div>
                   </div>
@@ -567,7 +571,7 @@ const NewSupplyRequestWizard = ({ isModalOpen, setModalOpen }) => {
                             </div>
                             <div className="flex items-center gap-4">
                               <p className="text-lg font-semibold text-[#05431E]">
-                                ₦{(item.quantity * item.unitPrice).toFixed(2)}
+                                {formatCurrency((item.quantity * item.unitPrice).toFixed(2))}
                               </p>
                               <span className={`transform transition-transform duration-200 ${expandedItems.includes(index) ? 'rotate-180' : ''}`}>
                                 ▼
@@ -580,7 +584,7 @@ const NewSupplyRequestWizard = ({ isModalOpen, setModalOpen }) => {
                                 <p><span className="font-medium text-gray-700">Quantity:</span> {item.quantity} {item.unitOfMeasurement}</p>
                                 <p><span className="font-medium text-gray-700">Base Unit:</span> {item.baseQuantityPerUnit} {item.baseUnit}/unit</p>
                                 <p><span className="font-medium text-gray-700">Total Base:</span> {(item.quantity * item.baseQuantityPerUnit).toFixed(2)} {item.baseUnit}</p>
-                                <p><span className="font-medium text-gray-700">Unit Price:</span> ₦{item.unitPrice.toFixed(2)}</p>
+                                <p><span className="font-medium text-gray-700">Unit Price:</span> {formatCurrency(item.unitPrice.toFixed(2))}</p>
                                 <p><span className="font-medium text-gray-700">Method:</span> {item.requestMethod}</p>
                                 {item.specialNote && (
                                   <p className="col-span-2"><span className="font-medium text-gray-700">Note:</span> {item.specialNote}</p>
@@ -616,11 +620,10 @@ const NewSupplyRequestWizard = ({ isModalOpen, setModalOpen }) => {
                   <button
                     type="submit"
                     disabled={isSubmitting || getValues('newSupplies').length === 0}
-                    className={`px-6 py-2 text-sm text-white rounded-md transition-all duration-200 ${
-                      isSubmitting || getValues('newSupplies').length === 0
+                    className={`px-6 py-2 text-sm text-white rounded-md transition-all duration-200 ${isSubmitting || getValues('newSupplies').length === 0
                         ? 'bg-[#05431E] opacity-60 cursor-not-allowed'
                         : 'bg-[#05431E] hover:bg-[#043818]'
-                    }`}
+                      }`}
                   >
                     {isSubmitting ? 'Submitting...' : 'Submit'}
                   </button>

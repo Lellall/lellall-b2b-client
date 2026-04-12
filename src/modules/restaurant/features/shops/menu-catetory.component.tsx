@@ -10,8 +10,11 @@ import { theme } from '@/theme/theme'
 import Table from '@/components/ui/table'
 import StatusDropdown from '@/components/ui/drop-down-btn'
 import NavigationTabs, { Tab } from '@/components/ui/navigation-tab'
+import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 const MenuCategory = () => {
+  const { formatCurrency } = useCurrency();
     const menus = [
         { name: "Pizza", icon: pizza, count: 30 },
         { name: "Burger", icon: burger, count: 20 },
@@ -48,18 +51,18 @@ const MenuCategory = () => {
         { key: "category", label: "Category" }
     ];
     const data = [
-        { image: "https://cdn.pixabay.com/photo/2017/09/02/21/01/salmon-2702922_960_720.jpg", name: "Chicken Parmesan", count: 30, price: "₦8,500", availability: true, stock: 50, category: "Italian" },
-        { image: "https://cdn.pixabay.com/photo/2016/03/05/19/02/food-1239241_960_720.jpg", name: "Beef Stroganoff", count: 25, price: "₦10,200", availability: false, stock: 35, category: "Russian" },
-        { image: "https://cdn.pixabay.com/photo/2017/12/09/08/18/fried-rice-3002508_960_720.jpg", name: "Spaghetti Carbonara", count: 40, price: "₦7,000", availability: true, stock: 60, category: "Italian" },
-        { image: "https://cdn.pixabay.com/photo/2016/03/27/22/17/pasta-1283492_960_720.jpg", name: "Grilled Salmon", count: 15, price: "₦12,500", availability: false, stock: 20, category: "Seafood" },
-        { image: "https://cdn.pixabay.com/photo/2016/06/10/15/32/food-1445123_960_720.jpg", name: "Vegetable Stir Fry", count: 20, price: "₦5,800", availability: true, stock: 25, category: "Vegetarian" },
-        { image: "https://cdn.pixabay.com/photo/2014/04/22/02/56/bbq-329524_960_720.jpg", name: "BBQ Ribs", count: 18, price: "₦14,000", availability: false, stock: 15, category: "BBQ" },
-        { image: "https://cdn.pixabay.com/photo/2017/06/06/22/48/miso-soup-2377616_960_720.jpg", name: "Shrimp Scampi", count: 12, price: "₦13,700", availability: true, stock: 5, category: "Seafood" },
-        { image: "https://cdn.pixabay.com/photo/2015/04/08/13/13/food-712665_960_720.jpg", name: "Margherita Pizza", count: 35, price: "₦6,800", availability: false, stock: 40, category: "Italian" },
-        { image: "https://cdn.pixabay.com/photo/2016/03/05/19/02/rolls-1239395_960_720.jpg", name: "Buffalo Wings", count: 45, price: "₦6,500", availability: true, stock: 55, category: "American" },
-        { image: "https://cdn.pixabay.com/photo/2016/04/16/23/10/food-1332435_960_720.jpg", name: "Lobster Roll", count: 10, price: "₦18,000", availability: true, stock: 3, category: "Seafood" },
-        { image: "https://cdn.pixabay.com/photo/2016/03/27/19/20/food-1283157_960_720.jpg", name: "Eggplant Parmesan", count: 14, price: "₦9,200", availability: false, stock: 7, category: "Vegetarian" },
-        { image: "https://cdn.pixabay.com/photo/2017/07/16/11/55/tuna-2501828_960_720.jpg", name: "Miso Soup", count: 31, price: "₦3,500", availability: true, stock: 30, category: "Japanese" }
+        { image: "https://cdn.pixabay.com/photo/2017/09/02/21/01/salmon-2702922_960_720.jpg", name: "Chicken Parmesan", count: 30, price: formatCurrency(8500), availability: true, stock: 50, category: "Italian" },
+        { image: "https://cdn.pixabay.com/photo/2016/03/05/19/02/food-1239241_960_720.jpg", name: "Beef Stroganoff", count: 25, price: formatCurrency(10200), availability: false, stock: 35, category: "Russian" },
+        { image: "https://cdn.pixabay.com/photo/2017/12/09/08/18/fried-rice-3002508_960_720.jpg", name: "Spaghetti Carbonara", count: 40, price: formatCurrency(7000), availability: true, stock: 60, category: "Italian" },
+        { image: "https://cdn.pixabay.com/photo/2016/03/27/22/17/pasta-1283492_960_720.jpg", name: "Grilled Salmon", count: 15, price: formatCurrency(12500), availability: false, stock: 20, category: "Seafood" },
+        { image: "https://cdn.pixabay.com/photo/2016/06/10/15/32/food-1445123_960_720.jpg", name: "Vegetable Stir Fry", count: 20, price: formatCurrency(5800), availability: true, stock: 25, category: "Vegetarian" },
+        { image: "https://cdn.pixabay.com/photo/2014/04/22/02/56/bbq-329524_960_720.jpg", name: "BBQ Ribs", count: 18, price: formatCurrency(14000), availability: false, stock: 15, category: "BBQ" },
+        { image: "https://cdn.pixabay.com/photo/2017/06/06/22/48/miso-soup-2377616_960_720.jpg", name: "Shrimp Scampi", count: 12, price: formatCurrency(13700), availability: true, stock: 5, category: "Seafood" },
+        { image: "https://cdn.pixabay.com/photo/2015/04/08/13/13/food-712665_960_720.jpg", name: "Margherita Pizza", count: 35, price: formatCurrency(6800), availability: false, stock: 40, category: "Italian" },
+        { image: "https://cdn.pixabay.com/photo/2016/03/05/19/02/rolls-1239395_960_720.jpg", name: "Buffalo Wings", count: 45, price: formatCurrency(6500), availability: true, stock: 55, category: "American" },
+        { image: "https://cdn.pixabay.com/photo/2016/04/16/23/10/food-1332435_960_720.jpg", name: "Lobster Roll", count: 10, price: formatCurrency(18000), availability: true, stock: 3, category: "Seafood" },
+        { image: "https://cdn.pixabay.com/photo/2016/03/27/19/20/food-1283157_960_720.jpg", name: "Eggplant Parmesan", count: 14, price: formatCurrency(9200), availability: false, stock: 7, category: "Vegetarian" },
+        { image: "https://cdn.pixabay.com/photo/2017/07/16/11/55/tuna-2501828_960_720.jpg", name: "Miso Soup", count: 31, price: formatCurrency(3500), availability: true, stock: 30, category: "Japanese" }
     ];
 
     const statuses = ["Available", "Out of Stock"];

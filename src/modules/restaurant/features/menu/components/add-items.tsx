@@ -8,6 +8,8 @@ import { toast } from 'react-toastify';
 import { ColorRing } from 'react-loader-spinner';
 import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
+import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 type MenuItem = {
   id: string;
@@ -72,6 +74,7 @@ const selectStyles = {
 };
 
 const MenuItemForm = ({ setModalOpen, itemToEdit }: MenuItemFormProps) => {
+  const { currencySymbol } = useCurrency();
   const { subdomain } = useSelector(selectAuth);
   const [step, setStep] = useState(1);
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth <= 640);
@@ -318,7 +321,7 @@ const MenuItemForm = ({ setModalOpen, itemToEdit }: MenuItemFormProps) => {
                   rules={{ required: 'Price is required', min: { value: 0.01, message: 'Price must be greater than 0' } }}
                   render={({ field }) => (
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1 truncate">Price (₦)</label>
+                      <label className="block text-xs font-medium text-gray-700 mb-1 truncate">Price ({currencySymbol})</label>
                       <input
                         {...field}
                         type="number"

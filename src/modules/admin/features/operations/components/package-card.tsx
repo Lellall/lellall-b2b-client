@@ -1,6 +1,8 @@
 import React from "react";
 import LellallSwitch from "@/components/ui/switch.component";
 import users from '@/assets/subs-users.svg';
+import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 interface PackageCardProps {
     name: string;
@@ -25,6 +27,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
     packageColor = "bg-green-900",
     onToggle,
 }) => {
+    const { formatCurrency } = useCurrency();
     return (
         <div className={`flex cursor-pointer items-center justify-between rounded-xl p-6 min-h-[120px] px-10 ${background}`}>
             {/* Package Details */}
@@ -35,7 +38,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
                 <div>
                     <h3 className="text-sm font-semibold">{name}</h3>
                     <p className="text-xs text-gray-400">
-                        ₦{minPrice.toLocaleString()} - ₦{maxPrice.toLocaleString()}
+                        {formatCurrency(minPrice.toLocaleString())} - {formatCurrency(maxPrice.toLocaleString())}
                     </p>
                 </div>
             </div>

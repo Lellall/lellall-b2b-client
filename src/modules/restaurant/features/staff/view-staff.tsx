@@ -9,6 +9,8 @@ import { useGetStaffAttendanceByUserIdQuery } from '@/redux/api/attendance/atten
 import { ColorRing } from 'react-loader-spinner';
 import { theme } from '@/theme/theme';
 import { format } from 'date-fns';
+import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 type TabType = 'personal' | 'professional' | 'documents' | 'account';
 type SideNavType = 'profile' | 'attendance' | 'branch' | 'leave';
@@ -481,7 +483,7 @@ const ViewStaff: React.FC = () => {
                     <label className="text-xs text-gray-500 mb-1 block">Monthly Salary</label>
                     <p className="text-sm font-medium text-gray-900">
                       {selectedUser.monthlySalary 
-                        ? `₦${Number(selectedUser.monthlySalary).toLocaleString()}` 
+                        ? formatCurrency(Number(selectedUser.monthlySalary).toLocaleString()) 
                         : 'N/A'}
                     </p>
                   </div>
@@ -489,7 +491,7 @@ const ViewStaff: React.FC = () => {
                     <label className="text-xs text-gray-500 mb-1 block">Annual Salary</label>
                     <p className="text-sm font-medium text-gray-900">
                       {selectedUser.annualSalary 
-                        ? `₦${Number(selectedUser.annualSalary).toLocaleString()}` 
+                        ? formatCurrency(Number(selectedUser.annualSalary).toLocaleString()) 
                         : 'N/A'}
                     </p>
                   </div>

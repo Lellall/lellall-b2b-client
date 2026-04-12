@@ -56,7 +56,7 @@ export const restaurantApi = baseApi.injectEndpoints({
         try {
           await queryFulfilled;
         } catch (err) {
-         console.error(err)
+          console.error(err)
         }
       },
     }),
@@ -262,6 +262,42 @@ export const restaurantApi = baseApi.injectEndpoints({
       }),
       providesTags: ["MENU"],
     }),
+
+    getRestaurantCurrency: builder.query({
+      query: (subdomain) => ({
+        url: `/${subdomain}/restaurant-config/currency`,
+        method: "GET",
+        credentials: "include",
+      }),
+      providesTags: ["CURRENCY"],
+      async onQueryStarted(_args, { queryFulfilled }) {
+        try {
+          await queryFulfilled;
+        } catch (err: any) {
+          console.error("Failed to fetch restaurant currency:", err);
+        }
+      },
+    }),
+
+    updateRestaurantCurrency: builder.mutation({
+      query: ({ subdomain, data }) => ({
+        url: `/${subdomain}/restaurant-config/currency`,
+        method: "PATCH",
+        body: data,
+        credentials: "include",
+      }),
+      invalidatesTags: ["CURRENCY"],
+      async onQueryStarted(_args, { queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          toast.success("Currency settings updated successfully");
+        } catch (err: any) {
+          ErrorHandler(err);
+          toast.error(err?.error?.data?.message || "Failed to update currency settings");
+          throw err;
+        }
+      }
+    }),
   }),
 })
 
@@ -282,4 +318,6 @@ export const {
   useGetTopPerformersQuery,
   useGetBusinessInsightsQuery,
   useGetSeasonalTrendsQuery,
+  useGetRestaurantCurrencyQuery,
+  useUpdateRestaurantCurrencyMutation,
 } = restaurantApi

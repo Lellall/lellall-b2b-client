@@ -70,7 +70,8 @@ const endpointsRequiringToken = [
   "^/payroll",
   "^payroll",
   "^[^/]+/vendor-invoices",
-  "^webhooks/whatsapp"
+  "^webhooks/whatsapp",
+  "/restaurant-config/currency"
 ];
 
 const endpointsWithoutToken = ["/auth/login", "/auth/register", "/auth/refresh-token"];

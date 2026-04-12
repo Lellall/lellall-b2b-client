@@ -5,8 +5,11 @@ import Table from "@/components/ui/table";
 import { theme } from "@/theme/theme"
 import { Add, More } from "iconsax-react"
 import { useState } from "react";
+import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 const Staffs = () => {
+  const { formatCurrency } = useCurrency();
   const [activeTab, setActiveTab] = useState<string>("staffs-management");
   
   const statuses = ["Active", "On Leave", "In Active"];
@@ -53,10 +56,10 @@ const Staffs = () => {
   ];
 
   const data = [
-    { staffId: "#STF1001", name: "John Doe", phoneNumber: "+1 (123) 456 7890", age: 29, role: "Software Engineer", shift: "Morning", status: "Active", salary: "₦300,000" },
-    { staffId: "#STF1002", name: "Jane Smith", phoneNumber: "+1 (987) 654 3210", age: 35, role: "HR Manager", shift: "Day", status: "Inactive", salary: "₦400,000" },
-    { staffId: "#STF1003", name: "Michael Johnson", phoneNumber: "+1 (555) 123 4567", age: 41, role: "Product Manager", shift: "Evening", status: "Active", salary: "₦500,000" },
-    { staffId: "#STF1004", name: "Emily Williams", phoneNumber: "+1 (777) 987 6543", age: 27, role: "Marketing Lead", shift: "Night", status: "On Leave", salary: "₦350,000" },
+    { staffId: "#STF1001", name: "John Doe", phoneNumber: "+1 (123) 456 7890", age: 29, role: "Software Engineer", shift: "Morning", status: "Active", salary: formatCurrency(300000) },
+    { staffId: "#STF1002", name: "Jane Smith", phoneNumber: "+1 (987) 654 3210", age: 35, role: "HR Manager", shift: "Day", status: "Inactive", salary: formatCurrency(400000) },
+    { staffId: "#STF1003", name: "Michael Johnson", phoneNumber: "+1 (555) 123 4567", age: 41, role: "Product Manager", shift: "Evening", status: "Active", salary: formatCurrency(500000) },
+    { staffId: "#STF1004", name: "Emily Williams", phoneNumber: "+1 (777) 987 6543", age: 27, role: "Marketing Lead", shift: "Night", status: "On Leave", salary: formatCurrency(350000) },
   ];
 
   return (

@@ -3,6 +3,8 @@ import { theme } from "@/theme/theme";
 import React from "react";
 import styled, { css, keyframes } from "styled-components";
 import tick from '@/assets/tick.svg';
+import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 interface PricingCardProps {
     title: string;
@@ -159,6 +161,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
     onChoose,
     isPaymentLoading,
 }) => {
+    const { formatCurrency } = useCurrency();
     return (
         <CardContainer background={background} color={color} isCurrent={isCurrent} isRecommended={isRecommended} className="p-6 rounded-lg">
             {isCurrent && <CurrentBadge>Current Plan</CurrentBadge>}
@@ -180,7 +183,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
             </div>
             <div>
                 <PriceText>
-                    ₦{price} <BillingCycleText>/{billingCycle}</BillingCycleText>
+                    {formatCurrency(price)} <BillingCycleText>/{billingCycle}</BillingCycleText>
                 </PriceText>
             </div>
             <StyledButton

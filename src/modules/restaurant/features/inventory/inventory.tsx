@@ -4,7 +4,7 @@ import { selectAuth } from "@/redux/api/auth/auth.slice";
 import { usePermissions } from "@/hooks/usePermissions";
 import Table from "@/components/ui/table";
 import { format } from "date-fns";
-import { moneyFormatter } from "@/utils/moneyFormatter";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import SearchBar from '@/components/search-bar/search-bar';
 import { StyledButton } from '@/components/button/button-lellall';
 import { Add, ExportCircle } from 'iconsax-react';
@@ -146,6 +146,7 @@ interface InventoryItem {
 
 const InventoryComponent = () => {
   const { subdomain } = useSelector(selectAuth);
+  const { formatCurrency } = useCurrency();
   const { canCreate, canUpdate } = usePermissions();
   const [isModalOpen, setModalOpen] = useState(false);
   const [resupplyModalOpen, setResupplyModalOpen] = useState(false);
@@ -220,7 +221,7 @@ const InventoryComponent = () => {
         ...item,
         id: inventoryId,
         inventoryId,
-        unitPrice: unitPrice != null ? moneyFormatter(unitPrice) : '$0.00',
+        unitPrice: unitPrice != null ? formatCurrency(unitPrice) : '$0.00',
         rawUnitPrice: unitPrice ?? 0,
         category: <CategoryTag category={item.category || 'Miscellaneous'} />,
         rawCategory: item.category || 'Miscellaneous',

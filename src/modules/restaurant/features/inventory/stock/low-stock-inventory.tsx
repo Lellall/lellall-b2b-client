@@ -5,9 +5,11 @@ import { useGetLowStockInventoryWithMenuItemsQuery } from '@/redux/api/inventory
 import { LowStockInventoryWithMenuItems } from '@/redux/api/inventory/inventory.api';
 import ReactPaginate from 'react-paginate';
 import { Package, ChevronDown, ChevronUp, AlertTriangle, Tag } from 'lucide-react';
-import { moneyFormatter } from '@/utils/moneyFormatter';
+import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 const LowStockInventory = () => {
+  const { formatCurrency, currencySymbol } = useCurrency();
   const { subdomain, user } = useSelector(selectAuth);
   const [currentPage, setCurrentPage] = useState(0);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
@@ -306,9 +308,9 @@ const LowStockInventory = () => {
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <div className="p-1.5 rounded-lg bg-gradient-to-br from-green-800 to-black">
-                        <span className="text-white text-xs font-bold">₦</span>
+                        <span className="text-white text-xs font-bold">{currencySymbol}</span>
                       </div>
-                      <span>Unit Price: <span className="font-semibold text-gray-900">{moneyFormatter(item.unitPrice)}</span></span>
+                      <span>Unit Price: <span className="font-semibold text-gray-900">{formatCurrency(item.unitPrice)}</span></span>
                     </div>
                   </div>
 
@@ -349,11 +351,10 @@ const LowStockInventory = () => {
                                   <div className="text-sm font-semibold text-gray-900">{menuItem.name}</div>
                                   <div className="text-xs text-gray-600 mt-1">{menuItem.menuName}</div>
                                 </div>
-                                <div className={`px-2 py-1 rounded text-xs font-semibold ${
-                                  menuItem.status === 'AVAILABLE' 
-                                    ? 'bg-green-100 text-green-800' 
-                                    : 'bg-gray-100 text-gray-800'
-                                }`}>
+                                <div className={`px-2 py-1 rounded text-xs font-semibold ${menuItem.status === 'AVAILABLE'
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-gray-100 text-gray-800'
+                                  }`}>
                                   {menuItem.status}
                                 </div>
                               </div>
@@ -365,7 +366,7 @@ const LowStockInventory = () => {
                               )}
                               <div className="flex items-center justify-between text-xs text-gray-600">
                                 <span>Uses {menuItem.inventoryQuantity} {item.unitOfMeasurement}</span>
-                                <span className="font-semibold text-gray-900">{moneyFormatter(menuItem.price)}</span>
+                                <span className="font-semibold text-gray-900">{formatCurrency(menuItem.price)}</span>
                               </div>
                             </div>
                           ))

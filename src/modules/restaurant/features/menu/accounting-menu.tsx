@@ -15,9 +15,12 @@ import {
   useGetStaffBreakdownQuery,
 } from '@/redux/api/accounting/accounting.api';
 import { useGetAllTagsQuery, useGetAllMenuItemsQuery } from '@/redux/api/menu/menu.api';
+import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 const AccountingMenu: React.FC = () => {
   const { subdomain, user } = useSelector(selectAuth);
+  const { formatCurrency, currencySymbol } = useCurrency();
   const [activeTab, setActiveTab] = useState<'sales' | 'category' | 'item' | 'payment' | 'selected-items' | 'staff'>('sales');
   const [startDate, setStartDate] = useState<string>(format(subDays(new Date(), 7), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
@@ -120,8 +123,8 @@ const AccountingMenu: React.FC = () => {
     { skip: !subdomain || activeTab !== 'staff' }
   );
 
-  const formatCurrency = (amount: number) => {
-    return `₦${amount.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const formatCurrencyLocal = (amount: number) => {
+    return formatCurrency(amount);
   };
 
   const formatDate = (dateString: string | null) => {
@@ -450,11 +453,10 @@ const AccountingMenu: React.FC = () => {
                       <button
                         key={tag}
                         onClick={() => handleCategoryToggle(tag)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                          selectedCategories.includes(tag)
-                            ? 'bg-gradient-to-r from-[#05431E] to-[#0E5D37] text-white shadow-sm'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${selectedCategories.includes(tag)
+                          ? 'bg-gradient-to-r from-[#05431E] to-[#0E5D37] text-white shadow-sm'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
                       >
                         {tag}
                       </button>
@@ -471,11 +473,10 @@ const AccountingMenu: React.FC = () => {
                     <button
                       key={type}
                       onClick={() => handlePaymentTypeToggle(type)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                        selectedPaymentTypes.includes(type)
-                          ? 'bg-gradient-to-r from-[#05431E] to-[#0E5D37] text-white shadow-sm'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${selectedPaymentTypes.includes(type)
+                        ? 'bg-gradient-to-r from-[#05431E] to-[#0E5D37] text-white shadow-sm'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
                     >
                       {type}
                     </button>
@@ -501,11 +502,10 @@ const AccountingMenu: React.FC = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`px-6 py-4 text-sm font-semibold border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? 'border-[#05431E] text-[#05431E] bg-green-50/50'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50/50'
-                  }`}
+                  className={`px-6 py-4 text-sm font-semibold border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === tab.id
+                    ? 'border-[#05431E] text-[#05431E] bg-green-50/50'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50/50'
+                    }`}
                 >
                   <tab.icon className="w-4 h-4" />
                   {tab.label}
@@ -578,7 +578,7 @@ const AccountingMenu: React.FC = () => {
                       <div className="bg-[#F8F9FA]  p-6 ">
                         <div className="flex items-center justify-between mb-2">
                           <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Grand Total</div>
-                          <span className="text-xl text-gray-400 font-semibold">₦</span>
+                          <span className="text-xl text-gray-400 font-semibold">{currencySymbol}</span>
                         </div>
                         <div className="text-2xl font-bold text-gray-900">{formatCurrency(salesData.summary.grandTotal)}</div>
                       </div>
@@ -656,7 +656,7 @@ const AccountingMenu: React.FC = () => {
                           <div className="text-xs font-semibold text-green-100 uppercase tracking-wide mb-1">Total Revenue</div>
                           <div className="text-3xl font-bold">{formatCurrency(categoryData.total)}</div>
                         </div>
-                        <span className="text-4xl text-green-200 opacity-50 font-semibold">₦</span>
+                        <span className="text-4xl text-green-200 opacity-50 font-semibold">{currencySymbol}</span>
                       </div>
                     </div>
 
@@ -907,14 +907,13 @@ const AccountingMenu: React.FC = () => {
                               };
 
                               const isSelected = selectedItemIds.includes(item.id);
-                              
+
                               return (
                                 <div
                                   key={item.id}
                                   onClick={() => handleItemToggle(item.id)}
-                                  className={`p-3 rounded-xl ${generateDarkColorFromId(item.id)} text-white transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:brightness-110 cursor-pointer relative border-0 ${
-                                    isSelected ? ' scale-105' : ''
-                                  }`}
+                                  className={`p-3 rounded-xl ${generateDarkColorFromId(item.id)} text-white transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:brightness-110 cursor-pointer relative border-0 ${isSelected ? ' scale-105' : ''
+                                    }`}
                                 >
                                   {isSelected && (
                                     <div className="absolute -top-2 -right-2 bg-[#05431E] rounded-full p-1.5 shadow-lg">
@@ -925,7 +924,7 @@ const AccountingMenu: React.FC = () => {
                                   )}
                                   <div className="flex flex-col space-y-1">
                                     <h3 className="text-xs sm:text-sm font-bold truncate">{item.name}</h3>
-                                    <p className="text-[10px] sm:text-xs font-medium opacity-90">₦{item.price.toLocaleString()}</p>
+                                    <p className="text-[10px] sm:text-xs font-medium opacity-90">{formatCurrency(item.price.toLocaleString())}</p>
                                   </div>
                                 </div>
                               );
@@ -1169,11 +1168,11 @@ const AccountingMenu: React.FC = () => {
                   (activeTab === 'item' && !itemData) ||
                   (activeTab === 'payment' && !paymentData) ||
                   (activeTab === 'staff' && !staffData)) && (
-                  <div className="text-center py-20">
-                    <BarChart3 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500 font-medium">No data available for the selected period</p>
-                  </div>
-                )}
+                    <div className="text-center py-20">
+                      <BarChart3 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-500 font-medium">No data available for the selected period</p>
+                    </div>
+                  )}
               </>
             )}
           </div>
