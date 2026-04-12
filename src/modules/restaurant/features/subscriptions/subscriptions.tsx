@@ -221,6 +221,27 @@ const Subscriptions = () => {
     }
   };
 
+  const isMaintenanceMode = true;
+
+  if (isMaintenanceMode) {
+    return (
+      <Cover>
+        <div className="flex flex-col items-center justify-center mt-20 p-8 sm:p-12 bg-white/90 backdrop-blur-sm mx-auto max-w-xl rounded-3xl shadow-xl border border-gray-100 text-center">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-4 tracking-tight">
+            System Maintenance 🛠️
+          </h2>
+          <p className="text-base sm:text-lg text-gray-600 font-medium leading-relaxed">
+            We are currently upgrading our subscription system to serve you better. 
+            The page will be back online shortly.
+          </p>
+          <div className="mt-8 text-sm text-gray-500 bg-gray-100 px-4 py-2 rounded-full inline-block">
+            Thank you for your patience!
+          </div>
+        </div>
+      </Cover>
+    );
+  }
+
   if (isLoading) {
     return (
       <Cover>
