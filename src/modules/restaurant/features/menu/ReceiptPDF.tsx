@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { Receipt as Btn } from 'iconsax-react';
 import { useLazyFetchReceiptHtmlQuery } from '@/redux/api/order/order.api';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface BankDetail {
   id: string;
@@ -48,6 +49,7 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain, orderId }:
 }) => {
   const componentRef = useRef<HTMLDivElement>(null);
   const [fetchReceiptHtml] = useLazyFetchReceiptHtmlQuery();
+  const { formatCurrency } = useCurrency();
 
   const handlePrint = async () => {
     if (subdomain.toLowerCase() === 'satisfait' && orderId) {

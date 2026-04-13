@@ -10,7 +10,6 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 
 
 const StatusTag = ({ status }: { status: string }) => {
-  const { formatCurrency } = useCurrency();
     const statusColors: Record<string, string> = {
         "Paid": "text-xs bg-green-100 text-green-700",
         "Pending": "text-xs bg-yellow-100 text-yellow-700",
@@ -25,6 +24,7 @@ const StatusTag = ({ status }: { status: string }) => {
 };
 
 const Invoices = () => {
+    const { formatCurrency } = useCurrency();
     const columns = [
         { key: "invoiceId", label: "Invoice ID" },
         { key: "phoneNumber", label: "Phone Number" },
@@ -51,7 +51,7 @@ const Invoices = () => {
                 <InfoCard title="Packages Delivered" value="200" icon={<img src={packageIcon} alt="Packages Supplied" />} />
                 <InfoCard title="Total Invoices" value="150" icon={<img src={totalIcon} alt="Total Paid" />} />
                 <InfoCard title="Pending Invoices" value="50" icon={<img src={pendingIcon} alt="Pending Invoices" />} />
-                <InfoCard title="Total Amount" value=formatCurrency(250000.00) icon={<img src={financeIcon} alt="Finance Approved" />} />
+                <InfoCard title="Total Amount" value={formatCurrency(250000.00)} icon={<img src={financeIcon} alt="Finance Approved" />} />
             </div>
             <div className="mt-5">
                 <Table columns={columns} data={data}
