@@ -54,26 +54,12 @@ const datePickerStyles = `
 const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => {
   const componentRef = useRef<HTMLDivElement>(null);
   const [bgColor, setBgColor] = useState('#ffffff'); // Default white background
-  const [selectedStartDate, setSelectedStartDate] = useState<Date>(() => {
-    if (subdomain === "burger-hub") {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      return yesterday;
-    }
-    return new Date();
-  });
-  const [selectedEndDate, setSelectedEndDate] = useState<Date | null>(() => {
-    if (subdomain === "burger-hub") {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      return tomorrow;
-    }
-    return null;
-  });
-  const [inputStartTime, setInputStartTime] = useState<string>(subdomain === "burger-hub" ? "09:00" : "");
-  const [inputEndTime, setInputEndTime] = useState<string>(subdomain === "burger-hub" ? "06:00" : "");
-  const [queryStartTime, setQueryStartTime] = useState<string | undefined>(subdomain === "burger-hub" ? "09:00" : undefined);
-  const [queryEndTime, setQueryEndTime] = useState<string | undefined>(subdomain === "burger-hub" ? "06:00" : undefined);
+  const [selectedStartDate, setSelectedStartDate] = useState<Date>(new Date());
+  const [selectedEndDate, setSelectedEndDate] = useState<Date | null>(null);
+  const [inputStartTime, setInputStartTime] = useState<string>("");
+  const [inputEndTime, setInputEndTime] = useState<string>("");
+  const [queryStartTime, setQueryStartTime] = useState<string | undefined>(undefined);
+  const [queryEndTime, setQueryEndTime] = useState<string | undefined>(undefined);
   const { formatCurrency, currencySymbol } = useCurrency();
   const reactToPrintFn = useReactToPrint({ contentRef: componentRef });
 
@@ -440,8 +426,6 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
                 />
               </div>
 
-              {subdomain === 'burger-hub' && (
-                <>
                   <div className="flex items-center gap-2">
                     <label className="text-sm font-semibold text-gray-700">End Date:</label>
                     <DatePicker
@@ -514,8 +498,6 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
                       Shift Report
                     </button>
                   </div>
-                </>
-              )}
             </div>
           </div>
 
