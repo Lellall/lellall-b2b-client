@@ -126,11 +126,20 @@ const Subscriptions = () => {
   };
 
   // Calculate days left based on endDate, regardless of status
-  const daysLeft = subscription?.endDate
+  let daysLeft = subscription?.endDate
     ? calculateDaysLeft(subscription.endDate)
     : subscription?.trialEndDate
       ? calculateDaysLeft(subscription.trialEndDate)
       : 0;
+
+  // Temporary 30-day override for burger-hub (fixing backend subscription issues — expires 2026-05-16)
+  const OVERRIDE_EXPIRY_BURGER_HUB = new Date('2026-05-16T23:59:59Z');
+  const isBurgerHubOverride = subdomain?.toLowerCase() === 'burger-hub' && new Date() < OVERRIDE_EXPIRY_BURGER_HUB;
+
+  if (isBurgerHubOverride) {
+    const overrideDaysLeft = Math.ceil((OVERRIDE_EXPIRY_BURGER_HUB.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    daysLeft = overrideDaysLeft;
+  }
 
   const filteredPlans = plans
     ? plans
@@ -140,7 +149,7 @@ const Subscriptions = () => {
         price: isChecked ? plan.price * 12 : plan.price,
         billingCycle: isChecked ? 'Annually' : 'Monthly',
         // Check if current plan by matching plan ID and if endDate is in the future
-        isCurrent: subscription?.plan?.id === plan.id && subscription?.endDate && new Date(subscription.endDate) > new Date(),
+        isCurrent: (subscription?.plan?.id === plan.id && subscription?.endDate && new Date(subscription.endDate) > new Date()) || (isBurgerHubOverride && plan.name === 'Elite'),
       }))
     : [];
 

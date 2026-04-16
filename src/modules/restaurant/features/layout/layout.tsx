@@ -356,10 +356,20 @@ const Layout: React.FC<LayoutProps> = ({ subdomainData }) => {
   // Temporary 30-day override for no5ive (overcharge compensation — expires 2026-04-04)
   const currentSubdomain = getSubdomainFromUrl() || user?.ownedRestaurant?.subdomain || user?.restaurant?.subdomain || '';
   const OVERRIDE_EXPIRY = new Date('2026-04-04T23:59:59Z');
-  if (currentSubdomain?.toLowerCase() === 'no5ive' && new Date() < OVERRIDE_EXPIRY) {
+  const isNo5iveOverride = currentSubdomain?.toLowerCase() === 'no5ive' && new Date() < OVERRIDE_EXPIRY;
+
+  // Temporary 30-day override for burger-hub (fixing backend subscription issues — expires 2026-05-16)
+  const OVERRIDE_EXPIRY_BURGER_HUB = new Date('2026-05-16T23:59:59Z');
+  const isBurgerHubOverride = currentSubdomain?.toLowerCase() === 'burger-hub' && new Date() < OVERRIDE_EXPIRY_BURGER_HUB;
+
+  if (isNo5iveOverride) {
     daysLeft = Math.ceil((OVERRIDE_EXPIRY.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
     status = 'ACTIVE';
     planName = planName !== 'No Plan' ? planName : 'Business Plan';
+  } else if (isBurgerHubOverride) {
+    daysLeft = Math.ceil((OVERRIDE_EXPIRY_BURGER_HUB.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    status = 'ACTIVE';
+    planName = planName !== 'No Plan' ? planName : 'Elite';
   }
 
   // Log for debugging
