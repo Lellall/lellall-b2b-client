@@ -230,7 +230,7 @@ const Subscriptions = () => {
     }
   };
 
-  const isMaintenanceMode = true;
+  const isMaintenanceMode = false;
 
   if (isMaintenanceMode) {
     return (
