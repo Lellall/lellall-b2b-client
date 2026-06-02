@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { Add, MinusCirlce, Send, Trash } from "iconsax-react";
-import { GripVertical } from "lucide-react";
+import { BadgeCheck, GripVertical, ScanLine, UserCheck, X } from "lucide-react";
 import OrderCard from "./components/order-card";
 import PreReceipt from "./pre-receipt";
 import SearchBar from "@/components/search-bar/search-bar";
@@ -12,6 +12,7 @@ import { selectAuth } from "@/redux/api/auth/auth.slice";
 import { ColorRing } from "react-loader-spinner";
 import { PrintableInvoice } from "./rafawa";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { type Member as MembershipMember, getDemoMembershipMembers } from "../membership/mock-members";
 
 
 interface MenuItem {
@@ -34,11 +35,15 @@ const Orders = () => {
   const [createdOrders, setCreatedOrders] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("All");
   const [searchQuery, setSearchQuery] = useState(""); // New: Search query state
+  const [memberSearch, setMemberSearch] = useState("");
+  const [availableMembers, setAvailableMembers] = useState<MembershipMember[]>(() => getDemoMembershipMembers());
+  const [selectedMember, setSelectedMember] = useState<MembershipMember | null>(null);
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   const { subdomain, user } = useSelector(selectAuth);
+  const membershipFeatureEnabled = subdomain === "355";
   const { data: menuItems = [], isLoading: isLoadingMenu, error: menuError } = useGetAllMenuItemsQuery({
     subdomain,
     search: searchQuery // Pass search query to the backend
@@ -58,6 +63,82 @@ const Orders = () => {
       item.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [menuItems, taggedItems, activeTab, searchQuery]);
+
+  const memberSuggestions = useMemo(() => {
+    if (!membershipFeatureEnabled) return [];
+
+    const query = memberSearch.trim().toLowerCase();
+    const candidates = query
+      ? availableMembers.filter((member) =>
+        member.fullName.toLowerCase().includes(query) ||
+        member.phoneNumber.toLowerCase().includes(query) ||
+        member.membershipId.toLowerCase().includes(query)
+      )
+      : availableMembers.filter((member) => member.status === "Active");
+
+    return candidates.slice(0, 4);
+  }, [availableMembers, memberSearch, membershipFeatureEnabled]);
+
+  const membershipCoverage = membershipFeatureEnabled && selectedMember?.status === "Active";
+
+  const getMembershipSnapshot = (member: MembershipMember | null) => {
+    if (!membershipFeatureEnabled) return undefined;
+    if (!member) return undefined;
+
+    return {
+      fullName: member.fullName,
+      membershipId: member.membershipId,
+      planType: member.planType,
+      status: member.status,
+      covered: member.status === "Active",
+    };
+  };
+
+  const handleMemberLookup = () => {
+    if (!membershipFeatureEnabled) return;
+
+    const query = memberSearch.trim().toLowerCase();
+    if (!query) return;
+
+    const member = availableMembers.find((item) =>
+      item.membershipId.toLowerCase() === query ||
+      item.membershipId.toLowerCase().includes(query) ||
+      item.phoneNumber.toLowerCase().includes(query) ||
+      item.fullName.toLowerCase().includes(query)
+    );
+
+    if (!member) {
+      alert("No membership record found for this demo ID.");
+      return;
+    }
+
+    setSelectedMember(member);
+    setMemberSearch(member.membershipId);
+  };
+
+  useEffect(() => {
+    if (!membershipFeatureEnabled) {
+      setSelectedMember(null);
+      setMemberSearch("");
+      return;
+    }
+
+    const refreshMembers = () => setAvailableMembers(getDemoMembershipMembers());
+
+    refreshMembers();
+    window.addEventListener('focus', refreshMembers);
+    window.addEventListener('storage', refreshMembers);
+
+    return () => {
+      window.removeEventListener('focus', refreshMembers);
+      window.removeEventListener('storage', refreshMembers);
+    };
+  }, [membershipFeatureEnabled]);
+
+  const clearSelectedMember = () => {
+    setSelectedMember(null);
+    setMemberSearch("");
+  };
 
   useEffect(() => {
     if (activeTab === "All") {
@@ -148,6 +229,8 @@ const Orders = () => {
       return;
     }
 
+    const membershipMember = getMembershipSnapshot(selectedMember);
+
     const orderData = {
       waiterId: user?.id,
       items: Object.entries(filteredOrder).map(([id, { quantity }]: [string, any]) => ({
@@ -177,8 +260,9 @@ const Orders = () => {
           total,
           status: "PENDING",
           specialNote,
-          paymentType: null,
+          paymentType: membershipMember?.covered ? "MEMBERSHIP" : null,
           discountPercentage,
+          membershipMember,
         },
       ]);
       setOrderSent(true);
@@ -196,6 +280,7 @@ const Orders = () => {
         });
       } else {
         setOrder({});
+        clearSelectedMember();
       }
 
       setSpecialNote("");
@@ -226,13 +311,15 @@ const Orders = () => {
       date: new Date().toLocaleString(),
       specialNote,
       discountPercentage,
+      membershipMember: getMembershipSnapshot(selectedMember),
     };
     setReceipt(receiptData);
   };
 
   const getButtonText = () => {
-    if (activeTab === "All") return "Place Order";
-    return `Send to ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}`;
+    const destination = activeTab.charAt(0).toUpperCase() + activeTab.slice(1);
+    if (activeTab === "All") return membershipCoverage ? "Place Member Order" : "Place Order";
+    return membershipCoverage ? `Send Member Order to ${destination}` : `Send to ${destination}`;
   };
 
   // Get unique tags from items in the order (only for "All" tab)
@@ -392,6 +479,81 @@ const Orders = () => {
                 className="w-full"
               />
             </div>
+            {membershipFeatureEnabled && (
+            <div className="mb-4 rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+              <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#05431E] text-white">
+                    <ScanLine className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">Member Order</p>
+                    <p className="text-xs text-gray-500">Scan QR, enter membership ID, or pick a demo member</p>
+                  </div>
+                </div>
+
+                {selectedMember ? (
+                  <div className="flex flex-col gap-2 rounded-lg bg-green-50 p-3 sm:flex-row sm:items-center sm:justify-between xl:min-w-[420px]">
+                    <div className="flex items-center gap-2">
+                      <BadgeCheck className={membershipCoverage ? "h-5 w-5 text-green-700" : "h-5 w-5 text-orange-600"} />
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">{selectedMember.fullName}</p>
+                        <p className="text-xs text-gray-600">
+                          {selectedMember.membershipId} - {selectedMember.planType} - {selectedMember.status}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={clearSelectedMember}
+                      className="inline-flex items-center justify-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                      Clear
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center xl:min-w-[440px]">
+                    <input
+                      value={memberSearch}
+                      onChange={(e) => setMemberSearch(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleMemberLookup();
+                        }
+                      }}
+                      placeholder="LEL-CLUB-1001"
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#05431E]"
+                    />
+                    <button
+                      onClick={handleMemberLookup}
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#05431E] px-4 py-2 text-sm font-medium text-white hover:bg-[#04391A]"
+                    >
+                      <UserCheck className="h-4 w-4" />
+                      Link Member
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {!selectedMember && memberSuggestions.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {memberSuggestions.map((member) => (
+                    <button
+                      key={member.id}
+                      onClick={() => {
+                        setSelectedMember(member);
+                        setMemberSearch(member.membershipId);
+                      }}
+                      className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-700 hover:border-[#05431E] hover:bg-green-50 hover:text-[#05431E]"
+                    >
+                      {member.fullName} - {member.membershipId}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            )}
             {isLoadingTaggedItems && activeTab !== "All" ? (
               <div className="flex items-center justify-center">
                 <ColorRing
@@ -510,6 +672,7 @@ const Orders = () => {
                   tableNumber={tableNumber}
                   specialNote={specialNote}
                   discountPercentage={discountPercentage}
+                  membershipMember={getMembershipSnapshot(selectedMember)}
                 />
               )}
               <div className="bg-[#FAFBFF] p-3 sm:p-4 rounded-lg">
@@ -528,6 +691,26 @@ const Orders = () => {
                   <p className="text-xs sm:text-sm font-semibold">Total</p>
                   <p className="text-xs sm:text-sm font-semibold">{formatCurrency(total.toLocaleString())}</p>
                 </div>
+                {selectedMember && (
+                  <div className={`mt-3 rounded-lg border p-3 ${membershipCoverage ? "border-green-200 bg-green-50" : "border-orange-200 bg-orange-50"}`}>
+                    <div className="flex items-start gap-2">
+                      <UserCheck className={membershipCoverage ? "mt-0.5 h-4 w-4 text-green-700" : "mt-0.5 h-4 w-4 text-orange-700"} />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-gray-900">{selectedMember.fullName}</p>
+                        <p className="truncate text-[10px] text-gray-600">{selectedMember.membershipId}</p>
+                        <p className={membershipCoverage ? "mt-1 text-[10px] font-medium text-green-700" : "mt-1 text-[10px] font-medium text-orange-700"}>
+                          {membershipCoverage ? "Covered by subscription" : "Membership not active"}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] text-gray-500">POS charge</p>
+                        <p className="text-xs font-bold text-gray-900">
+                          {membershipCoverage ? formatCurrency(0) : formatCurrency(total.toLocaleString())}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="flex my-4 sm:my-5 flex-col sm:flex-row justify-between gap-2">
                 <Button
@@ -574,6 +757,7 @@ const Orders = () => {
                     specialNote={createdOrder.specialNote}
                     paymentType={createdOrder.paymentType}
                     discountPercentage={createdOrder.discountPercentage}
+                    membershipMember={createdOrder.membershipMember}
                   />
                 ))}
               </div>
@@ -591,6 +775,11 @@ const Orders = () => {
               )}
               {receipt.discountPercentage > 0 && (
                 <p className="text-[10px] sm:text-xs text-gray-600 mb-2">Discount: {receipt.discountPercentage}%</p>
+              )}
+              {receipt.membershipMember && (
+                <p className="text-[10px] sm:text-xs text-gray-600 mb-2">
+                  Member: {receipt.membershipMember.fullName} ({receipt.membershipMember.membershipId})
+                </p>
               )}
               <ul className="space-y-1 mb-2 max-h-32 sm:max-h-40 overflow-y-auto">
                 {receipt.items.map((item: any) => (
