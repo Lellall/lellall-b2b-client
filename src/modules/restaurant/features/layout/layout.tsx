@@ -375,9 +375,6 @@ const Layout: React.FC<LayoutProps> = ({ subdomainData }) => {
 
   // Get navigation items based on role, subscription status, and plan
   const allowedNavItems = getNavItemsByRole(userRole, daysLeft, planName);
-  const scopedNavItems = currentSubdomain === '355'
-    ? allowedNavItems
-    : allowedNavItems.filter((item) => item.to !== '/membership');
 
   // Redirect to /expired or /subscriptions if subscription is expired, but allow /verify-payment
   useEffect(() => {
@@ -395,7 +392,7 @@ const Layout: React.FC<LayoutProps> = ({ subdomainData }) => {
     }
   }, [daysLeft, allowedNavItems, location.pathname, navigate]);
 
-  const fixed = scopedNavItems.filter((item) => item.icon !== null || (item.text && item.text.trim() !== ''));
+  const fixed = allowedNavItems.filter((item) => item.icon !== null || (item.text && item.text.trim() !== ''));
 
   return (
     <ThemeProvider theme={theme}>

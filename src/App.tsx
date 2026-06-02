@@ -43,7 +43,6 @@ import Payroll from './modules/human-resource/features/payroll/payroll';
 import SalaryManagement from './modules/human-resource/features/salary/salary';
 import VendorInvoices from './modules/restaurant/features/vendor-invoices/vendor-invoices';
 import WhatsAppMessages from './modules/restaurant/features/whatsapp/whatsapp-messages';
-import RestaurantMembership from './modules/restaurant/features/membership/membership';
 import { CurrencyProvider } from './contexts/CurrencyContext';
 
 const App = () => {
@@ -123,7 +122,6 @@ const App = () => {
       <Route path="departments/:id" element={<ViewDepartment />} />
       <Route path="vendor-invoices" element={<VendorInvoices />} />
       <Route path="whatsapp-messages" element={<WhatsAppMessages />} />
-      <Route path="membership" element={subdomain === '355' ? <RestaurantMembership /> : <NotFound />} />
     </>
   );
 

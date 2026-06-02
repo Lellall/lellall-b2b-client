@@ -7,16 +7,9 @@ interface PreReceiptProps {
   subdomain: string;
   tableNumber: string;
   specialNote?: string;
-  membershipMember?: {
-    fullName: string;
-    membershipId: string;
-    planType: string;
-    status: string;
-    covered: boolean;
-  };
 }
 
-const PreReceipt: React.FC<PreReceiptProps> = ({ order, subdomain, tableNumber, specialNote, membershipMember }) => {
+const PreReceipt: React.FC<PreReceiptProps> = ({ order, subdomain, tableNumber, specialNote }) => {
   const componentRef = useRef<HTMLDivElement>(null);
   const [bgColor, setBgColor] = useState('#ffffff'); // Default white background
 
@@ -100,16 +93,6 @@ const PreReceipt: React.FC<PreReceiptProps> = ({ order, subdomain, tableNumber, 
               <p>
                 <span className="font-semibold">Special Note:</span> {specialNote}
               </p>
-            )}
-            {membershipMember && (
-              <>
-                <p>
-                  <span className="font-semibold">Member:</span> {membershipMember.fullName} ({membershipMember.membershipId})
-                </p>
-                <p>
-                  <span className="font-semibold">Coverage:</span> {membershipMember.covered ? 'Subscription covered' : membershipMember.status}
-                </p>
-              </>
             )}
           </div>
           <hr className="border-gray-300 my-1" style={{ borderColor: fontColor }} />

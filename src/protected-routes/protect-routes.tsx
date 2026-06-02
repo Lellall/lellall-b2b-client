@@ -107,10 +107,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
     return <Outlet />;
   }
 
-  if (currentPath.startsWith('/membership') && currentSubdomain !== '355') {
-    return <LostScreen />;
-  }
-
   // Special handling for STORE_KEEPER - always allow dashboard, inventory, settings, and leave-tracker
   if (userRole === 'STORE_KEEPER') {
     if (currentPath === '/' || currentPath === '/inventory' || currentPath === '/settings' || currentPath === '/leave-tracker' || currentPath.startsWith('/inventory')) {

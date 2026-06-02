@@ -37,7 +37,6 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
     { to: '/reservations', icon: Calendar2, text: 'Reservations' },
     { to: '/staffs', icon: UserSearch, text: 'Staffs' },
     { to: '/attendance', icon: DocumentText, text: 'Attendance' },
-    { to: '/membership', icon: UserSearch, text: 'Membership Club' },
     { to: '/whatsapp-messages', icon: MessageSquare, text: 'WhatsApp Messages' },
     { to: '/settings', icon: Setting, text: 'Settings' },
     { to: '/subscriptions', icon: MoneyChange, text: 'Subscriptions' },
@@ -54,7 +53,6 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
     { to: '/reservations', icon: Calendar2, text: 'Reservations' },
     { to: '/staffs', icon: UserSearch, text: 'Staffs' },
     { to: '/attendance', icon: DocumentText, text: 'Attendance' },
-    { to: '/membership', icon: UserSearch, text: 'Membership Club' },
     { to: '/whatsapp-messages', icon: MessageSquare, text: 'WhatsApp Messages' },
     { to: '/leave-tracker', icon: Calendar2, text: 'Leave Tracker' },
     { to: '/subscriptions', icon: MoneyChange, text: 'Subscriptions' },
@@ -136,7 +134,6 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
     { to: '/reservations', icon: Calendar2, text: 'Reservations' },
     { to: '/staffs', icon: UserSearch, text: 'Staffs' },
     { to: '/attendance', icon: DocumentText, text: 'Attendance' },
-    { to: '/membership', icon: UserSearch, text: 'Membership Club' },
     { to: '/salary', icon: DocumentText, text: 'Salary Management' },
     { to: '/payroll', icon: MoneyChange, text: 'Payroll' },
     { to: '/vendor-invoices', icon: DocumentText, text: 'Vendor Invoices' },
@@ -168,7 +165,6 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
     { to: '/reservations', icon: Calendar2, text: 'Reservations' },
     { to: '/staffs', icon: UserSearch, text: 'Staffs' },
     { to: '/attendance', icon: DocumentText, text: 'Attendance' },
-    { to: '/membership', icon: UserSearch, text: 'Membership Club' },
     { to: '/salary', icon: DocumentText, text: 'Salary Management' },
     { to: '/payroll', icon: MoneyChange, text: 'Payroll' },
     { to: '/vendor-invoices', icon: DocumentText, text: 'Vendor Invoices' },
@@ -235,7 +231,7 @@ export const getNavItemsByRole = (role: string, daysLeft: number, planName: stri
   const allowedFeatures = planFeatures[planName];
   const allowedRoutes = allowedFeatures
     .flatMap((feature) => featureToRoutes[feature] || [])
-    .concat(['/settings', '/subscriptions', '/verify-payment', '/', '/insights', '/attendance', '/leave-tracker', '/payroll', '/menu', '/whatsapp-messages', '/membership']);
+    .concat(['/settings', '/subscriptions', '/verify-payment', '/', '/insights', '/attendance', '/leave-tracker', '/payroll', '/menu', '/whatsapp-messages']);
 
   // HUMAN_RESOURCE bypasses subscription checks
   if (role === 'HUMAN_RESOURCE') {
