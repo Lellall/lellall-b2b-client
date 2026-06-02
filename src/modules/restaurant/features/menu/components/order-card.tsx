@@ -28,6 +28,13 @@ interface OrderCardProps {
   specialNote?: string; // Optional special note
   paymentType?: string | null; // Optional payment type
   discountPercentage?: number; // New: Optional discount percentage
+  membershipMember?: {
+    fullName: string;
+    membershipId: string;
+    planType: string;
+    status: string;
+    covered: boolean;
+  };
 }
 
 const statusOptions = ["PENDING", "PREPARING", "READY", "SERVED", "CREDIT", "CANCELLED"];
@@ -48,6 +55,7 @@ const OrderCard = ({
   specialNote,
   paymentType,
   discountPercentage,
+  membershipMember,
 }: OrderCardProps) => {
   const [selectedStatus, setSelectedStatus] = useState(status);
   const [updateOrderStatus] = useUpdateOrdersMutation();
@@ -103,6 +111,13 @@ const OrderCard = ({
             <p className="text-[10px] sm:text-sm text-gray-600">
               Discount: {discountPercentage}% ({discountAmount})
             </p>
+          )}
+          {membershipMember && (
+            <div className="mt-2 inline-flex flex-wrap items-center gap-2 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-[10px] sm:text-xs text-green-800">
+              <span className="font-semibold">{membershipMember.fullName}</span>
+              <span>{membershipMember.membershipId}</span>
+              <span>{membershipMember.covered ? 'Subscription covered' : membershipMember.status}</span>
+            </div>
           )}
         </div>
         <Select value={selectedStatus} onValueChange={handleStatusChange}>
