@@ -390,8 +390,8 @@ const CardItem: React.FC<CardItemProps> = ({
           <div className="flex gap-2 mt-2">
             <button
               onClick={() => setIsEditModalOpen(true)}
-              disabled={isUpdatingItems || order.status !== 'PENDING'}
-              className={`flex-1 flex justify-center items-center ${isUpdatingItems || order.status !== 'PENDING' ? 'bg-gray-300' : 'bg-blue-500 hover:bg-blue-600'
+              disabled={isUpdatingItems || (canEditOrDelete ? !['PENDING', 'PREPARING'].includes(order.status) : order.status !== 'PENDING')}
+              className={`flex-1 flex justify-center items-center ${isUpdatingItems || (canEditOrDelete ? !['PENDING', 'PREPARING'].includes(order.status) : order.status !== 'PENDING') ? 'bg-gray-300' : 'bg-blue-500 hover:bg-blue-600'
                 } text-white rounded-md p-1 text-[10px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-blue-500`}
               aria-label={`Edit order ${order.id}`}
             >
