@@ -14,7 +14,7 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
   const { isAuthenticated, user, subscription } = useSelector(selectAuth);
   const location = useLocation();
-  const userRole = user?.role || 'WAITER';
+  const userRole = (user?.role || 'WAITER').toUpperCase();
   const isLoungeAdmin = userRole === 'ADMIN' && !!user?.privateLoungeId;
   const effectiveRole = isLoungeAdmin ? 'PRIVATE_LOUNGE_ADMIN' : userRole;
   const isSuperAdmin = effectiveRole === 'SUPER_ADMIN';
@@ -128,6 +128,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
     if (effectiveRole === 'WAITER' && daysLeft > 0) {
       return <Navigate to="/settings" replace />;
     }
+    
+    // If they just logged in and hit the root path but it's not allowed,
+    // redirect them to their first available route instead of showing Access Denied
+    if (currentPath === '/') {
+      const allowedRoutes = getNavItemsByRole(effectiveRole, daysLeft, planName);
+      const targetRoute = allowedRoutes[0]?.to || '/settings';
+      return <Navigate to={targetRoute} replace />;
+    }
+    
     return <LostScreen />;
   }
 
