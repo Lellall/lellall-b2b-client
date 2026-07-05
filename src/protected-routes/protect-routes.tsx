@@ -15,7 +15,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
   const { isAuthenticated, user, subscription } = useSelector(selectAuth);
   const location = useLocation();
   const userRole = user?.role || 'WAITER';
-  const isSuperAdmin = userRole === 'SUPER_ADMIN';
+  const isLoungeAdmin = userRole === 'ADMIN' && !!user?.privateLoungeId;
+  const effectiveRole = isLoungeAdmin ? 'PRIVATE_LOUNGE_ADMIN' : userRole;
+  const isSuperAdmin = effectiveRole === 'SUPER_ADMIN';
 
   // Calculate days left for subscription (non-SUPER_ADMIN only)
   // Based on endDate only, regardless of status
@@ -42,7 +44,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
   const currentSubscription = isSuperAdmin
     ? null
     : user?.ownedRestaurant?.subscription || user?.restaurant?.subscription || subscription;
-  let daysLeft = isSuperAdmin ? Infinity : calculateDaysLeft(currentSubscription);
+  let daysLeft = isSuperAdmin || isLoungeAdmin ? Infinity : calculateDaysLeft(currentSubscription);
   let planName = isSuperAdmin ? 'Super Admin' : currentSubscription?.plan?.name;
 
   // Temporary 30-day override for no5ive (overcharge compensation — expires 2026-04-04)
@@ -72,14 +74,22 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
     return <LostScreen />;
   }
 
+  // Block roles (other than SUPER_ADMIN, ADMIN, MANAGER, CASHIER, STORE_KEEPER, ACCOUNTANT, COO, AUDITOR, SUPERVISOR, PRIVATE_LOUNGE_ADMIN) from accessing the dashboard /
+  if (
+    currentPath === '/' &&
+    !['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'CASHIER', 'STORE_KEEPER', 'ACCOUNTANT', 'COO', 'AUDITOR', 'SUPERVISOR', 'PRIVATE_LOUNGE_ADMIN'].includes(effectiveRole)
+  ) {
+    return <LostScreen />;
+  }
+
   // Restrict SUPER_ADMIN to admin routes only
   if (isSuperAdmin && !isAdminRoute && !currentPath.startsWith('/admin')) {
     return <Navigate to="/admin" replace />;
   }
 
   // Handle expired subscription for non-SUPER_ADMIN
-  if (!isSuperAdmin && daysLeft === 0) {
-    const allowedRoutes = getNavItemsByRole(userRole, daysLeft, planName);
+  if (!isSuperAdmin && !isLoungeAdmin && daysLeft === 0) {
+    const allowedRoutes = getNavItemsByRole(effectiveRole, daysLeft, planName);
     const targetRoute = allowedRoutes[0]?.to; // Either /expired or /subscriptions
     if (currentPath !== targetRoute) {
       const message =
@@ -93,12 +103,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
   }
 
   // Redirect WAITER to /settings if trying to access the root route (/)
-  if (userRole === 'WAITER' && currentPath === '/' && daysLeft > 0) {
+  if (effectiveRole === 'WAITER' && currentPath === '/' && daysLeft > 0) {
     return <Navigate to="/settings" replace />;
   }
 
   // Redirect HUMAN_RESOURCE to /attendance if trying to access the root route (/)
-  if (userRole === 'HUMAN_RESOURCE' && currentPath === '/') {
+  if (effectiveRole === 'HUMAN_RESOURCE' && currentPath === '/' && daysLeft > 0) { 
     return <Navigate to="/attendance" replace />;
   }
 
@@ -112,7 +122,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
   }
 
   // Special handling for STORE_KEEPER - always allow dashboard, inventory, settings, and leave-tracker
-  if (userRole === 'STORE_KEEPER') {
+  if (effectiveRole === 'STORE_KEEPER') {
     if (currentPath === '/' || currentPath === '/inventory' || currentPath === '/settings' || currentPath === '/leave-tracker' || currentPath.startsWith('/inventory')) {
       return <Outlet />;
     }
@@ -121,8 +131,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
   }
 
   // Check if the current route is allowed for the user's role and plan
-  if (!isRouteAllowed(userRole, currentPath, daysLeft, planName)) {
-    if (userRole === 'WAITER' && daysLeft > 0) {
+  if (!isRouteAllowed(effectiveRole, currentPath, daysLeft, planName)) {
+    if (effectiveRole === 'WAITER' && daysLeft > 0) {
       return <Navigate to="/settings" replace />;
     }
     return <LostScreen />;

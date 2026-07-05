@@ -34,6 +34,7 @@ interface OrderData {
   subtotal: number;
   discountPercentage?: number;
   discountAmount?: number;
+  appliedTaxes?: Array<{ name: string; rate: number; amount: number }>;
   vatTax: number;
   serviceFee: number;
   total: number;
@@ -187,9 +188,19 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain, orderId }:
               <p>
                 <span className="font-semibold">Discount ({orderData.discountPercentage ?? 0}%):</span> {formatCurrency((orderData.discountAmount ?? 0).toFixed(2))}
               </p>
-              <p>
-                <span className="font-semibold">VAT:</span> {formatCurrency(orderData.vatTax.toFixed(2))}
-              </p>
+              {orderData.appliedTaxes && orderData.appliedTaxes.length > 0 ? (
+                orderData.appliedTaxes.map((tax, index) => (
+                  tax.amount > 0 && (
+                    <p key={index}>
+                      <span className="font-semibold">{tax.name} ({(tax.rate * 100).toFixed(2)}%):</span> {formatCurrency(tax.amount.toFixed(2))}
+                    </p>
+                  )
+                ))
+              ) : (
+                <p>
+                  <span className="font-semibold">VAT:</span> {formatCurrency(orderData.vatTax.toFixed(2))}
+                </p>
+              )}
               {subdomain !== "355" && (
                 <p>
                   <span className="font-semibold">Service Fee:</span> {formatCurrency(orderData.serviceFee.toFixed(2))}

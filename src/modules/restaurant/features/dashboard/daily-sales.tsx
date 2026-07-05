@@ -145,14 +145,15 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
   const parseAmount = (val: string | undefined): number =>
     parseFloat((val || '0').replace(/[^\d.-]/g, '')) || 0;
 
-  // When VAT is enabled it is already baked into item prices.
-  // We extract it out so the operator can see the net revenue.
+  // The backend's totalRevenue is now exclusive of VAT (it is the discounted subtotal).
+  // We simply use the values directly.
   const rawRevenue = parseAmount(soldItemsData?.totalRevenue);
   const rawVat = parseAmount(soldItemsData?.totalVatTax);
-  const adjustedRevenue = vatEnabled ? rawRevenue - rawVat : rawRevenue;
+  const adjustedRevenue = rawRevenue;
 
   const rawServiceFee = parseAmount((soldItemsData as any)?.totalServiceFee);
-  const grandTotalNum = vatEnabled ? rawRevenue - rawVat + rawServiceFee : rawRevenue;
+  // Grand total is what the customer actually paid: Revenue + VAT + Service Fee
+  const grandTotalNum = rawRevenue + rawVat + rawServiceFee;
   const grandTotal = formatCurrency(grandTotalNum);
   // Query for daily sales revenue
   const { data: revenueData, isLoading: isRevenueLoading, error: revenueError } = useGetDailySalesRevenueQuery(
@@ -372,18 +373,18 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
                           <div>
                             <p className="text-sm">Total Revenue{vatEnabled ? ' (excl. VAT)' : ''}</p>
                             <p className="text-lg font-bold">
-                              {vatEnabled ? formatCurrency(adjustedRevenue) : (soldItemsData?.totalRevenue ? formatCurrency(Number(soldItemsData.totalRevenue) || 0) : formatCurrency(0))}
+                              {vatEnabled ? formatCurrency(adjustedRevenue) : (soldItemsData?.totalRevenue ? formatCurrency(parseAmount(soldItemsData.totalRevenue)) : formatCurrency(0))}
                             </p>
                           </div>
                           {vatEnabled && (
                             <div>
                               <p className="text-sm">Total VAT Tax</p>
-                              <p className="text-lg font-bold">{soldItemsData?.totalVatTax ? formatCurrency(Number(soldItemsData.totalVatTax) || 0) : formatCurrency(0)}</p>
+                              <p className="text-lg font-bold">{soldItemsData?.totalVatTax ? formatCurrency(parseAmount(soldItemsData.totalVatTax)) : formatCurrency(0)}</p>
                             </div>
                           )}
                           <div>
                             <p className="text-sm">Total Service Fee</p>
-                            <p className="text-lg font-bold">{soldItemsData?.totalServiceFee ? formatCurrency(Number(soldItemsData.totalServiceFee) || 0) : formatCurrency(0)}</p>
+                            <p className="text-lg font-bold">{soldItemsData?.totalServiceFee ? formatCurrency(parseAmount(soldItemsData.totalServiceFee)) : formatCurrency(0)}</p>
                           </div>
                           <div>
                             <p className="text-sm">Grand Total</p>
@@ -559,9 +560,7 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
                   </p>
                 ) : (
                   <p className="text-5xl font-bold text-[#0E5D37] mb-12 tracking-tight">
-                    {vatEnabled
-                      ? formatCurrency(adjustedRevenue)
-                      : (soldItemsData?.totalRevenue || formatCurrency(0))}
+                    {formatCurrency(grandTotalNum)}
                   </p>
                 )}
 

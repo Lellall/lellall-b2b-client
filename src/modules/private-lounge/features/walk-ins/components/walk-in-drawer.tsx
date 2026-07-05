@@ -1,0 +1,212 @@
+import React from 'react';
+import { X, Phone, User as UserIcon, Users, AlignLeft } from 'lucide-react';
+import { Profile2User, TickCircle, CloseCircle, Clock } from 'iconsax-react';
+import { toast } from 'react-toastify';
+
+interface WalkInDrawerProps {
+  walkIn: any | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onStatusChange: (id: string, newStatus: string) => void;
+  onConfirmPayment?: (id: string, ref: string, method: string) => void;
+  onLogDish?: (id: string, dishName: string, notes: string) => void;
+}
+
+export const WalkInDrawer: React.FC<WalkInDrawerProps> = ({ 
+  walkIn, 
+  isOpen, 
+  onClose,
+  onStatusChange,
+  onConfirmPayment,
+  onLogDish
+}) => {
+  const [paymentRef, setPaymentRef] = React.useState('');
+  const [dishName, setDishName] = React.useState('');
+  if (!isOpen || !walkIn) return null;
+
+  return (
+    <>
+      <div 
+        className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        onClick={onClose}
+      />
+
+      <div className={`fixed inset-y-0 right-0 w-full max-w-md bg-[#F9FAFB] shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'} overflow-y-auto border-l border-gray-200 flex flex-col`}>
+        
+        {/* Header */}
+        <div className="sticky top-0 bg-white/90 backdrop-blur-md z-10 px-6 py-5 border-b border-gray-100 flex justify-between items-center shadow-sm shrink-0">
+          <h2 className="text-xl font-bold text-gray-900">Walk-In Details</h2>
+          <button 
+            onClick={onClose}
+            className="p-2 bg-gray-50 hover:bg-red-50 rounded-full transition-colors text-gray-500 hover:text-red-500 border border-transparent hover:border-red-100"
+          >
+            <X size="20" />
+          </button>
+        </div>
+
+        <div className="p-6 flex-1 overflow-y-auto">
+          {/* Status Banner */}
+          <div className={`mb-6 rounded-xl p-4 flex items-center justify-between border ${
+            walkIn.status === 'CHECKED_IN' ? (walkIn.paymentConfirmed ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200') :
+            walkIn.status === 'COMPLETED' ? 'bg-gray-50 border-gray-200' :
+            'bg-red-50 border-red-200'
+          }`}>
+            <div>
+              <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${
+                walkIn.status === 'CHECKED_IN' ? (walkIn.paymentConfirmed ? 'text-green-800' : 'text-amber-800') :
+                walkIn.status === 'COMPLETED' ? 'text-gray-800' :
+                'text-red-800'
+              }`}>
+                Current Status
+              </p>
+              <p className={`text-sm font-semibold flex items-center gap-2 ${
+                walkIn.status === 'CHECKED_IN' ? (walkIn.paymentConfirmed ? 'text-green-900' : 'text-amber-900') :
+                walkIn.status === 'COMPLETED' ? 'text-gray-900' :
+                'text-red-900'
+              }`}>
+                {walkIn.status === 'CHECKED_IN' && !walkIn.paymentConfirmed && <Clock size="18" variant="Bold" />}
+                {walkIn.status === 'CHECKED_IN' && walkIn.paymentConfirmed && <TickCircle size="18" variant="Bold" />}
+                {walkIn.status === 'VOIDED' && <CloseCircle size="18" variant="Bold" />}
+                {walkIn.status === 'COMPLETED' && <TickCircle size="18" variant="Bold" />}
+                {walkIn.status === 'CHECKED_IN' ? (walkIn.paymentConfirmed ? 'PAID & ACTIVE' : 'PENDING PAYMENT') : walkIn.status}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-gray-500">Arrival Time</p>
+              <p className="text-sm font-semibold text-gray-900">
+                {new Date(walkIn.timeIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </div>
+          </div>
+
+          {/* Profile Card */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 border-b border-gray-50 pb-2 flex items-center gap-2">
+              <UserIcon size="14" /> Primary Details
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs text-gray-400">Guest Name</p>
+                <p className="text-lg font-bold text-gray-900">{walkIn.fullName}</p>
+                <p className="text-xs font-mono text-gray-400">{walkIn.id}</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-400">Phone</p>
+                  <p className="text-sm font-medium text-gray-900">{walkIn.phone || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">Email</p>
+                  <p className="text-sm font-medium text-gray-900 truncate pr-2">{walkIn.email || '-'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Visit Details */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 border-b border-gray-50 pb-2 flex items-center gap-2">
+              <Users size="14" /> Visit Details
+            </h3>
+            
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-gray-400 mb-0.5">Complimentary Dish Selections</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {walkIn.dishSelectionsUsed || 0} / {walkIn.maxDishSelections || 1} Used
+                  </p>
+                </div>
+              </div>
+
+              {walkIn.dishSelections && walkIn.dishSelections.length > 0 && (
+                <div className="pt-4 border-t border-gray-50 space-y-2">
+                  <p className="text-xs text-gray-400 mb-1">Selections Made</p>
+                  {walkIn.dishSelections.map((dish: any, idx: number) => (
+                    <div key={idx} className="text-sm font-medium text-gray-900 bg-gray-50 p-2 rounded">
+                      {dish.itemName}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Notes */}
+          {walkIn.notes && (
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 border-b border-gray-50 pb-2 flex items-center gap-2">
+                <AlignLeft size="14" /> Notes & Conditions
+              </h3>
+              <p className="text-sm text-gray-700 leading-relaxed bg-gray-50 p-3 rounded-lg border border-gray-100">
+                {walkIn.notes}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Action Footer */}
+        <div className="p-6 bg-white border-t border-gray-200 shrink-0">
+          {walkIn.status === 'CHECKED_IN' && !walkIn.paymentConfirmed && (
+            <div className="space-y-3">
+              <input
+                type="text"
+                placeholder="Payment Reference (e.g., POS Receipt No)"
+                value={paymentRef}
+                onChange={(e) => setPaymentRef(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm"
+              />
+              <button
+                onClick={() => {
+                  if (!paymentRef) return toast.error('Please enter payment reference');
+                  onConfirmPayment?.(walkIn.id, paymentRef, 'POS_TERMINAL');
+                  setPaymentRef('');
+                }}
+                className="w-full py-3 rounded-xl text-sm font-bold text-white bg-[#05431E] hover:bg-[#042f15] transition-colors shadow-md"
+              >
+                Confirm Payment
+              </button>
+            </div>
+          )}
+          
+          {walkIn.status === 'CHECKED_IN' && walkIn.paymentConfirmed && (
+            <div className="space-y-3">
+              {(walkIn.dishSelectionsUsed || 0) < (walkIn.maxDishSelections || 1) && (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Enter Dish Name"
+                    value={dishName}
+                    onChange={(e) => setDishName(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm"
+                  />
+                  <button
+                    onClick={() => {
+                      if (!dishName) return toast.error('Please enter dish name');
+                      onLogDish?.(walkIn.id, dishName, '');
+                      setDishName('');
+                    }}
+                    className="w-full py-3 rounded-xl text-sm font-bold text-[#05431E] bg-[#05431E]/10 hover:bg-[#05431E]/20 transition-colors"
+                  >
+                    Log Dish Selection
+                  </button>
+                </>
+              )}
+              
+              <button
+                onClick={() => {
+                  onStatusChange(walkIn.id, 'COMPLETED');
+                }}
+                className="w-full py-3 rounded-xl text-sm font-bold text-gray-700 border border-gray-300 hover:bg-gray-50 transition-colors"
+              >
+                Check Out Guest
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+};

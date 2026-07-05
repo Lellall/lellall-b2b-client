@@ -188,7 +188,7 @@ const AccountingMenu: React.FC = () => {
             toast.error('No category data available to export');
             return;
           }
-          headers = ['Category', 'Total Revenue', 'Item Count', 'Order Count'];
+          headers = ['Category', 'Net Sales', 'Item Count', 'Order Count'];
           rows = categoryData.categories.map((cat: any) => [
             cat.category || 'N/A',
             formatCurrency(cat.totalRevenue),
@@ -203,7 +203,7 @@ const AccountingMenu: React.FC = () => {
             toast.error('No item data available to export');
             return;
           }
-          headers = ['Item Name', 'Category', 'Quantity', 'Average Price', 'Total Revenue', 'Order Count'];
+          headers = ['Item Name', 'Category', 'Quantity', 'Average Price', 'Net Sales', 'Order Count'];
           rows = itemData.items.map((item: any) => [
             item.itemName || 'N/A',
             item.category || 'N/A',
@@ -220,7 +220,7 @@ const AccountingMenu: React.FC = () => {
             toast.error('No payment data available to export');
             return;
           }
-          headers = ['Payment Type', 'Order Count', 'Subtotal', 'Discount', 'VAT', 'Service Fee', 'Total Revenue'];
+          headers = ['Payment Type', 'Order Count', 'Subtotal', 'Discount', 'VAT', 'Service Fee', 'Grand Total'];
           rows = paymentData.breakdown.map((payment: any) => [
             payment.paymentType || 'N/A',
             payment.orderCount || 0,
@@ -238,7 +238,7 @@ const AccountingMenu: React.FC = () => {
             toast.error('No selected items data available to export');
             return;
           }
-          headers = ['Item Name', 'Category', 'Quantity', 'Total Revenue', 'Order Count'];
+          headers = ['Item Name', 'Category', 'Quantity', 'Net Sales', 'Order Count'];
           rows = selectedItemsData.items.map((item: any) => [
             item.itemName || 'N/A',
             item.category || 'N/A',
@@ -254,7 +254,7 @@ const AccountingMenu: React.FC = () => {
             toast.error('No staff data available to export');
             return;
           }
-          headers = ['Staff Name', 'Order Count', 'Total Revenue'];
+          headers = ['Staff Name', 'Order Count', 'Grand Total'];
           rows = staffData.staff.map((staff: any) => [
             staff.staffName || 'N/A',
             staff.orderCount || 0,
@@ -653,7 +653,7 @@ const AccountingMenu: React.FC = () => {
                     <div className="bg-gradient-to-r from-[#05431E] to-[#0E5D37] rounded-xl p-6 text-white">
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="text-xs font-semibold text-green-100 uppercase tracking-wide mb-1">Total Revenue</div>
+                          <div className="text-xs font-semibold text-green-100 uppercase tracking-wide mb-1">Net Sales</div>
                           <div className="text-3xl font-bold">{formatCurrency(categoryData.total)}</div>
                         </div>
                         <span className="text-4xl text-green-200 opacity-50 font-semibold">{currencySymbol}</span>
@@ -666,7 +666,7 @@ const AccountingMenu: React.FC = () => {
                           <thead className="bg-gray-50">
                             <tr>
                               <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wide">Category</th>
-                              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wide">Total Revenue</th>
+                              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wide">Net Sales</th>
                               <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wide">Item Count</th>
                               <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wide">Order Count</th>
                             </tr>
@@ -721,7 +721,7 @@ const AccountingMenu: React.FC = () => {
                         <div className="text-2xl font-bold text-gray-900">{itemData.summary.totalQuantity}</div>
                       </div>
                       <div className="bg-gradient-to-r from-[#05431E] to-[#0E5D37] rounded-xl p-6 text-white">
-                        <div className="text-xs font-semibold text-green-100 uppercase tracking-wide mb-2">Total Revenue</div>
+                        <div className="text-xs font-semibold text-green-100 uppercase tracking-wide mb-2">Net Sales</div>
                         <div className="text-2xl font-bold">{formatCurrency(itemData.summary.totalRevenue)}</div>
                       </div>
                     </div>
@@ -735,7 +735,7 @@ const AccountingMenu: React.FC = () => {
                               <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wide">Category</th>
                               <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wide">Quantity</th>
                               <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wide">Average Price</th>
-                              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wide">Total Revenue</th>
+                              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wide">Net Sales</th>
                               <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wide">Order Count</th>
                             </tr>
                           </thead>
@@ -788,7 +788,7 @@ const AccountingMenu: React.FC = () => {
                     <div className="bg-gradient-to-r from-[#05431E] to-[#0E5D37] rounded-xl p-6 text-white">
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="text-xs font-semibold text-green-100 uppercase tracking-wide mb-1">Total Revenue</div>
+                          <div className="text-xs font-semibold text-green-100 uppercase tracking-wide mb-1">Grand Total</div>
                           <div className="text-3xl font-bold">{formatCurrency(paymentData.totalRevenue)}</div>
                         </div>
                         <CreditCard className="w-10 h-10 text-green-200 opacity-50" />
@@ -806,7 +806,7 @@ const AccountingMenu: React.FC = () => {
                               <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wide">Discount</th>
                               <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wide">VAT</th>
                               <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wide">Service Fee</th>
-                              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wide">Total Revenue</th>
+                              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wide">Grand Total</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-100">
@@ -958,7 +958,7 @@ const AccountingMenu: React.FC = () => {
                               <div className="text-2xl font-bold">{selectedItemsData.summary.totalQuantity}</div>
                             </div>
                             <div>
-                              <div className="text-xs font-semibold text-green-100 uppercase tracking-wide mb-2">Total Revenue</div>
+                              <div className="text-xs font-semibold text-green-100 uppercase tracking-wide mb-2">Net Sales</div>
                               <div className="text-2xl font-bold">{formatCurrency(selectedItemsData.summary.totalRevenue)}</div>
                             </div>
                           </div>
@@ -995,7 +995,7 @@ const AccountingMenu: React.FC = () => {
                                           <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wide">Order ID</th>
                                           <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wide">Date</th>
                                           <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wide">Quantity</th>
-                                          <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wide">Revenue</th>
+                                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wide">Net Sales</th>
                                           <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wide">Waiter</th>
                                         </tr>
                                       </thead>
@@ -1062,7 +1062,7 @@ const AccountingMenu: React.FC = () => {
                         <div className="text-2xl font-bold text-gray-900">{staffData.summary.totalItemsSold}</div>
                       </div>
                       <div className="bg-gradient-to-r from-[#05431E] to-[#0E5D37] rounded-xl p-5 text-white">
-                        <div className="text-xs font-semibold text-green-100 uppercase tracking-wide mb-2">Total Revenue</div>
+                        <div className="text-xs font-semibold text-green-100 uppercase tracking-wide mb-2">Grand Total</div>
                         <div className="text-2xl font-bold">{formatCurrency(staffData.summary.totalRevenue)}</div>
                       </div>
                       <div className="bg-white rounded-xl p-5">
@@ -1090,7 +1090,7 @@ const AccountingMenu: React.FC = () => {
 
                           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                             <div>
-                              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Total Revenue</div>
+                              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Grand Total</div>
                               <div className="text-lg font-bold text-[#05431E]">{formatCurrency(staffMember.totalRevenue)}</div>
                             </div>
                             <div>

@@ -2,7 +2,7 @@ import axios from "axios";
 import { configUrl } from "../../utils/config";
 
 const CustomAxios = axios.create({
-  baseURL: `${configUrl?.BACKEND_URL}/`,
+  baseURL: `${configUrl?.BACKEND_URL}`,
   headers: {
     "Content-Type": "application/json",
   },
@@ -71,7 +71,8 @@ const endpointsRequiringToken = [
   "^payroll",
   "^[^/]+/vendor-invoices",
   "^webhooks/whatsapp",
-  "/restaurant-config/currency"
+  "/restaurant-config/currency",
+  "/private-lounge"
 ];
 
 const endpointsWithoutToken = ["/auth/login", "/auth/register", "/auth/refresh-token"];

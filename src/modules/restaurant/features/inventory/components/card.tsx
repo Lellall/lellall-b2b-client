@@ -24,6 +24,7 @@ interface Order {
   subtotal: number;
   discountPercentage?: number;
   discountAmount?: number;
+  appliedTaxes?: Array<{ name: string; rate: number; amount: number }>;
   vatTax: number;
   serviceFee: number;
   total: number;
@@ -220,8 +221,9 @@ const CardItem: React.FC<CardItemProps> = ({
             orderData={{
               ...order,
               subtotal: order.subtotal,
-              discountPercentage: order.discountPercentage, // Pass discountPercentage
-              discountAmount: order.discountAmount, // Pass discountAmount
+              discountPercentage: order.discountPercentage,
+              discountAmount: order.discountAmount,
+              appliedTaxes: order.appliedTaxes,
               vatTax: order.vatTax,
               serviceFee: order.serviceFee,
               total: order.total,
@@ -289,10 +291,21 @@ const CardItem: React.FC<CardItemProps> = ({
             <span>Discount ({order.discountPercentage ?? 0}%)</span>
             <span>{formatCurrency((order.discountAmount ?? 0).toLocaleString())}</span>
           </div>
-          <div className="flex justify-between mt-1 text-xs">
-            <span>VAT</span>
-            <span>{formatCurrency(order.vatTax.toLocaleString())}</span>
-          </div>
+          {order.appliedTaxes && order.appliedTaxes.length > 0 ? (
+            order.appliedTaxes.map((tax, index) => (
+              tax.amount > 0 && (
+                <div key={index} className="flex justify-between mt-1 text-xs">
+                  <span>{tax.name} ({(tax.rate * 100).toFixed(2)}%)</span>
+                  <span>{formatCurrency(tax.amount.toLocaleString())}</span>
+                </div>
+              )
+            ))
+          ) : (
+            <div className="flex justify-between mt-1 text-xs">
+              <span>VAT</span>
+              <span>{formatCurrency(order.vatTax.toLocaleString())}</span>
+            </div>
+          )}
           {subdomain !== "355" && (
             <div className="flex justify-between mt-1 text-xs">
               <span>Service Fee</span>

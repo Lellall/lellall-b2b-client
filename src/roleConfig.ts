@@ -9,6 +9,19 @@ export interface NavItemConfig {
 }
 
 export const navItemsByRole: Record<string, NavItemConfig[]> = {
+  PRIVATE_LOUNGE_ADMIN: [
+    { to: '/lounge/dashboard', icon: Home, text: 'Dashboard', end: true },
+    { to: '/lounge/applications', icon: DocumentText, text: 'Applications' },
+    { to: '/lounge/members', icon: UserSearch, text: 'Members' },
+    { to: '/lounge/walk-ins', icon: ArchiveBox, text: 'Walk-ins' },
+    { to: '/lounge/bottles', icon: ArchiveBox, text: 'Storage' },
+    { to: '/lounge/menu', icon: Element2, text: 'Menu' },
+    { to: '/lounge/reservations', icon: Calendar2, text: 'Reservations' },
+    { to: '/lounge/partners', icon: TrendUp, text: 'Partners' },
+    { to: '/lounge/revenue', icon: MoneyChange, text: 'Revenue' },
+    { to: '/lounge/billing', icon: MoneyChange, text: 'Billing' },
+    { to: '/lounge/settings', icon: Setting, text: 'Settings' },
+  ],
   WAITER: [
     // { to: '/', icon: Home, text: 'Dashboard', end: true },
     { to: '/menu', icon: Element2, text: 'Menu' },
@@ -219,6 +232,11 @@ export const getNavItemsByRole = (role: string, daysLeft: number, planName: stri
     return defaultRoutes;
   }
 
+  // PRIVATE_LOUNGE_ADMIN bypasses standard restaurant subscription checks
+  if (role === 'PRIVATE_LOUNGE_ADMIN') {
+    return defaultRoutes;
+  }
+
   if (daysLeft === 0) {
     const hasSubscriptionAccess = defaultRoutes.some((item) => item.to === '/subscriptions');
     if (hasSubscriptionAccess) {
@@ -301,6 +319,13 @@ export const isRouteAllowed = (
   if (role === 'STORE_KEEPER') {
     if (path === '/' || path === '/inventory' || path === '/settings' || path === '/leave-tracker') {
       return true;
+    }
+  }
+
+  // Special handling for PRIVATE_LOUNGE_ADMIN
+  if (role === 'PRIVATE_LOUNGE_ADMIN') {
+    if (path === '/') {
+      return true; // Allow root so the redirect to /lounge/dashboard can occur
     }
   }
 

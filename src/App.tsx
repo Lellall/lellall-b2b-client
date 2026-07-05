@@ -15,6 +15,7 @@ import Subscriptions from './modules/restaurant/features/subscriptions/subscript
 import Reservations from './modules/restaurant/features/reservations/reservations';
 import Reservation from './modules/restaurant/features/reservations/reservation';
 import AdminLayout from './modules/admin/features/layout/layout';
+import LoungeLayout from './modules/private-lounge/layout/layout';
 import Operations from './modules/admin/features/operations/operations';
 import ViewOrderOperations from './modules/admin/features/operations/view-order-operations';
 import Settings from './modules/restaurant/features/settings/settings';
@@ -31,6 +32,13 @@ import AddStaff from './modules/restaurant/features/staff/add-staff';
 import EditStaff from './modules/restaurant/features/staff/edit-staff';
 import VerifyPaymentPage from './modules/restaurant/features/subscriptions/verify-page';
 import Dashboard from './modules/restaurant/features/dashboard/dashboard';
+import LoungeDashboard from './modules/private-lounge/features/dashboard/dashboard';
+import BottleStoragePage from './modules/private-lounge/features/bottles/BottleStoragePage';
+import { Members } from './modules/private-lounge/features/members/members';
+import { WalkIns } from './modules/private-lounge/features/walk-ins/walk-ins';
+import { Applications } from './modules/private-lounge/features/applications/applications';
+import { NewApplication } from './modules/private-lounge/features/applications/new-application';
+import LoungeMenuPage from './modules/private-lounge/features/menu/LoungeMenuPage';
 import SubscriptionExpired from './SubscriptionExpired';
 import Insights from './modules/restaurant/features/insights/insights';
 import Attendance from './modules/human-resource/features/attendance/attendance';
@@ -56,13 +64,16 @@ const App = () => {
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
   const isAdminSubdomain = subdomain === 'admin';
   const isHumanResource = user?.role === 'HUMAN_RESOURCE';
+  const isLoungeAdmin = user?.role === 'ADMIN' && !!user?.privateLoungeId;
 
   // Check if user is allowed to access the dashboard
   const canAccessDashboard = user?.role === 'ADMIN' || user?.role === 'MANAGER' || user?.role === "CASHIER" || user?.role === "STORE_KEEPER" || user?.role === "ACCOUNTANT" || user?.role === "COO" || user?.role === "AUDITOR";
 
-  // Query restaurant data unless accessing admin subdomain with SUPER_ADMIN
+  // Query restaurant data — skip for admin subdomain, and skip for lounge admins
+  // (lounge subdomains like 'sanctum' are not restaurants and would 404)
+  const shouldSkipRestaurantQuery = (isAdminSubdomain && isSuperAdmin) || isLoungeAdmin;
   const { data: restaurant, isLoading, isError } = useGetRestaurantBySubdomainQuery(subdomain, {
-    skip: isAdminSubdomain && isSuperAdmin,
+    skip: shouldSkipRestaurantQuery,
   });
 
   // Store refresh token in localStorage
@@ -80,12 +91,13 @@ const App = () => {
   }, [restaurant, subdomain, dispatch]);
 
   // Show loading state while checking restaurant data
-  if (isLoading && !(isAdminSubdomain && isSuperAdmin)) {
+  if (isLoading && !shouldSkipRestaurantQuery) {
     return <div className="text-center text-lg">Checking restaurant...</div>;
   }
 
-  // Show SubdomainNotFound if restaurant query fails and not on admin subdomain
-  if (isError && !isAdminSubdomain) {
+  // Show SubdomainNotFound if restaurant query fails — but not for admin, lounge subdomains,
+  // or unauthenticated users (they need to see the login page regardless)
+  if (isError && !isAdminSubdomain && !isLoungeAdmin && isAuthenticated) {
     return <SubdomainNotFound />;
   }
 
@@ -161,6 +173,27 @@ const App = () => {
     </>
   );
 
+  // Define lounge routes for PRIVATE_LOUNGE_ADMIN
+  const loungeRoutes = (
+    <>
+      <Route path="dashboard" element={<LoungeDashboard />} />
+      <Route path="applications">
+        <Route index element={<Applications />} />
+        <Route path="new" element={<NewApplication />} />
+      </Route>
+      <Route path="members" element={<Members />} />
+      <Route path="walk-ins" element={<WalkIns />} />
+      <Route path="bottles" element={<BottleStoragePage />} />
+      <Route path="menu" element={<LoungeMenuPage />} />
+      <Route path="reservations" element={<div>Lounge Reservations Placeholder</div>} />
+      <Route path="partners" element={<div>Lounge Partners Placeholder</div>} />
+      <Route path="revenue" element={<div>Lounge Revenue Placeholder</div>} />
+      <Route path="billing" element={<div>Lounge Billing Placeholder</div>} />
+      <Route path="settings" element={<div>Lounge Settings Placeholder</div>} />
+      <Route index element={<Navigate to="dashboard" replace />} />
+    </>
+  );
+
   return (
     <CurrencyProvider>
       <Router>
@@ -203,7 +236,17 @@ const App = () => {
                   </Route>
                 )}
 
-                {!isSuperAdmin && !isHumanResource && (
+                {isLoungeAdmin && (
+                  <Route element={<ProtectedRoute isAdminRoute={false} />}>
+                    <Route path="/lounge" element={<LoungeLayout />}>
+                      {loungeRoutes}
+                    </Route>
+                    {/* Redirect root to lounge dashboard if they are a lounge admin */}
+                    <Route path="/" element={<Navigate to="/lounge/dashboard" replace />} />
+                  </Route>
+                )}
+
+                {!isSuperAdmin && !isHumanResource && !isLoungeAdmin && (
                   <Route element={<ProtectedRoute isAdminRoute={false} />}>
                     <Route path="/" element={<Layout subdomainData={restaurant} />}>
                       {restaurantRoutes}
