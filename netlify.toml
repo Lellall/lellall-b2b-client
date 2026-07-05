@@ -2,7 +2,7 @@
   functions = "netlify/functions"
 
 [context.production]
-command = "npm install @rollup/rollup-linux-x64-gnu --no-save && npm run build"
+command = "npm install @rollup/rollup-linux-x64-gnu @esbuild/linux-x64@0.21.5 --no-save && npm run build"
 publish = "dist"
 branch = "main"
 
