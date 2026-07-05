@@ -74,13 +74,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
     return <LostScreen />;
   }
 
-  // Block roles (other than SUPER_ADMIN, ADMIN, MANAGER, CASHIER, STORE_KEEPER, ACCOUNTANT, COO, AUDITOR, SUPERVISOR, PRIVATE_LOUNGE_ADMIN) from accessing the dashboard /
-  if (
-    currentPath === '/' &&
-    !['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'CASHIER', 'STORE_KEEPER', 'ACCOUNTANT', 'COO', 'AUDITOR', 'SUPERVISOR', 'PRIVATE_LOUNGE_ADMIN'].includes(effectiveRole)
-  ) {
-    return <LostScreen />;
-  }
 
   // Restrict SUPER_ADMIN to admin routes only
   if (isSuperAdmin && !isAdminRoute && !currentPath.startsWith('/admin')) {
