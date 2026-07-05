@@ -373,12 +373,14 @@ export const orderApi = baseApi.injectEndpoints({
         totalServiceFee: number;
         totalRevenue: number;
       },
-      { subdomain: string; startDate?: string; endDate?: string }
+      { subdomain: string; startDate?: string; endDate?: string; startTime?: string; endTime?: string }
     >({
-      query: ({ subdomain, startDate, endDate }) => {
+      query: ({ subdomain, startDate, endDate, startTime, endTime }) => {
         const queryParams = new URLSearchParams();
         if (startDate) queryParams.set('startDate', startDate);
         if (endDate) queryParams.set('endDate', endDate);
+        if (startTime) queryParams.set('startTime', startTime);
+        if (endTime) queryParams.set('endTime', endTime);
         queryParams.set('format', 'json');
 
         const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
@@ -402,13 +404,15 @@ export const orderApi = baseApi.injectEndpoints({
     }),
     downloadPaymentTypeSummaryCsv: builder.query<
       string,
-      { subdomain: string; startDate?: string; endDate?: string }
+      { subdomain: string; startDate?: string; endDate?: string; startTime?: string; endTime?: string }
     >({
-      query: ({ subdomain, startDate, endDate }) => {
+      query: ({ subdomain, startDate, endDate, startTime, endTime }) => {
         const queryParams = new URLSearchParams();
         queryParams.set('format', 'csv');
         if (startDate) queryParams.set('startDate', startDate);
         if (endDate) queryParams.set('endDate', endDate);
+        if (startTime) queryParams.set('startTime', startTime);
+        if (endTime) queryParams.set('endTime', endTime);
 
         const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
 

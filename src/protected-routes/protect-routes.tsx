@@ -95,11 +95,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
     return <Outlet />;
   }
 
-  // Redirect WAITER to /settings if trying to access the root route (/)
-  if (effectiveRole === 'WAITER' && currentPath === '/' && daysLeft > 0) {
-    return <Navigate to="/settings" replace />;
-  }
-
   // Redirect HUMAN_RESOURCE to /attendance if trying to access the root route (/)
   if (effectiveRole === 'HUMAN_RESOURCE' && currentPath === '/' && daysLeft > 0) { 
     return <Navigate to="/attendance" replace />;
@@ -125,10 +120,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
 
   // Check if the current route is allowed for the user's role and plan
   if (!isRouteAllowed(effectiveRole, currentPath, daysLeft, planName)) {
-    if (effectiveRole === 'WAITER' && daysLeft > 0) {
-      return <Navigate to="/settings" replace />;
-    }
-    
     // If they just logged in and hit the root path but it's not allowed,
     // redirect them to their first available route instead of showing Access Denied
     if (currentPath === '/') {

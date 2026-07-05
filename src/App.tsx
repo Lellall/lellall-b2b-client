@@ -67,7 +67,8 @@ const App = () => {
   const isLoungeAdmin = user?.role === 'ADMIN' && !!user?.privateLoungeId;
 
   // Check if user is allowed to access the dashboard
-  const canAccessDashboard = user?.role === 'ADMIN' || user?.role === 'MANAGER' || user?.role === "CASHIER" || user?.role === "STORE_KEEPER" || user?.role === "ACCOUNTANT" || user?.role === "COO" || user?.role === "AUDITOR";
+  // Anyone reaching this point for the index route has already been authorized by protect-routes.tsx
+  const canAccessDashboard = true;
 
   // Query restaurant data — skip for admin subdomain, and skip for lounge admins
   // (lounge subdomains like 'sanctum' are not restaurants and would 404)
