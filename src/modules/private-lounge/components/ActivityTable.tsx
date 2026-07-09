@@ -1,6 +1,18 @@
 import React from 'react';
 import styled from 'styled-components';
 import { User } from 'iconsax-react';
+import { formatDistanceToNow } from 'date-fns';
+
+export interface RecentActivity {
+  member: string;
+  tier: string;
+  action: string;
+  time: string;
+}
+
+interface ActivityTableProps {
+  activities?: RecentActivity[];
+}
 
 const Container = styled.div`
   background: white;
@@ -114,38 +126,9 @@ const TierBadge = styled.span<{ tier: 'Black' | 'Gold' | 'Silver' }>`
   }}
 `;
 
-const activities = [
-  {
-    id: 1,
-    name: 'Chief Tunde M.',
-    tier: 'Black' as const,
-    action: 'Retrieved 2x Dom Perignon',
-    time: '10 mins ago',
-  },
-  {
-    id: 2,
-    name: 'Sarah O.',
-    tier: 'Gold' as const,
-    action: 'Reservation Check-in (VIP Table 4)',
-    time: '25 mins ago',
-  },
-  {
-    id: 3,
-    name: 'Dr. Ahmed K.',
-    tier: 'Silver' as const,
-    action: 'Membership Renewed (Annual)',
-    time: '1 hour ago',
-  },
-  {
-    id: 4,
-    name: 'Jane Smith',
-    tier: 'Gold' as const,
-    action: 'Walk-in (+3 guests)',
-    time: '2 hours ago',
-  },
-];
+// Static data removed
 
-const ActivityTable: React.FC = () => {
+const ActivityTable: React.FC<ActivityTableProps> = ({ activities = [] }) => {
   return (
     <Container>
       <Header>
@@ -163,23 +146,31 @@ const ActivityTable: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {activities.map((activity) => (
-            <tr key={activity.id}>
+          {activities.length > 0 ? activities.map((activity, index) => (
+            <tr key={index}>
               <Td>
                 <MemberInfo>
                   <Avatar>
                     <User size="16" />
                   </Avatar>
-                  <MemberName>{activity.name}</MemberName>
+                  <MemberName>{activity.member}</MemberName>
                 </MemberInfo>
               </Td>
               <Td>
-                <TierBadge tier={activity.tier}>{activity.tier}</TierBadge>
+                <TierBadge tier={activity.tier as 'Black' | 'Gold' | 'Silver'}>{activity.tier}</TierBadge>
               </Td>
               <Td>{activity.action}</Td>
-              <Td style={{ color: '#6B7280' }}>{activity.time}</Td>
+              <Td style={{ color: '#6B7280' }}>
+                {activity.time ? formatDistanceToNow(new Date(activity.time), { addSuffix: true }) : ''}
+              </Td>
             </tr>
-          ))}
+          )) : (
+            <tr>
+              <Td colSpan={4} style={{ textAlign: 'center', color: '#6B7280' }}>
+                No recent activity.
+              </Td>
+            </tr>
+          )}
         </tbody>
       </Table>
     </Container>

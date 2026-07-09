@@ -80,7 +80,11 @@ const ArrowIcon = styled(ArrowRight2)`
   height: 16px;
 `;
 
-const QuickActions: React.FC = () => {
+interface QuickActionsProps {
+  pendingCount?: number;
+}
+
+const QuickActions: React.FC<QuickActionsProps> = ({ pendingCount = 0 }) => {
   return (
     <Container>
       <Header>
@@ -94,7 +98,7 @@ const QuickActions: React.FC = () => {
           </IconBox>
           <ActionContent>
             <ActionTitle>Approve Memberships</ActionTitle>
-            <ActionDesc>3 applications pending</ActionDesc>
+            <ActionDesc>{pendingCount} {pendingCount === 1 ? 'application' : 'applications'} pending</ActionDesc>
           </ActionContent>
           <ArrowIcon />
         </ActionItem>

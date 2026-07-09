@@ -5,6 +5,11 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store';
+import { toast } from 'react-toastify';
+import { useGetInventoryItemsQuery } from '../../../../redux/api/private-lounge/inventory.api';
+import { useCreateOrderMutation } from '../../../../redux/api/private-lounge/orders.api';
+import { useGetTodaysWalkInsQuery } from '../../../../redux/api/private-lounge/walk-ins.api';
+import { useGetAllMembersQuery } from '../../../../redux/api/private-lounge/members.api';
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -365,7 +370,44 @@ const OrderPanel: React.FC<{
   total: number;
   isOpen: boolean;
   onClose: () => void;
-}> = ({ order, onRemove, onClear, total, isOpen, onClose }) => (
+  activeLoungeId: string;
+}> = ({ order, onRemove, onClear, total, isOpen, onClose, activeLoungeId }) => {
+  const [createOrder, { isLoading }] = useCreateOrderMutation();
+  const { data: walkInsData } = useGetTodaysWalkInsQuery(activeLoungeId, { skip: !activeLoungeId });
+  const walkIns = walkInsData?.walkIns || [];
+  const { data: members = [] } = useGetAllMembersQuery(activeLoungeId, { skip: !activeLoungeId });
+  const [selectedCustomer, setSelectedCustomer] = useState<string>(''); // format "walkIn:id" or "member:id" or "anonymous"
+
+  const activeWalkIns = walkIns.filter(w => w.status === 'ACTIVE');
+  const checkedInMembers = members.filter((m: any) => m.visits && m.visits.length > 0);
+
+  const handleConfirmOrder = async () => {
+    if (!activeLoungeId) return;
+    try {
+      const orderData: any = {
+        items: order.map(o => ({ 
+          inventoryItemId: o.item.id, 
+          quantity: o.qty,
+          unitPrice: o.item.price,
+          totalPrice: o.item.price * o.qty
+        }))
+      };
+      if (selectedCustomer.startsWith('walkIn:')) {
+        orderData.walkInId = selectedCustomer.split(':')[1];
+      } else if (selectedCustomer.startsWith('member:')) {
+        orderData.membershipId = selectedCustomer.split(':')[1];
+      }
+
+      await createOrder({ loungeId: activeLoungeId, ...orderData }).unwrap();
+      toast.success('Order placed successfully!');
+      onClear();
+      onClose();
+    } catch (error) {
+      toast.error('Failed to place order');
+    }
+  };
+
+  return (
   <>
     <div
       className={`fixed inset-0 bg-black/30 backdrop-blur-sm z-40 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
@@ -409,13 +451,33 @@ const OrderPanel: React.FC<{
 
       {order.length > 0 && (
         <div className="p-6 border-t border-gray-100 space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Assign Order To</label>
+            <select 
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#05431E]/20"
+              value={selectedCustomer}
+              onChange={e => setSelectedCustomer(e.target.value)}
+            >
+              <option value="" disabled>-- Select Customer --</option>
+              {activeWalkIns.length > 0 && <optgroup label="Walk-Ins">
+                {activeWalkIns.map(w => <option key={w.id} value={`walkIn:${w.id}`}>Walk-In: {w.guestName}</option>)}
+              </optgroup>}
+              {checkedInMembers.length > 0 && <optgroup label="Checked-In Members">
+                {checkedInMembers.map((m: any) => <option key={m.id} value={`member:${m.id}`}>Member: {m.fullName}</option>)}
+              </optgroup>}
+            </select>
+          </div>
           <div className="flex justify-between items-center">
             <span className="text-gray-500 text-base">Total</span>
             <span className="text-gray-900 font-bold text-2xl">{formatCurrency(total)}</span>
           </div>
           {/* Large CTA for tablet */}
-          <button className="w-full py-4 rounded-2xl bg-[#05431E] hover:bg-[#042f15] active:scale-[0.98] text-white font-bold text-base transition-all shadow-sm">
-            Confirm Order
+          <button 
+            disabled={isLoading || !selectedCustomer}
+            onClick={handleConfirmOrder}
+            className="w-full py-4 rounded-2xl bg-[#05431E] hover:bg-[#042f15] active:scale-[0.98] text-white font-bold text-base transition-all shadow-sm"
+          >
+            {isLoading ? 'Processing...' : 'Confirm Order'}
           </button>
           <button onClick={onClear} className="w-full text-sm text-gray-400 hover:text-gray-600 transition-colors py-2">
             Clear all items
@@ -424,7 +486,8 @@ const OrderPanel: React.FC<{
       )}
     </div>
   </>
-);
+  );
+};
 
 // ─── BOTTLE POUR MODAL ────────────────────────────────────────────────────────
 
@@ -469,7 +532,6 @@ const BottlePourModal: React.FC<{
 
 const LoungeMenuPage: React.FC = () => {
   const user = useSelector((state: RootState) => state.auth.user);
-  const loungeName = (user as any)?.loungeName || 'Lounge';
 
   const [activeTab, setActiveTab] = useState<'food' | 'drinks' | 'bottle-pour'>('food');
   const [activeCategory, setActiveCategory] = useState<string>('All');
@@ -479,7 +541,16 @@ const LoungeMenuPage: React.FC = () => {
   const [selectedBottle, setSelectedBottle] = useState<BottlePourItem | null>(null);
   const [isPourModalOpen, setIsPourModalOpen] = useState(false);
 
-  const items = activeTab === 'food' ? foodItems : activeTab === 'drinks' ? drinkItems : [];
+  const { data: inventory = [] } = useGetInventoryItemsQuery(user?.privateLoungeId || '', { skip: !user?.privateLoungeId });
+  
+  const mappedFoodItems = inventory.filter(i => i.category === 'Food').map(i => ({
+    id: i.id, name: i.name, description: i.brand, price: i.cost, category: i.subCategory, emoji: i.emoji, color: i.accentColor
+  }));
+  const mappedDrinkItems = inventory.filter(i => i.category === 'Spirits & Wine').map(i => ({
+    id: i.id, name: i.name, description: i.brand, price: i.cost, category: i.subCategory, emoji: i.emoji, color: i.accentColor
+  }));
+
+  const items = activeTab === 'food' ? mappedFoodItems : activeTab === 'drinks' ? mappedDrinkItems : [];
   const categories = ['All', ...Array.from(new Set(items.map(i => i.category)))];
 
   const filteredItems = items.filter(item => {
@@ -676,6 +747,7 @@ const LoungeMenuPage: React.FC = () => {
         total={totalAmount}
         isOpen={isOrderOpen}
         onClose={() => setIsOrderOpen(false)}
+        activeLoungeId={user?.privateLoungeId}
       />
 
       {/* ── Bottle Pour Modal ────────────────────────────────────────────── */}

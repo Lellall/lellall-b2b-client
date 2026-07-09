@@ -36,6 +36,27 @@ export const membersApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['LOUNGE_MEMBERS'],
     }),
+    checkInMember: builder.mutation({
+      query: ({ membershipId, pin }: { membershipId: string; pin: string }) => ({
+        url: `/private-lounge/admin/members/${membershipId}/check-in`,
+        method: 'POST',
+        body: { pin },
+      }),
+      invalidatesTags: ['LOUNGE_MEMBERS'],
+    }),
+    checkOutMember: builder.mutation({
+      query: (visitId: string) => ({
+        url: `/private-lounge/admin/members/visits/${visitId}/check-out`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['LOUNGE_MEMBERS'],
+    }),
+    requestCheckInPin: builder.mutation({
+      query: (membershipId: string) => ({
+        url: `/private-lounge/admin/members/${membershipId}/request-pin`,
+        method: 'POST',
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -45,5 +66,8 @@ export const {
   useGetMemberByIdQuery,
   useUpdateMemberMutation,
   useSuspendMemberMutation,
-  useDeleteMemberMutation
+  useDeleteMemberMutation,
+  useCheckInMemberMutation,
+  useCheckOutMemberMutation,
+  useRequestCheckInPinMutation
 } = membersApi;

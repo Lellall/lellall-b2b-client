@@ -13,6 +13,15 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 
+export interface RevenueTrend {
+  day: string;
+  amount: number;
+}
+
+interface PremiumChartProps {
+  trends?: RevenueTrend[];
+}
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -104,35 +113,38 @@ export const options = {
   },
 };
 
-const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+// Static data removed
 
-export const data = {
-  labels,
-  datasets: [
-    {
-      fill: true,
-      label: 'Revenue (₦)',
-      data: [65000, 59000, 80000, 81000, 112000, 155000, 140000],
-      borderColor: '#05431E',
-      backgroundColor: (context: any) => {
-        const ctx = context.chart.ctx;
-        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-        gradient.addColorStop(0, 'rgba(5, 67, 30, 0.2)');
-        gradient.addColorStop(1, 'rgba(5, 67, 30, 0)');
-        return gradient;
+const PremiumChart: React.FC<PremiumChartProps> = ({ trends = [] }) => {
+  const labels = trends.map(t => t.day);
+  const dataPoints = trends.map(t => t.amount);
+
+  const chartData = {
+    labels: labels.length ? labels : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    datasets: [
+      {
+        fill: true,
+        label: 'Revenue (₦)',
+        data: dataPoints.length ? dataPoints : [0, 0, 0, 0, 0, 0, 0],
+        borderColor: '#05431E',
+        backgroundColor: (context: any) => {
+          const ctx = context.chart.ctx;
+          const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+          gradient.addColorStop(0, 'rgba(5, 67, 30, 0.2)');
+          gradient.addColorStop(1, 'rgba(5, 67, 30, 0)');
+          return gradient;
+        },
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 6,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: '#05431E',
+        pointBorderWidth: 2,
+        tension: 0.4,
       },
-      borderWidth: 2,
-      pointRadius: 0,
-      pointHoverRadius: 6,
-      pointBackgroundColor: '#fff',
-      pointBorderColor: '#05431E',
-      pointBorderWidth: 2,
-      tension: 0.4,
-    },
-  ],
-};
+    ],
+  };
 
-const PremiumChart: React.FC = () => {
   return (
     <ChartContainer>
       <Header>
@@ -140,7 +152,7 @@ const PremiumChart: React.FC = () => {
         <SubText>Weekly performance overview</SubText>
       </Header>
       <div style={{ flex: 1, position: 'relative', minHeight: '250px' }}>
-        <Line options={options} data={data} />
+        <Line options={options} data={chartData} />
       </div>
     </ChartContainer>
   );

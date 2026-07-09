@@ -5,8 +5,9 @@ import { BottleSlider } from './bottle-slider';
 import { AddBottleModal } from './add-bottle-modal';
 import { EditMemberModal } from './edit-member-modal';
 import { useGetMemberBottlesQuery, useLogBottlePourMutation } from '../../../../../redux/api/private-lounge/bottles.api';
-import { useSuspendMemberMutation, useDeleteMemberMutation } from '../../../../../redux/api/private-lounge/members.api';
+import { useSuspendMemberMutation, useDeleteMemberMutation, useCheckInMemberMutation, useCheckOutMemberMutation, useRequestCheckInPinMutation } from '../../../../../redux/api/private-lounge/members.api';
 import { toast } from 'react-toastify';
+import { PinInput } from './pin-input'; // We'll create a simple input or just use a standard input in the modal
 
 interface MemberDrawerProps {
   member: any | null; 
@@ -20,6 +21,15 @@ export const MemberDrawer: React.FC<MemberDrawerProps> = ({ member, isOpen, onCl
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddBottleModalOpen, setIsAddBottleModalOpen] = useState(false);
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+  const [isCloseTabConfirmOpen, setIsCloseTabConfirmOpen] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [pinCode, setPinCode] = useState('');
+
+  const [checkIn, { isLoading: isCheckingIn }] = useCheckInMemberMutation();
+  const [requestPin] = useRequestCheckInPinMutation();
+  const [checkOut, { isLoading: isCheckingOut }] = useCheckOutMemberMutation();
 
   const { data: bottlesResponse, isLoading: isLoadingBottles } = useGetMemberBottlesQuery(member?.id || '', {
     skip: !member?.id
@@ -75,6 +85,34 @@ export const MemberDrawer: React.FC<MemberDrawerProps> = ({ member, isOpen, onCl
       onClose();
     } catch (err: any) {
       toast.error(err.data?.message || 'Failed to suspend member');
+    }
+  };
+
+  const handleCheckInSubmit = async () => {
+    if (!pinCode || pinCode.length < 4) {
+      toast.error('Please enter a 4-digit PIN');
+      return;
+    }
+    try {
+      await checkIn({ membershipId: member.id, pin: pinCode }).unwrap();
+      setIsPinModalOpen(false);
+      setPinCode('');
+      setSuccessMessage('Member has been successfully checked in!');
+      setIsSuccessModalOpen(true);
+    } catch (err: any) {
+      toast.error(err.data?.message || 'Invalid PIN or check-in failed');
+    }
+  };
+
+  const handleCheckOut = async () => {
+    if (!member.visits || member.visits.length === 0) return;
+    try {
+      await checkOut(member.visits[0].id).unwrap();
+      setIsCloseTabConfirmOpen(false);
+      setSuccessMessage('Tab has been closed successfully!');
+      setIsSuccessModalOpen(true);
+    } catch (err) {
+      toast.error('Failed to close tab');
     }
   };
 
@@ -168,11 +206,61 @@ export const MemberDrawer: React.FC<MemberDrawerProps> = ({ member, isOpen, onCl
                    </div>
                 </div>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900">
-                {member.title ? `${member.title} ` : ''}{member.fullName}
+              <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                {member.title && <span className="text-sm font-normal text-gray-500 mr-2">{member.title}</span>}
+                {member.fullName}
               </h3>
-              <p className="text-sm text-gray-500 font-mono mt-1 bg-gray-50 inline-block px-3 py-1 rounded-md border border-gray-100">{member.membershipNumber}</p>
+              <p className="text-sm text-gray-500 font-mono mt-1 bg-gray-50 inline-block px-3 py-1 rounded-md border border-gray-100 mb-6">{member.membershipNumber}</p>
               
+              {/* CHECK IN / CHECK OUT ACTIONS */}
+              {member.visits && member.visits.length > 0 ? (
+                <div className="w-full relative overflow-hidden bg-gradient-to-r from-[#05431E] to-[#0a6c33] p-5 rounded-2xl mb-6 text-left shadow-xl shadow-[#05431E]/20">
+                   <div className="absolute top-1/2 -translate-y-1/2 right-0 opacity-10 pointer-events-none">
+                     <Wine size="120" className="text-white" />
+                   </div>
+                   <div className="relative z-10 flex items-center justify-between">
+                     <div>
+                       <div className="flex items-center gap-2 mb-1.5">
+                         <span className="relative flex h-3 w-3">
+                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                           <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]"></span>
+                         </span>
+                         <p className="text-xs font-bold text-green-100 uppercase tracking-widest">Active Tab</p>
+                       </div>
+                       <p className="text-sm text-green-50/90 font-medium">Arrived at <span className="font-bold text-white">{new Date(member.visits[0].checkInTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span></p>
+                     </div>
+                     <button 
+                       onClick={() => setIsCloseTabConfirmOpen(true)}
+                       className="px-5 py-2.5 bg-white text-[#05431E] hover:bg-gray-50 text-sm font-bold rounded-xl transition-all active:scale-95 shadow-md flex items-center gap-2"
+                     >
+                       <X size="16" /> Close Tab
+                     </button>
+                   </div>
+                </div>
+              ) : (
+                <button 
+                  onClick={() => {
+                    setIsPinModalOpen(true);
+                    if (member?.id) requestPin(member.id);
+                  }}
+                  className="w-full mb-6 relative overflow-hidden group bg-gradient-to-r from-[#05431E] via-[#085a2a] to-[#05431E] bg-[length:200%_auto] hover:bg-right rounded-2xl transition-all duration-500 shadow-xl shadow-[#05431E]/30 hover:shadow-2xl hover:shadow-[#05431E]/40 hover:-translate-y-1 border border-[#05431E]/50"
+                >
+                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  
+                  <div className="relative z-10 px-6 py-4 flex items-center justify-center gap-4">
+                    <div className="relative flex items-center justify-center w-12 h-12 rounded-full bg-white/10 border border-white/20 shadow-inner backdrop-blur-sm group-hover:scale-110 group-hover:rotate-[15deg] transition-all duration-500 ease-out">
+                      <span className="absolute inset-0 rounded-full border border-white/30 animate-[ping_3s_ease-in-out_infinite]"></span>
+                      <MapPin size="22" className="text-white drop-shadow-md" />
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <span className="text-green-50 text-xs font-bold uppercase tracking-widest opacity-80 mb-0.5">Start Session</span>
+                      <span className="text-white font-extrabold text-xl tracking-wide drop-shadow-sm">Check In Member</span>
+                    </div>
+                  </div>
+                </button>
+              )}
+
               <div className="mt-4 flex justify-center gap-4 text-sm">
                  <div className="text-center">
                     <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Visits</p>
@@ -330,11 +418,13 @@ export const MemberDrawer: React.FC<MemberDrawerProps> = ({ member, isOpen, onCl
                       
                       {bottle.remainingVolumeMl > 0 && (
                         <button
+                          disabled={!member.visits || member.visits.length === 0}
                           onClick={() => {
                              setPourAmounts(prev => ({ ...prev, [bottle.id]: 30 }));
                              setPouringBottleId(bottle.id);
                           }}
-                          className="text-xs font-semibold px-4 py-1.5 rounded-lg transition-all bg-[#05431E]/10 text-[#05431E] hover:bg-[#05431E]/20"
+                          title={(!member.visits || member.visits.length === 0) ? "Member must be checked in to pour drinks" : ""}
+                          className="text-xs font-semibold px-4 py-1.5 rounded-lg transition-all bg-[#05431E]/10 text-[#05431E] hover:bg-[#05431E]/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
                         >
                           Pour
                         </button>
@@ -418,6 +508,105 @@ export const MemberDrawer: React.FC<MemberDrawerProps> = ({ member, isOpen, onCl
         onClose={() => setIsEditModalOpen(false)}
         member={member}
       />
+      {/* PIN Verification Modal */}
+      {isPinModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl transform transition-all">
+            <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-[#F9FAFB]">
+              <h3 className="text-lg font-bold text-gray-900">Member Verification</h3>
+              <button onClick={() => setIsPinModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <X size="20" />
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-gray-600 mb-6 text-center">
+                Please ask the member to enter their 4-digit PIN to authorize this check-in.
+              </p>
+              <div className="flex justify-center mb-8">
+                <input 
+                  type="password"
+                  maxLength={4}
+                  value={pinCode}
+                  onChange={(e) => setPinCode(e.target.value)}
+                  autoComplete="new-password"
+                  name="member-pin-verification"
+                  className="w-48 pl-4 text-center text-3xl tracking-[1em] font-bold border-b-2 border-gray-300 focus:border-[#05431E] focus:outline-none py-2 bg-transparent"
+                  placeholder="****"
+                  autoFocus
+                />
+              </div>
+              <button
+                onClick={handleCheckInSubmit}
+                disabled={isCheckingIn || pinCode.length < 4}
+                className="w-full py-3.5 bg-[#05431E] hover:bg-[#042f15] text-white font-bold rounded-xl shadow-md transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isCheckingIn ? 'Verifying...' : 'Authorize & Check In'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Close Tab Confirmation Modal */}
+      {isCloseTabConfirmOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl transform transition-all">
+            <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-[#F9FAFB]">
+              <h3 className="text-lg font-bold text-gray-900">Close Active Tab</h3>
+              <button onClick={() => setIsCloseTabConfirmOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <X size="20" />
+              </button>
+            </div>
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Ban size="32" />
+              </div>
+              <p className="text-gray-700 mb-8 font-medium">
+                Are you sure you want to close the active tab for <strong className="text-gray-900">{member.fullName}</strong>?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsCloseTabConfirmOpen(false)}
+                  className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCheckOut}
+                  disabled={isCheckingOut}
+                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors disabled:opacity-50"
+                >
+                  {isCheckingOut ? 'Closing...' : 'Confirm Close'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {isSuccessModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl transform transition-all scale-100 animate-in fade-in zoom-in duration-200">
+            <div className="p-8 text-center">
+              <div className="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Success!</h3>
+              <p className="text-gray-600 mb-8">{successMessage}</p>
+              <button
+                onClick={() => setIsSuccessModalOpen(false)}
+                className="w-full py-3.5 bg-[#05431E] hover:bg-[#042f15] text-white font-bold rounded-xl shadow-md transition-colors"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </>
   );
 };

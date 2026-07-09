@@ -2,11 +2,17 @@ import React, { useState, useMemo } from 'react';
 import {
   Search, Plus, Minus, Package, Wine, Utensils,
   AlertTriangle, CheckCircle, ChevronDown, X,
-  Archive, RefreshCcw, Droplets, ImagePlus,
+  Archive, RefreshCcw, Droplets, ImagePlus, Trash, Trash2,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store';
 import { toast } from 'react-toastify';
+import { 
+  useGetInventoryItemsQuery, 
+  useAddInventoryItemMutation, 
+  useRestockInventoryItemMutation,
+  useDeleteLoungeInventoryItemMutation
+} from '../../../../redux/api/private-lounge/inventory.api';
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -282,7 +288,7 @@ const AddItemModal: React.FC<{
 }> = ({ isOpen, onClose, onAdd }) => {
   const [form, setForm] = useState({
     name: '', brand: '', category: 'Spirits & Wine' as 'Spirits & Wine' | 'Food',
-    subCategory: 'Whisky', emoji: '🥃', unit: 'ml',
+    subCategory: 'Whisky', emoji: '', unit: 'ml',
     totalCapacity: '', currentStock: '', reorderAt: '', cost: '',
     accentColor: '#92400e',
     photo: null as File | null,
@@ -292,22 +298,38 @@ const AddItemModal: React.FC<{
     ? ['Champagne', 'Red Wine', 'White Wine', 'Rosé', 'Whisky', 'Cognac', 'Tequila', 'Vodka', 'Gin', 'Rum', 'Cocktail Base', 'Other']
     : ['Small Plates', 'Mains', 'Signature Cuts', 'Desserts', 'Sides', 'Other'];
 
+  const [addInventory, { isLoading }] = useAddInventoryItemMutation();
+  const user = useSelector((state: RootState) => state.auth.user);
+
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onAdd({
-      name: form.name, brand: form.brand,
-      category: form.category, subCategory: form.subCategory,
-      emoji: form.emoji, unit: form.unit,
-      totalCapacity: Number(form.totalCapacity),
-      currentStock: Number(form.currentStock),
-      reorderAt: Number(form.reorderAt),
-      cost: Number(form.cost),
-      accentColor: form.accentColor,
-      photoUrl: form.photo ? URL.createObjectURL(form.photo) : undefined,
-    });
-    onClose();
+    if (!user?.privateLoungeId) return;
+    
+    const formData = new FormData();
+    formData.append('name', form.name);
+    formData.append('brand', form.brand);
+    formData.append('category', form.category);
+    formData.append('subCategory', form.subCategory);
+    formData.append('emoji', form.emoji);
+    formData.append('unit', form.unit);
+    formData.append('totalCapacity', form.totalCapacity);
+    formData.append('currentStock', form.currentStock);
+    formData.append('reorderAt', form.reorderAt);
+    formData.append('cost', form.cost);
+    formData.append('accentColor', form.accentColor);
+    if (form.photo) {
+      formData.append('photo', form.photo);
+    }
+
+    try {
+      await addInventory({ loungeId: user.privateLoungeId, data: formData }).unwrap();
+      onAdd({} as any); // just for toast
+      onClose();
+    } catch (err) {
+      toast.error('Failed to add item');
+    }
   };
 
   return (
@@ -336,6 +358,11 @@ const AddItemModal: React.FC<{
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Brand / Source *</label>
                 <input required value={form.brand} onChange={e => setForm(p => ({ ...p, brand: e.target.value }))}
                   placeholder="e.g. The Macallan" className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#05431E]/20 focus:border-[#05431E] transition-all" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Emoji (Optional)</label>
+                <input value={form.emoji} onChange={e => setForm(p => ({ ...p, emoji: e.target.value }))}
+                  placeholder="e.g. 🍷" className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#05431E]/20 focus:border-[#05431E] transition-all" />
               </div>
               
               {/* Photo Upload */}
@@ -425,7 +452,8 @@ const AddItemModal: React.FC<{
 const StorageCard: React.FC<{
   item: StorageItem;
   onRestock: () => void;
-}> = ({ item, onRestock }) => {
+  onDelete: () => void;
+}> = ({ item, onRestock, onDelete }) => {
   const status = getStatus(item);
   const statusCfg = STATUS_CONFIG[status];
   const pct = Math.min((item.currentStock / item.totalCapacity) * 100, 100);
@@ -448,9 +476,16 @@ const StorageCard: React.FC<{
           {statusCfg.icon}
           {statusCfg.label}
         </div>
-        <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full bg-white/90 backdrop-blur-sm border border-gray-200 text-[9px] font-bold text-gray-500 shadow-sm">
+        <div className="absolute top-2 right-9 px-1.5 py-0.5 rounded-full bg-white/90 backdrop-blur-sm border border-gray-200 text-[9px] font-bold text-gray-500 shadow-sm">
           {item.unit === 'ml' ? '🍶' : '🍽️'} {item.subCategory}
         </div>
+        <button 
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
+          className="absolute top-2 right-2 p-1 rounded-full bg-white/90 backdrop-blur-sm border border-gray-200 text-gray-400 hover:text-red-500 shadow-sm transition-colors hover:bg-red-50"
+          title="Delete item"
+        >
+          <Trash size={12} />
+        </button>
       </div>
 
       {/* Body */}
@@ -492,15 +527,25 @@ const StorageCard: React.FC<{
 };
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
-
 const StoragePage: React.FC = () => {
-  const [items, setItems] = useState<StorageItem[]>(INITIAL_ITEMS);
   const [activeTab, setActiveTab] = useState<Category>('All');
   const [search, setSearch] = useState('');
   const [subFilter, setSubFilter] = useState('All');
   const [showAddModal, setShowAddModal] = useState(false);
   const [restockItem, setRestockItem] = useState<StorageItem | null>(null);
   const [isRestockOpen, setIsRestockOpen] = useState(false);
+  const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const user = useSelector((state: RootState) => state.auth.user);
+  const { data: fetchedItems = [], isLoading: isLoadingItems } = useGetInventoryItemsQuery(
+    user?.privateLoungeId || '',
+    { skip: !user?.privateLoungeId }
+  );
+  
+  const items = fetchedItems;
+  const [restockItemMutation] = useRestockInventoryItemMutation();
+  const [deleteItemMutation] = useDeleteLoungeInventoryItemMutation();
 
   // Compute subcategories for current tab
   const subCategories = useMemo(() => {
@@ -537,16 +582,36 @@ const StoragePage: React.FC = () => {
     }, {});
   }, [filtered]);
 
-  const handleRestock = (itemId: string, amount: number, customCost: number) => {
-    setItems(prev => prev.map(i =>
-      i.id === itemId ? { ...i, currentStock: Math.min(i.currentStock + amount, i.totalCapacity) } : i
-    ));
-    toast.success(`Stock updated successfully (Cost: ${formatCurrency(customCost)})`);
+  const handleRestock = async (itemId: string, amount: number, customCost: number) => {
+    if (!user?.privateLoungeId) return;
+    try {
+      await restockItemMutation({ loungeId: user.privateLoungeId, itemId, amount, cost: customCost }).unwrap();
+      toast.success(`Stock updated successfully`);
+    } catch (err) {
+      toast.error('Failed to restock item');
+    }
   };
 
-  const handleAddItem = (newItem: Omit<StorageItem, 'id'>) => {
-    setItems(prev => [...prev, { ...newItem, id: `custom-${Date.now()}` }]);
-    toast.success(`${newItem.name} added to storage`);
+  const handleAddItem = () => {
+    toast.success(`Item added to storage`);
+  };
+
+  const handleDelete = (itemId: string) => {
+    setDeleteItemId(itemId);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteItemId) return;
+    setIsDeleting(true);
+    try {
+      await deleteItemMutation(deleteItemId).unwrap();
+      toast.success("Item deleted successfully");
+      setDeleteItemId(null);
+    } catch (err: any) {
+      toast.error(err.data?.message || "Failed to delete item");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const openRestock = (item: StorageItem) => {
@@ -670,7 +735,7 @@ const StoragePage: React.FC = () => {
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
             {catItems.map(item => (
-              <StorageCard key={item.id} item={item} onRestock={() => openRestock(item)} />
+              <StorageCard key={item.id} item={item} onRestock={() => openRestock(item)} onDelete={() => handleDelete(item.id)} />
             ))}
           </div>
         </div>
@@ -685,6 +750,37 @@ const StoragePage: React.FC = () => {
       )}
 
       {/* ── Modals ───────────────────────────────────────────────────────────── */}
+      {deleteItemId && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6">
+              <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-4 text-red-600">
+                <Trash2 size="24" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Storage Item</h3>
+              <p className="text-sm text-gray-500 mb-6">
+                Are you sure you want to delete this item? This action cannot be undone and will permanently remove the record from your inventory.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setDeleteItemId(null)}
+                  disabled={isDeleting}
+                  className="px-5 py-2.5 rounded-xl font-medium text-sm text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  disabled={isDeleting}
+                  className="px-5 py-2.5 rounded-xl font-medium text-sm text-white bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isDeleting ? 'Deleting...' : 'Yes, Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <AddItemModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}

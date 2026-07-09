@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DocumentText, TickCircle, CloseCircle, Clock } from 'iconsax-react';
-import { Search, Filter, Plus, Eye } from 'lucide-react';
+import { Search, Filter, Plus, Eye, Trash2 } from 'lucide-react';
 import { ApplicationDrawer } from './components/application-drawer';
-import { useGetApplicationsQuery, useApproveApplicationMutation, useDeclineApplicationMutation, useConfirmPaymentMutation } from '../../../../redux/api/private-lounge/applications.api';
+import { useGetApplicationsQuery, useApproveApplicationMutation, useDeclineApplicationMutation, useConfirmPaymentMutation, useDeleteApplicationMutation } from '../../../../redux/api/private-lounge/applications.api';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store';
 import { toast } from 'react-toastify';
@@ -60,6 +60,7 @@ export const Applications: React.FC = () => {
   const [approveApplication] = useApproveApplicationMutation();
   const [declineApplication] = useDeclineApplicationMutation();
   const [confirmPayment] = useConfirmPaymentMutation();
+  const [deleteApplication] = useDeleteApplicationMutation();
 
   const applications: any[] = useMemo(() => {
     if (Array.isArray(response)) return response;
@@ -69,6 +70,8 @@ export const Applications: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [selectedApp, setSelectedApp] = useState<any | null>(null);
+  const [appToDelete, setAppToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const filteredApps = useMemo(() => {
     return applications.filter((app) => {
@@ -116,6 +119,25 @@ export const Applications: React.FC = () => {
       setSelectedApp(null);
     } catch (err: any) {
       toast.error(err?.data?.message || err?.error?.message || 'Failed to confirm payment');
+    }
+  };
+
+  const handleDeleteClick = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setAppToDelete(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!appToDelete) return;
+    setIsDeleting(true);
+    try {
+      await deleteApplication(appToDelete).unwrap();
+      toast.success('Application deleted successfully.');
+      setAppToDelete(null);
+    } catch (err: any) {
+      toast.error(err?.data?.message || err?.error?.message || 'Failed to delete application');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -216,7 +238,6 @@ export const Applications: React.FC = () => {
             <div className="col-span-3">
               <h3 className="text-sm font-semibold text-gray-900">{app.fullName}</h3>
               <p className="text-xs text-gray-500">{app.company || 'N/A'}</p>
-              <p className="text-[10px] font-mono text-gray-400 mt-0.5">{app.id}</p>
             </div>
 
             {/* Contact */}
@@ -236,17 +257,28 @@ export const Applications: React.FC = () => {
             </div>
 
             {/* Actions / Submitted */}
-            <div className="col-span-2 flex items-center justify-between md:justify-end gap-4">
+            <div className="col-span-2 flex items-center justify-between md:justify-end gap-2 md:gap-4">
               <span className="text-xs text-gray-500 hidden md:block">
                 {new Date(app.createdAt || app.submittedAt || new Date()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
               </span>
-              <button 
-                onClick={() => setSelectedApp(app)}
-                className="p-2 text-gray-400 hover:text-[#05431E] hover:bg-[#05431E]/10 rounded-lg transition-colors"
-                title="Review Application"
-              >
-                <Eye size="18" />
-              </button>
+              <div className="flex items-center gap-1">
+                {(app.status === 'PENDING' || app.status === 'REJECTED' || app.status === 'DECLINED') && (
+                  <button 
+                    onClick={(e) => handleDeleteClick(app.id, e)}
+                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Delete Application"
+                  >
+                    <Trash2 size="18" />
+                  </button>
+                )}
+                <button 
+                  onClick={() => setSelectedApp(app)}
+                  className="p-2 text-gray-400 hover:text-[#05431E] hover:bg-[#05431E]/10 rounded-lg transition-colors"
+                  title="Review Application"
+                >
+                  <Eye size="18" />
+                </button>
+              </div>
             </div>
           </div>
         ))}
@@ -265,6 +297,39 @@ export const Applications: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* ─── DELETE CONFIRMATION MODAL ───────────────────── */}
+      {appToDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6">
+              <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-4 text-red-600">
+                <Trash2 size="24" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Application</h3>
+              <p className="text-sm text-gray-500 mb-6">
+                Are you sure you want to delete this application? This action cannot be undone and will permanently remove the record.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setAppToDelete(null)}
+                  disabled={isDeleting}
+                  className="px-5 py-2.5 rounded-xl font-medium text-sm text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  disabled={isDeleting}
+                  className="px-5 py-2.5 rounded-xl font-medium text-sm text-white bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isDeleting ? 'Deleting...' : 'Yes, Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ─── APPLICATION DRAWER ──────────────────────────── */}
       <ApplicationDrawer

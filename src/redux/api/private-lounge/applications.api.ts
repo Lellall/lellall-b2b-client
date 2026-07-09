@@ -38,6 +38,26 @@ export const applicationsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['LOUNGE_APPLICATIONS', 'LOUNGE_MEMBERS'],
     }),
+    deleteApplication: builder.mutation({
+      query: (applicationId: string) => ({
+        url: `/private-lounge/admin/applications/${applicationId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['LOUNGE_APPLICATIONS'],
+    }),
+    verifyMembership: builder.query({
+      query: (code: string) => ({
+        url: `/private-lounge/membership/verify/${code}`,
+      }),
+    }),
+    registerGuest: builder.mutation({
+      query: (data: { membershipCode: string; name: string; email: string; phone: string; position?: string }) => ({
+        url: `/private-lounge/membership/guest`,
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['LOUNGE_MEMBERS'],
+    }),
   }),
   overrideExisting: false,
 });
@@ -48,4 +68,7 @@ export const {
   useApproveApplicationMutation,
   useDeclineApplicationMutation,
   useConfirmPaymentMutation,
+  useDeleteApplicationMutation,
+  useVerifyMembershipQuery,
+  useRegisterGuestMutation,
 } = applicationsApi;

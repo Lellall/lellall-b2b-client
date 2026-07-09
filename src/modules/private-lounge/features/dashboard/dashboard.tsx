@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { useSelector } from 'react-redux';
 import { selectAuth } from '@/redux/api/auth/auth.slice';
 import { Crown, Profile2User, CalendarTick, CardCoin } from 'iconsax-react';
+import { useGetDashboardStatsQuery } from '@/redux/api/private-lounge/dashboard.api';
 import PremiumMetricCard from '../../components/PremiumMetricCard';
 import PremiumChart from '../../components/PremiumChart';
 import QuickActions from '../../components/QuickActions';
@@ -58,6 +59,11 @@ const MiddleSection = styled.div`
 const LoungeDashboard: React.FC = () => {
   const { user } = useSelector(selectAuth);
   
+  const { data: statsData, isLoading } = useGetDashboardStatsQuery(
+    user?.privateLoungeId || '',
+    { skip: !user?.privateLoungeId }
+  );
+
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -76,43 +82,43 @@ const LoungeDashboard: React.FC = () => {
       <MetricGrid>
         <PremiumMetricCard
           title="Total Active Members"
-          value={142} // Mock data
+          value={statsData?.activeMembers?.total || 0}
           icon={<Crown size="20" variant="Bold" />}
           backgroundColor="#F8FAFC" // Slight blue-gray for elegance
-          trend={{ value: 12, isPositive: true }}
+          trend={{ value: statsData?.activeMembers?.trend || 0, isPositive: (statsData?.activeMembers?.trend || 0) >= 0 }}
         />
         <PremiumMetricCard
           title="Pending Applications"
-          value={3} // Mock data
+          value={statsData?.pendingApplications?.total || 0}
           icon={<Profile2User size="20" variant="Bold" />}
           backgroundColor="#FEFCE8" // Soft gold/yellow
-          trend={{ value: 5, isPositive: false }}
+          trend={{ value: statsData?.pendingApplications?.trend || 0, isPositive: (statsData?.pendingApplications?.trend || 0) >= 0 }}
         />
         <PremiumMetricCard
           title="Today's Reservations"
-          value={15} // Mock data
+          value={statsData?.todaysReservations?.total || 0}
           icon={<CalendarTick size="20" variant="Bold" />}
           backgroundColor="#F0FDF4" // Soft green
-          trend={{ value: 8, isPositive: true }}
+          trend={{ value: statsData?.todaysReservations?.trend || 0, isPositive: (statsData?.todaysReservations?.trend || 0) >= 0 }}
         />
         <PremiumMetricCard
           title="Monthly Revenue"
-          value={1250000} // Mock data
+          value={statsData?.monthlyRevenue?.total || 0}
           isCurrency={true}
           icon={<CardCoin size="20" variant="Bold" />}
           backgroundColor="#F9FAFB" // Clean white/gray
-          trend={{ value: 18, isPositive: true }}
+          trend={{ value: statsData?.monthlyRevenue?.trend || 0, isPositive: (statsData?.monthlyRevenue?.trend || 0) >= 0 }}
         />
       </MetricGrid>
 
       {/* MIDDLE ROW: Charts & Actions */}
       <MiddleSection>
-        <PremiumChart />
-        <QuickActions />
+        <PremiumChart trends={statsData?.revenueTrends || []} />
+        <QuickActions pendingCount={statsData?.pendingApplications?.total || 0} />
       </MiddleSection>
 
       {/* BOTTOM ROW: Recent Activity */}
-      <ActivityTable />
+      <ActivityTable activities={statsData?.recentActivity || []} />
 
     </DashboardContainer>
   );

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldTick, Profile2User, TickCircle } from 'iconsax-react';
-import { User, ArrowLeft, ArrowRight } from 'lucide-react';
+import { ShieldTick, Profile2User, TickCircle, Crown, UserOctagon } from 'iconsax-react';
+import { User, ArrowLeft, ArrowRight, Search, CheckCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { useSubmitApplicationMutation } from '../../../../redux/api/private-lounge/applications.api';
+import { useSubmitApplicationMutation, useVerifyMembershipQuery, useRegisterGuestMutation } from '../../../../redux/api/private-lounge/applications.api';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store';
 
@@ -48,6 +48,15 @@ export const NewApplication: React.FC = () => {
     approvedGuests: [],
     currentGuestInput: ''
   });
+
+  const [registrationType, setRegistrationType] = useState<'primary' | 'guest' | null>(null);
+
+  // Guest Registration State
+  const [membershipCode, setMembershipCode] = useState('');
+  const [verifyCode, setVerifyCode] = useState('');
+  const { data: verifiedMembership, isFetching: isVerifying, isError: verifyError, error: vError } = useVerifyMembershipQuery(verifyCode, { skip: !verifyCode });
+  const [registerGuest, { isLoading: isRegisteringGuest }] = useRegisterGuestMutation();
+  const [guestData, setGuestData] = useState({ name: '', email: '', phone: '', position: '' });
 
   const steps: { id: FormStep; label: string; icon: React.ReactNode }[] = [
     { id: 'primary', label: 'Primary Details', icon: <User size={20} /> },
@@ -141,6 +150,115 @@ export const NewApplication: React.FC = () => {
         </div>
       </div>
 
+      {!registrationType ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mt-12">
+          <button 
+            onClick={() => setRegistrationType('primary')}
+            className="group bg-white p-8 rounded-3xl border-2 border-transparent hover:border-[#05431E]/20 shadow-sm hover:shadow-lg transition-all text-left flex flex-col items-center text-center"
+          >
+            <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <Crown size="32" variant="Bulk" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Primary Member</h2>
+            <p className="text-sm text-gray-500">Apply for a new Sanctum membership tier (Black, Gold, or Silver).</p>
+          </button>
+
+          <button 
+            onClick={() => setRegistrationType('guest')}
+            className="group bg-white p-8 rounded-3xl border-2 border-transparent hover:border-[#05431E]/20 shadow-sm hover:shadow-lg transition-all text-left flex flex-col items-center text-center"
+          >
+            <div className="w-16 h-16 rounded-2xl bg-[#05431E]/5 text-[#05431E] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <UserOctagon size="32" variant="Bulk" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Approved Guest</h2>
+            <p className="text-sm text-gray-500">Register as a guest under an existing primary member's account.</p>
+          </button>
+        </div>
+      ) : registrationType === 'guest' ? (
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">Guest Registration</h2>
+            
+            <div className="mb-8">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Primary Member's Code</label>
+              <div className="flex gap-3">
+                <input 
+                  type="text" 
+                  value={membershipCode}
+                  onChange={(e) => setMembershipCode(e.target.value.toUpperCase())}
+                  className="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#05431E]/20 focus:border-[#05431E] outline-none text-sm uppercase" 
+                  placeholder="e.g. SCT-BLK-000001" 
+                />
+                <button 
+                  type="button"
+                  onClick={() => setVerifyCode(membershipCode)}
+                  disabled={!membershipCode || isVerifying}
+                  className="bg-gray-900 hover:bg-black text-white px-6 rounded-xl font-medium text-sm transition-colors disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isVerifying ? 'Checking...' : <><Search size={18} /> Verify</>}
+                </button>
+              </div>
+              
+              {verifyError && (
+                <p className="text-red-500 text-sm mt-2">{(vError as any)?.data?.message || 'Membership not found or inactive'}</p>
+              )}
+              
+              {verifiedMembership && (
+                <div className="mt-4 p-4 bg-green-50 rounded-xl border border-green-100 flex items-start gap-3">
+                  <CheckCircle className="text-green-600 shrink-0" size={20} />
+                  <div>
+                    <p className="text-sm font-semibold text-green-900">Verified: {verifiedMembership.fullName}</p>
+                    <p className="text-xs text-green-700 mt-0.5">Tier: {verifiedMembership.tier}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {verifiedMembership && (
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                try {
+                  await registerGuest({ membershipCode: verifyCode, ...guestData }).unwrap();
+                  toast.success('Guest registered successfully!');
+                  navigate('/lounge/applications');
+                } catch(err: any) {
+                  toast.error(err?.data?.message || 'Registration failed');
+                }
+              }} className="space-y-5 border-t border-gray-100 pt-6 animate-in fade-in">
+                
+                <h3 className="font-semibold text-gray-900 text-sm mb-4 uppercase tracking-wider">Guest Details</h3>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name *</label>
+                  <input required type="text" value={guestData.name} onChange={e => setGuestData(p => ({...p, name: e.target.value}))} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#05431E]/20 focus:border-[#05431E] outline-none text-sm" />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Address *</label>
+                    <input required type="email" value={guestData.email} onChange={e => setGuestData(p => ({...p, email: e.target.value}))} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#05431E]/20 focus:border-[#05431E] outline-none text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone Number *</label>
+                    <input required type="tel" value={guestData.phone} onChange={e => setGuestData(p => ({...p, phone: e.target.value}))} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#05431E]/20 focus:border-[#05431E] outline-none text-sm" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Position / Role (Optional)</label>
+                  <input type="text" value={guestData.position} onChange={e => setGuestData(p => ({...p, position: e.target.value}))} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#05431E]/20 focus:border-[#05431E] outline-none text-sm" placeholder="e.g. Chief of Staff, PA" />
+                </div>
+
+                <div className="pt-4">
+                  <button type="submit" disabled={isRegisteringGuest} className="w-full bg-[#05431E] hover:bg-[#042f15] text-white py-3 rounded-xl font-semibold transition-colors disabled:opacity-50">
+                    {isRegisteringGuest ? 'Registering...' : 'Complete Guest Registration'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      ) : (
       <div className="flex flex-col md:flex-row gap-8">
         {/* ─── STEPPER SIDEBAR ─────────────────────────────── */}
         <div className="w-full md:w-64 shrink-0">
@@ -379,6 +497,7 @@ export const NewApplication: React.FC = () => {
           </form>
         </div>
       </div>
+      )}
     </div>
   );
 };

@@ -278,7 +278,7 @@ export const Members: React.FC = () => {
 
       {/* ─── MEMBER DRAWER ───────────────────────────────── */}
       <MemberDrawer
-        member={selectedMember}
+        member={members?.find((m: any) => m.id === selectedMember?.id) || selectedMember}
         isOpen={!!selectedMember}
         onClose={() => setSelectedMember(null)}
       />
