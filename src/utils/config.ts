@@ -4,8 +4,8 @@ const config = {
     // BACKEND_URL: "http://localhost:3333",
   },
   production: {
-    // BACKEND_URL: "http://localhost:3333",
-    BACKEND_URL: "https://api-b2b-prod.lellall.com/",
+    // BACKEND_URL: "https://api-b2b-prod.lellall.com/",
+    BACKEND_URL: "http://localhost:3333",
   },
 }
 

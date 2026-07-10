@@ -262,7 +262,6 @@ export const Applications: React.FC = () => {
                 {new Date(app.createdAt || app.submittedAt || new Date()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
               </span>
               <div className="flex items-center gap-1">
-                {(app.status === 'PENDING' || app.status === 'REJECTED' || app.status === 'DECLINED') && (
                   <button 
                     onClick={(e) => handleDeleteClick(app.id, e)}
                     className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -270,7 +269,6 @@ export const Applications: React.FC = () => {
                   >
                     <Trash2 size="18" />
                   </button>
-                )}
                 <button 
                   onClick={() => setSelectedApp(app)}
                   className="p-2 text-gray-400 hover:text-[#05431E] hover:bg-[#05431E]/10 rounded-lg transition-colors"
