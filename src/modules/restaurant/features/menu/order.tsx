@@ -6,6 +6,7 @@ import OrderCard from "./components/order-card";
 import PreReceipt from "./pre-receipt";
 import SearchBar from "@/components/search-bar/search-bar";
 import { useCreateOrdersMutation, useUpdateOrdersMutation } from "@/redux/api/order/order.api";
+import { useGetVatConfigQuery } from "@/redux/api/vat/vat.api";
 import { useGetAllMenuItemsQuery, useGetAllTagsQuery, useGetMenuItemsByTagQuery } from "@/redux/api/menu/menu.api";
 import { useSelector } from "react-redux";
 import { selectAuth } from "@/redux/api/auth/auth.slice";
@@ -44,6 +45,7 @@ const Orders = () => {
 
   const { subdomain, user } = useSelector(selectAuth);
   const membershipFeatureEnabled = subdomain === "355";
+  const { data: vatConfig } = useGetVatConfigQuery(subdomain, { skip: !subdomain });
   const { data: menuItems = [], isLoading: isLoadingMenu, error: menuError } = useGetAllMenuItemsQuery({
     subdomain,
     search: searchQuery // Pass search query to the backend
@@ -200,14 +202,23 @@ const Orders = () => {
     const subtotal = Object.values(order).reduce((acc: number, { quantity, price }: any) => acc + quantity * price, 0);
     const discountAmount = subtotal * (discountPercentage / 100);
     const discountedSubtotal = subtotal - discountAmount;
-    const total = discountedSubtotal;
+    
+    let computedVatTax = 0;
+    let computedTotal = discountedSubtotal;
+
+    if (subdomain === "355") {
+      const vatRate = vatConfig?.rate || 0;
+      computedVatTax = discountedSubtotal * vatRate;
+      computedTotal = discountedSubtotal + computedVatTax;
+    }
+
     return {
       subtotal: Number(subtotal.toFixed(2)),
       discountAmount: Number(discountAmount.toFixed(2)),
       discountedSubtotal: Number(discountedSubtotal.toFixed(2)),
-      vatTax: 0,
+      vatTax: Number(computedVatTax.toFixed(2)),
       serviceFee: 0,
-      total: Number(total.toFixed(2)),
+      total: Number(computedTotal.toFixed(2)),
     };
   };
 
@@ -684,6 +695,12 @@ const Orders = () => {
                   <div className="flex justify-between mt-2">
                     <p className="text-xs sm:text-sm">Discount ({discountPercentage}%)</p>
                     <p className="text-xs sm:text-sm">{formatCurrency(discountAmount.toLocaleString())}</p>
+                  </div>
+                )}
+                {subdomain === "355" && vatTax > 0 && (
+                  <div className="flex justify-between mt-2">
+                    <p className="text-xs sm:text-sm">VAT ({(vatConfig?.rate || 0) * 100}%)</p>
+                    <p className="text-xs sm:text-sm">{formatCurrency(vatTax.toLocaleString())}</p>
                   </div>
                 )}
                 <div className="mt-3 mb-3 border-t border-[#05431E] border-t-[0.5px] border-dashed" />

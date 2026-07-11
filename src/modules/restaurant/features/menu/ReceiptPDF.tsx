@@ -207,7 +207,14 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain, orderId }:
                 </p>
               )}
               <p className="font-semibold">
-                <span className="font-semibold">Total:</span> {formatCurrency(orderData.total.toFixed(2))}
+                <span className="font-semibold">Total:</span> {
+                  formatCurrency(
+                    (subdomain === "355"
+                      ? (orderData.subtotal - (orderData.discountAmount ?? 0) + (orderData.appliedTaxes && orderData.appliedTaxes.length > 0 ? orderData.appliedTaxes.reduce((sum, tax) => sum + tax.amount, 0) : orderData.vatTax))
+                      : orderData.total
+                    ).toFixed(2)
+                  )
+                }
               </p>
               {subdomain === "355" ? (
                 <div className="text-right" style={{ marginTop: '-10px' }}>
