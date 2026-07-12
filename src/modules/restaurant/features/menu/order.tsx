@@ -767,7 +767,9 @@ const Orders = () => {
                     }))}
                     subtotal={formatCurrency(createdOrder.subtotal.toLocaleString())}
                     discountAmount={createdOrder.discountAmount ? formatCurrency(createdOrder.discountAmount.toLocaleString()) : undefined}
-                    total={formatCurrency(createdOrder.total.toLocaleString())}
+                    vatTax={formatCurrency(createdOrder.vatTax.toLocaleString())}
+                    serviceFee={formatCurrency(createdOrder.serviceFee.toLocaleString())}
+                    total={formatCurrency((subdomain === "355" ? createdOrder.subtotal - (createdOrder.discountAmount ?? 0) + (createdOrder.appliedTaxes && createdOrder.appliedTaxes.length > 0 ? createdOrder.appliedTaxes.reduce((sum: any, tax: any) => sum + tax.amount, 0) : createdOrder.vatTax) : createdOrder.total).toLocaleString())}
                     status={createdOrder.status}
                     subdomain={subdomain}
                     id={createdOrder.id}
@@ -818,6 +820,12 @@ const Orders = () => {
                   <div className="flex justify-between text-[10px] sm:text-sm text-gray-700 mt-1">
                     <span>Discount ({receipt.discountPercentage}%)</span>
                     <span>{formatCurrency(receipt.discountAmount.toLocaleString())}</span>
+                  </div>
+                )}
+                {subdomain === "355" && (
+                  <div className="flex justify-between text-[10px] sm:text-sm text-gray-700 mt-1">
+                    <span>VAT</span>
+                    <span>{formatCurrency(receipt.vatTax.toLocaleString())}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-[10px] sm:text-sm font-semibold text-gray-800 mt-1">

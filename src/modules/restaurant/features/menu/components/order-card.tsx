@@ -170,6 +170,12 @@ const OrderCard = ({
               <span className="text-[10px] sm:text-sm font-semibold">{discountAmount}</span>
             </div>
           )}
+          {subdomain === "355" && (
+            <div className="flex items-center gap-4 sm:gap-6">
+              <span className="text-[10px] sm:text-sm font-medium">VAT</span>
+              <span className="text-[10px] sm:text-sm font-semibold">{vatTax}</span>
+            </div>
+          )}
           <div className="flex items-center gap-4 sm:gap-6">
             <span className="text-[10px] sm:text-sm font-medium">Total</span>
             <span className="text-base sm:text-lg font-extrabold tracking-tight">{total}</span>

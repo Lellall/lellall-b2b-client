@@ -314,7 +314,7 @@ const CardItem: React.FC<CardItemProps> = ({
           )}
           <div className="flex justify-between mt-1 font-semibold">
             <span>Total</span>
-            <span>{formatCurrency(order.total.toLocaleString())}</span>
+            <span>{formatCurrency((subdomain === "355" ? order.subtotal - (order.discountAmount ?? 0) + (order.appliedTaxes && order.appliedTaxes.length > 0 ? order.appliedTaxes.reduce((sum, tax) => sum + tax.amount, 0) : order.vatTax) : order.total).toLocaleString())}</span>
           </div>
         </div>
         <form onSubmit={handleFormSubmit} className="mt-2 space-y-2">
