@@ -5,7 +5,7 @@ import { BottleSlider } from './bottle-slider';
 import { AddBottleModal } from './add-bottle-modal';
 import { EditMemberModal } from './edit-member-modal';
 import { useGetMemberBottlesQuery, useLogBottlePourMutation } from '../../../../../redux/api/private-lounge/bottles.api';
-import { useSuspendMemberMutation, useDeleteMemberMutation, useCheckInMemberMutation, useCheckOutMemberMutation, useRequestCheckInPinMutation } from '../../../../../redux/api/private-lounge/members.api';
+import { useSuspendMemberMutation, useDeleteMemberMutation, useCheckInMemberMutation, useCheckOutMemberMutation, useRequestCheckInPinMutation, useReactivateMemberMutation, useRenewMembershipMutation } from '../../../../../redux/api/private-lounge/members.api';
 import { toast } from 'react-toastify';
 import { PinInput } from './pin-input'; // We'll create a simple input or just use a standard input in the modal
 
@@ -48,6 +48,8 @@ export const MemberDrawer: React.FC<MemberDrawerProps> = ({ member, isOpen, onCl
   const [logPour] = useLogBottlePourMutation();
   const [suspendMember] = useSuspendMemberMutation();
   const [deleteMember] = useDeleteMemberMutation();
+  const [reactivateMember] = useReactivateMemberMutation();
+  const [renewMembership] = useRenewMembershipMutation();
 
   if (!isOpen || !member) return null;
 
@@ -117,13 +119,33 @@ export const MemberDrawer: React.FC<MemberDrawerProps> = ({ member, isOpen, onCl
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this member?')) return;
+    if (!confirm('Are you sure you want to soft-delete this member? They will be moved to the Deleted Members page.')) return;
     try {
       await deleteMember(member.id).unwrap();
-      toast.success('Member deleted');
+      toast.success('Member soft-deleted');
       onClose();
     } catch (err: any) {
       toast.error(err.data?.message || 'Failed to delete member');
+    }
+  };
+
+  const handleReactivate = async () => {
+    try {
+      await reactivateMember(member.id).unwrap();
+      toast.success('Member reactivated successfully');
+      onClose();
+    } catch (err: any) {
+      toast.error(err.data?.message || 'Failed to reactivate member');
+    }
+  };
+
+  const handleRenew = async () => {
+    if (!confirm('Confirm subscription renewal payment?')) return;
+    try {
+      await renewMembership(member.id).unwrap();
+      toast.success('Subscription renewed for 1 year');
+    } catch (err: any) {
+      toast.error(err.data?.message || 'Failed to renew subscription');
     }
   };
 
@@ -147,12 +169,14 @@ export const MemberDrawer: React.FC<MemberDrawerProps> = ({ member, isOpen, onCl
           <h2 className="text-xl font-bold text-gray-900">Member Dossier</h2>
           <div className="flex items-center gap-2">
             <div className="relative">
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-2 bg-gray-50 hover:bg-gray-100 rounded-full transition-colors text-gray-500"
-              >
-                <MoreVertical size="20" />
-              </button>
+              {member.status !== 'DELETED' && (
+                <button
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="p-2 bg-gray-50 hover:bg-gray-100 rounded-full transition-colors text-gray-500"
+                >
+                  <MoreVertical size="20" />
+                </button>
+              )}
               {isMenuOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
                   <button onClick={() => { setIsMenuOpen(false); setIsEditModalOpen(true); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
@@ -210,10 +234,31 @@ export const MemberDrawer: React.FC<MemberDrawerProps> = ({ member, isOpen, onCl
                 {member.title && <span className="text-sm font-normal text-gray-500 mr-2">{member.title}</span>}
                 {member.fullName}
               </h3>
-              <p className="text-sm text-gray-500 font-mono mt-1 bg-gray-50 inline-block px-3 py-1 rounded-md border border-gray-100 mb-6">{member.membershipNumber}</p>
+              <div className="flex flex-col items-center gap-1 mb-6">
+                <p className="text-sm text-gray-500 font-mono bg-gray-50 inline-block px-3 py-1 rounded-md border border-gray-100">{member.membershipNumber}</p>
+                {member.expiryDate && (
+                  <p className={`text-xs font-medium px-2 py-0.5 rounded-md ${member.status === 'EXPIRED' ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-500'}`}>
+                    Expires: {new Date(member.expiryDate).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
               
-              {/* CHECK IN / CHECK OUT ACTIONS */}
-              {member.visits && member.visits.length > 0 ? (
+              {/* ACTIONS: Reactivate / Renew / Check-In */}
+              {member.status === 'DELETED' ? (
+                <button 
+                  onClick={handleReactivate}
+                  className="w-full mb-6 relative overflow-hidden group bg-gradient-to-r from-gray-700 via-gray-800 to-gray-900 rounded-2xl transition-all duration-500 shadow-xl hover:shadow-2xl hover:-translate-y-1 py-4 flex items-center justify-center gap-2 text-white font-bold"
+                >
+                  <Plus size="20" /> Reactivate Member
+                </button>
+              ) : member.status === 'EXPIRED' ? (
+                <button 
+                  onClick={handleRenew}
+                  className="w-full mb-6 relative overflow-hidden group bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 rounded-2xl transition-all duration-500 shadow-xl hover:shadow-2xl hover:-translate-y-1 py-4 flex items-center justify-center gap-2 text-white font-bold"
+                >
+                  <Crown size="20" /> Renew Subscription
+                </button>
+              ) : member.visits && member.visits.length > 0 ? (
                 <div className="w-full relative overflow-hidden bg-gradient-to-r from-[#05431E] to-[#0a6c33] p-5 rounded-2xl mb-6 text-left shadow-xl shadow-[#05431E]/20">
                    <div className="absolute top-1/2 -translate-y-1/2 right-0 opacity-10 pointer-events-none">
                      <Wine size="120" className="text-white" />

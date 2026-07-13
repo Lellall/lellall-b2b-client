@@ -378,7 +378,7 @@ const OrderPanel: React.FC<{
   const { data: members = [] } = useGetAllMembersQuery(activeLoungeId, { skip: !activeLoungeId });
   const [selectedCustomer, setSelectedCustomer] = useState<string>(''); // format "walkIn:id" or "member:id" or "anonymous"
 
-  const activeWalkIns = walkIns.filter(w => w.status === 'ACTIVE');
+  const activeWalkIns = walkIns.filter((w: any) => w.status === 'CHECKED_IN');
   const checkedInMembers = members.filter((m: any) => m.visits && m.visits.length > 0);
 
   const handleConfirmOrder = async () => {

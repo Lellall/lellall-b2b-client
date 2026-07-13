@@ -13,6 +13,7 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
     { to: '/lounge/dashboard', icon: Home, text: 'Dashboard', end: true },
     { to: '/lounge/applications', icon: DocumentText, text: 'Applications' },
     { to: '/lounge/members', icon: UserSearch, text: 'Members' },
+    { to: '/lounge/deleted-members', icon: UserSearch, text: 'Deleted Members' },
     { to: '/lounge/walk-ins', icon: ArchiveBox, text: 'Walk-ins' },
     { to: '/lounge/bottles', icon: ArchiveBox, text: 'Storage' },
     { to: '/lounge/menu', icon: Element2, text: 'Menu' },

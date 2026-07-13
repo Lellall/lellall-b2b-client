@@ -7,10 +7,10 @@ export const walkInsApi = baseApi.injectEndpoints({
       providesTags: ['WalkIns'],
     }),
     createWalkIn: builder.mutation({
-      query: ({ loungeId, guestName, guestPhone, guestEmail, notes, method = 'POS_TERMINAL' }: { loungeId: string; guestName?: string; guestPhone?: string; guestEmail?: string; notes?: string; method?: string }) => ({
+      query: ({ loungeId, guestName, guestPhone, guestEmail, adultCount, childrenCount, notes, method = 'POS_TERMINAL' }: { loungeId: string; guestName?: string; guestPhone?: string; guestEmail?: string; adultCount?: number; childrenCount?: number; notes?: string; method?: string }) => ({
         url: `/private-lounge/admin/walkin/${loungeId}`,
         method: 'POST',
-        body: { guestName, guestPhone, guestEmail, notes, method },
+        body: { guestName, guestPhone, guestEmail, adultCount, childrenCount, notes, method },
       }),
       invalidatesTags: ['WalkIns'],
     }),

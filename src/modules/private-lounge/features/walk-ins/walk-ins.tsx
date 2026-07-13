@@ -66,14 +66,14 @@ export const WalkIns: React.FC = () => {
       phone: w.guestPhone || '-',
       email: w.guestEmail || '-',
       timeIn: w.accessDate,
-      expectedPartySize: 1, // Walkins are typically single day passes, but can be adjusted
-      referredBy: null, // Backend doesn't support referrals for walk-ins yet
+      adultCount: w.adultCount || 1,
+      childrenCount: w.childrenCount || 0,
+      accessCode: w.accessCode || '-',
       status: w.status,
       notes: w.notes,
+      amount: w.amount || 0,
       paymentConfirmed: w.paymentConfirmed,
-      dishSelectionsUsed: w.dishSelectionsUsed,
-      maxDishSelections: w.maxDishSelections,
-      dishSelections: w.dishSelections,
+      orders: w.orders || [],
     }));
   }, [response]);
 
@@ -126,6 +126,8 @@ export const WalkIns: React.FC = () => {
         guestName: data.fullName,
         guestPhone: data.phone,
         guestEmail: data.email,
+        adultCount: Number(data.adultCount),
+        childrenCount: Number(data.childrenCount),
         notes: data.notes
       }).unwrap();
       setIsNewModalOpen(false);
@@ -221,7 +223,7 @@ export const WalkIns: React.FC = () => {
         <div className="hidden md:grid grid-cols-12 gap-4 p-4 bg-gray-50/50 border-b border-gray-100 text-xs font-bold uppercase tracking-wider text-gray-400">
           <div className="col-span-3 pl-2">Guest</div>
           <div className="col-span-2">Contact</div>
-          <div className="col-span-2">Referral / Party</div>
+          <div className="col-span-2">Access / Party</div>
           <div className="col-span-2">Status</div>
           <div className="col-span-3 text-right pr-2">Arrival Time</div>
         </div>
@@ -247,10 +249,13 @@ export const WalkIns: React.FC = () => {
               <p className="text-xs text-gray-400 truncate pr-4">{w.email || 'No email provided'}</p>
             </div>
 
-            {/* Referral */}
+            {/* Access Code / Party */}
             <div className="col-span-2 hidden md:block">
-              <p className="text-sm font-medium text-gray-900">{w.referredBy ? w.referredBy : <span className="text-gray-400 italic">None</span>}</p>
-              <p className="text-xs text-gray-500 mt-0.5">Party of {w.expectedPartySize}</p>
+              <p className="text-sm font-medium text-gray-900">{w.accessCode}</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {w.adultCount} Adult{w.adultCount > 1 ? 's' : ''}
+                {w.childrenCount > 0 ? `, ${w.childrenCount} Child${w.childrenCount > 1 ? 'ren' : ''}` : ''}
+              </p>
             </div>
 
             {/* Status */}
@@ -298,8 +303,8 @@ export const WalkIns: React.FC = () => {
         onConfirmPayment={async (id, ref, method) => {
           try {
             await confirmPayment({ id, paymentReference: ref, method }).unwrap();
-            toast.success('Payment confirmed successfully');
-            setSelectedWalkIn({ ...selectedWalkIn, paymentConfirmed: true });
+            toast.success('Payment confirmed & Tab Closed');
+            setSelectedWalkIn(null);
           } catch (error: any) {
             toast.error(error?.data?.message || 'Failed to confirm payment');
           }

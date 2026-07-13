@@ -20,8 +20,6 @@ export const WalkInDrawer: React.FC<WalkInDrawerProps> = ({
   onConfirmPayment,
   onLogDish
 }) => {
-  const [paymentRef, setPaymentRef] = React.useState('');
-  const [dishName, setDishName] = React.useState('');
   if (!isOpen || !walkIn) return null;
 
   return (
@@ -47,28 +45,26 @@ export const WalkInDrawer: React.FC<WalkInDrawerProps> = ({
         <div className="p-6 flex-1 overflow-y-auto">
           {/* Status Banner */}
           <div className={`mb-6 rounded-xl p-4 flex items-center justify-between border ${
-            walkIn.status === 'CHECKED_IN' ? (walkIn.paymentConfirmed ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200') :
+            walkIn.status === 'CHECKED_IN' ? 'bg-green-50 border-green-200' :
             walkIn.status === 'COMPLETED' ? 'bg-gray-50 border-gray-200' :
             'bg-red-50 border-red-200'
           }`}>
             <div>
               <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${
-                walkIn.status === 'CHECKED_IN' ? (walkIn.paymentConfirmed ? 'text-green-800' : 'text-amber-800') :
+                walkIn.status === 'CHECKED_IN' ? 'text-green-800' :
                 walkIn.status === 'COMPLETED' ? 'text-gray-800' :
                 'text-red-800'
               }`}>
                 Current Status
               </p>
               <p className={`text-sm font-semibold flex items-center gap-2 ${
-                walkIn.status === 'CHECKED_IN' ? (walkIn.paymentConfirmed ? 'text-green-900' : 'text-amber-900') :
+                walkIn.status === 'CHECKED_IN' ? 'text-green-900' :
                 walkIn.status === 'COMPLETED' ? 'text-gray-900' :
                 'text-red-900'
               }`}>
-                {walkIn.status === 'CHECKED_IN' && !walkIn.paymentConfirmed && <Clock size="18" variant="Bold" />}
-                {walkIn.status === 'CHECKED_IN' && walkIn.paymentConfirmed && <TickCircle size="18" variant="Bold" />}
+                {(walkIn.status === 'CHECKED_IN' || walkIn.status === 'COMPLETED') && <TickCircle size="18" variant="Bold" />}
                 {walkIn.status === 'VOIDED' && <CloseCircle size="18" variant="Bold" />}
-                {walkIn.status === 'COMPLETED' && <TickCircle size="18" variant="Bold" />}
-                {walkIn.status === 'CHECKED_IN' ? (walkIn.paymentConfirmed ? 'PAID & ACTIVE' : 'PENDING PAYMENT') : walkIn.status}
+                {walkIn.status === 'CHECKED_IN' ? 'ACTIVE (IN LOUNGE)' : walkIn.status === 'COMPLETED' ? 'PAID & CHECKED OUT' : walkIn.status}
               </p>
             </div>
             <div className="text-right">
@@ -89,7 +85,10 @@ export const WalkInDrawer: React.FC<WalkInDrawerProps> = ({
               <div>
                 <p className="text-xs text-gray-400">Guest Name</p>
                 <p className="text-lg font-bold text-gray-900">{walkIn.fullName}</p>
-                <p className="text-xs font-mono text-gray-400">{walkIn.id}</p>
+                <div className="flex gap-4 items-center">
+                  <p className="text-xs font-mono text-gray-400">ID: {walkIn.id}</p>
+                  <span className="text-xs font-bold text-[#05431E] bg-[#05431E]/10 px-2 py-0.5 rounded-md">Code: {walkIn.accessCode}</span>
+                </div>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
@@ -105,32 +104,54 @@ export const WalkInDrawer: React.FC<WalkInDrawerProps> = ({
             </div>
           </div>
 
-          {/* Visit Details */}
+          {/* Bill Summary */}
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
             <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 border-b border-gray-50 pb-2 flex items-center gap-2">
-              <Users size="14" /> Visit Details
+              <Users size="14" /> Bill Summary
             </h3>
             
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Complimentary Dish Selections</p>
-                  <p className="text-sm font-semibold text-gray-900">
-                    {walkIn.dishSelectionsUsed || 0} / {walkIn.maxDishSelections || 1} Used
-                  </p>
-                </div>
+              <div className="space-y-2">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Check-in Fees</p>
+                {walkIn.adultCount > 0 && (
+                  <div className="flex justify-between items-center text-sm font-medium text-gray-900 bg-gray-50 p-2 rounded mb-1">
+                    <span>{walkIn.adultCount}x Adult</span>
+                    <span>₦{(walkIn.adultCount * 20000).toLocaleString()}</span>
+                  </div>
+                )}
+                {walkIn.childrenCount > 0 && (
+                  <div className="flex justify-between items-center text-sm font-medium text-gray-900 bg-gray-50 p-2 rounded mb-1">
+                    <span>{walkIn.childrenCount}x Child</span>
+                    <span>₦{(walkIn.childrenCount * 10000).toLocaleString()}</span>
+                  </div>
+                )}
               </div>
 
-              {walkIn.dishSelections && walkIn.dishSelections.length > 0 && (
+              {walkIn.orders && walkIn.orders.length > 0 && (
                 <div className="pt-4 border-t border-gray-50 space-y-2">
-                  <p className="text-xs text-gray-400 mb-1">Selections Made</p>
-                  {walkIn.dishSelections.map((dish: any, idx: number) => (
-                    <div key={idx} className="text-sm font-medium text-gray-900 bg-gray-50 p-2 rounded">
-                      {dish.itemName}
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Menu Orders</p>
+                  {walkIn.orders.map((order: any, idx: number) => (
+                    <div key={order.id || idx} className="mb-2">
+                      {order.items?.map((item: any, iIdx: number) => (
+                        <div key={iIdx} className="flex justify-between items-center text-sm font-medium text-gray-900 bg-gray-50 p-2 rounded mb-1">
+                          <span>{item.quantity}x {item.inventoryItem?.name || 'Item'}</span>
+                          <span>₦{(item.totalPrice || 0).toLocaleString()}</span>
+                        </div>
+                      ))}
                     </div>
                   ))}
                 </div>
               )}
+              
+              <div className="flex justify-between items-center text-base font-black text-gray-900 pt-4 border-t border-gray-200 mt-4">
+                <span>Grand Total:</span>
+                <span>
+                  ₦{(
+                    (walkIn.amount || 0) + 
+                    (walkIn.orders?.reduce((sum: number, o: any) => sum + (o.totalAmount || 0), 0) || 0)
+                  ).toLocaleString()}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -149,59 +170,15 @@ export const WalkInDrawer: React.FC<WalkInDrawerProps> = ({
 
         {/* Action Footer */}
         <div className="p-6 bg-white border-t border-gray-200 shrink-0">
-          {walkIn.status === 'CHECKED_IN' && !walkIn.paymentConfirmed && (
+          {walkIn.status === 'CHECKED_IN' && (
             <div className="space-y-3">
-              <input
-                type="text"
-                placeholder="Payment Reference (e.g., POS Receipt No)"
-                value={paymentRef}
-                onChange={(e) => setPaymentRef(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm"
-              />
               <button
                 onClick={() => {
-                  if (!paymentRef) return toast.error('Please enter payment reference');
-                  onConfirmPayment?.(walkIn.id, paymentRef, 'POS_TERMINAL');
-                  setPaymentRef('');
+                  onConfirmPayment?.(walkIn.id, '', 'POS_TERMINAL');
                 }}
                 className="w-full py-3 rounded-xl text-sm font-bold text-white bg-[#05431E] hover:bg-[#042f15] transition-colors shadow-md"
               >
-                Confirm Payment
-              </button>
-            </div>
-          )}
-          
-          {walkIn.status === 'CHECKED_IN' && walkIn.paymentConfirmed && (
-            <div className="space-y-3">
-              {(walkIn.dishSelectionsUsed || 0) < (walkIn.maxDishSelections || 1) && (
-                <>
-                  <input
-                    type="text"
-                    placeholder="Enter Dish Name"
-                    value={dishName}
-                    onChange={(e) => setDishName(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm"
-                  />
-                  <button
-                    onClick={() => {
-                      if (!dishName) return toast.error('Please enter dish name');
-                      onLogDish?.(walkIn.id, dishName, '');
-                      setDishName('');
-                    }}
-                    className="w-full py-3 rounded-xl text-sm font-bold text-[#05431E] bg-[#05431E]/10 hover:bg-[#05431E]/20 transition-colors"
-                  >
-                    Log Dish Selection
-                  </button>
-                </>
-              )}
-              
-              <button
-                onClick={() => {
-                  onStatusChange(walkIn.id, 'COMPLETED');
-                }}
-                className="w-full py-3 rounded-xl text-sm font-bold text-gray-700 border border-gray-300 hover:bg-gray-50 transition-colors"
-              >
-                Check Out Guest
+                Confirm Payment & Close Tab
               </button>
             </div>
           )}

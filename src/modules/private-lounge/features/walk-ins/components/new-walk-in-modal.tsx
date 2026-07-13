@@ -13,10 +13,12 @@ export const NewWalkInModal: React.FC<NewWalkInModalProps> = ({ isOpen, onClose,
     fullName: '',
     phone: '',
     email: '',
-    partySize: 1,
-    referredBy: '',
+    adultCount: 1,
+    childrenCount: 0,
     notes: '',
   });
+
+  const totalAmount = formData.adultCount * 20000 + formData.childrenCount * 10000;
 
   if (!isOpen) return null;
 
@@ -39,8 +41,8 @@ export const NewWalkInModal: React.FC<NewWalkInModalProps> = ({ isOpen, onClose,
         fullName: '',
         phone: '',
         email: '',
-        partySize: 1,
-        referredBy: '',
+        adultCount: 1,
+        childrenCount: 0,
         notes: '',
       });
       onClose();
@@ -117,31 +119,37 @@ export const NewWalkInModal: React.FC<NewWalkInModalProps> = ({ isOpen, onClose,
             <div className="grid grid-cols-2 gap-4 border-t border-gray-100 pt-5 mt-5">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-2">
-                  <Users size="14" /> Party Size
+                  <Users size="14" /> Adults (₦20k/each)
                 </label>
                 <input 
                   type="number" 
                   min="1"
                   max="20"
-                  name="partySize"
-                  value={formData.partySize}
+                  name="adultCount"
+                  value={formData.adultCount}
                   onChange={handleChange}
                   className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#05431E]/20 focus:border-[#05431E] outline-none transition-all text-sm" 
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                  Referred By (Optional)
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-2">
+                  <Users size="14" /> Children (₦10k/each)
                 </label>
                 <input 
-                  type="text" 
-                  name="referredBy"
-                  value={formData.referredBy}
+                  type="number" 
+                  min="0"
+                  max="20"
+                  name="childrenCount"
+                  value={formData.childrenCount}
                   onChange={handleChange}
                   className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#05431E]/20 focus:border-[#05431E] outline-none transition-all text-sm" 
-                  placeholder="Member Name" 
                 />
               </div>
+            </div>
+
+            <div className="bg-green-50 p-4 rounded-xl border border-green-100 flex justify-between items-center">
+              <span className="text-sm font-semibold text-green-800">Total Check-In Fee</span>
+              <span className="text-xl font-bold text-green-900">₦{totalAmount.toLocaleString()}</span>
             </div>
 
             <div>

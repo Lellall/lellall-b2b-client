@@ -8,7 +8,7 @@ export const ordersApi = baseApi.injectEndpoints({
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: ['LOUNGE_INVENTORY'], // Invalidates inventory because stock decreases
+      invalidatesTags: ['LOUNGE_INVENTORY', 'WalkIns'], // Invalidates inventory and walk-ins (for order tracking)
     }),
   }),
   overrideExisting: false,

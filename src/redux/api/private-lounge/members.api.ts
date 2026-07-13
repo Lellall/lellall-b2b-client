@@ -8,6 +8,12 @@ export const membersApi = baseApi.injectEndpoints({
       }),
       providesTags: ['LOUNGE_MEMBERS'],
     }),
+    getDeletedMembers: builder.query({
+      query: (loungeId: string) => ({
+        url: `/private-lounge/admin/deleted-members?loungeId=${loungeId}`
+      }),
+      providesTags: ['LOUNGE_MEMBERS'],
+    }),
     getMemberById: builder.query({
       query: (memberId: string) => ({
         url: `/private-lounge/admin/members/${memberId}`
@@ -33,6 +39,20 @@ export const membersApi = baseApi.injectEndpoints({
       query: (id: string) => ({
         url: `/private-lounge/admin/members/${id}`,
         method: 'DELETE',
+      }),
+      invalidatesTags: ['LOUNGE_MEMBERS'],
+    }),
+    reactivateMember: builder.mutation({
+      query: (id: string) => ({
+        url: `/private-lounge/admin/members/${id}/reactivate`,
+        method: 'PATCH',
+      }),
+      invalidatesTags: ['LOUNGE_MEMBERS'],
+    }),
+    renewMembership: builder.mutation({
+      query: (id: string) => ({
+        url: `/private-lounge/admin/members/${id}/renew`,
+        method: 'PATCH',
       }),
       invalidatesTags: ['LOUNGE_MEMBERS'],
     }),
@@ -62,11 +82,14 @@ export const membersApi = baseApi.injectEndpoints({
 });
 
 export const { 
-  useGetAllMembersQuery, 
+  useGetAllMembersQuery,
+  useGetDeletedMembersQuery,
   useGetMemberByIdQuery,
   useUpdateMemberMutation,
   useSuspendMemberMutation,
   useDeleteMemberMutation,
+  useReactivateMemberMutation,
+  useRenewMembershipMutation,
   useCheckInMemberMutation,
   useCheckOutMemberMutation,
   useRequestCheckInPinMutation

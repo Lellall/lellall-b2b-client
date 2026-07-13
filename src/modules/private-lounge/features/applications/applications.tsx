@@ -96,7 +96,7 @@ export const Applications: React.FC = () => {
     try {
       await approveApplication(id).unwrap();
       toast.success('Application approved successfully!');
-      setSelectedApp(null);
+      setSelectedApp((prev: any) => prev ? { ...prev, status: 'APPROVED' } : null);
     } catch (err: any) {
       toast.error(err?.data?.message || err?.error?.message || 'Failed to approve application');
     }

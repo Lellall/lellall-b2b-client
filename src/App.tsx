@@ -35,6 +35,7 @@ import Dashboard from './modules/restaurant/features/dashboard/dashboard';
 import LoungeDashboard from './modules/private-lounge/features/dashboard/dashboard';
 import BottleStoragePage from './modules/private-lounge/features/bottles/BottleStoragePage';
 import { Members } from './modules/private-lounge/features/members/members';
+import { DeletedMembers } from './modules/private-lounge/features/deleted-members/deleted-members';
 import { WalkIns } from './modules/private-lounge/features/walk-ins/walk-ins';
 import { Applications } from './modules/private-lounge/features/applications/applications';
 import { NewApplication } from './modules/private-lounge/features/applications/new-application';
@@ -183,6 +184,7 @@ const App = () => {
         <Route path="new" element={<NewApplication />} />
       </Route>
       <Route path="members" element={<Members />} />
+      <Route path="deleted-members" element={<DeletedMembers />} />
       <Route path="walk-ins" element={<WalkIns />} />
       <Route path="bottles" element={<BottleStoragePage />} />
       <Route path="menu" element={<LoungeMenuPage />} />
