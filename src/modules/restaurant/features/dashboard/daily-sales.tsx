@@ -161,7 +161,7 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
 
   const rawServiceFee = parseAmount((soldItemsData as any)?.totalServiceFee);
   // Grand total is what the customer actually paid: Revenue + VAT + Service Fee
-  const grandTotalNum = rawRevenue + rawVat + rawServiceFee;
+  const grandTotalNum = rawRevenue + (vatEnabled ? rawVat : 0) + rawServiceFee;
   const grandTotal = formatCurrency(grandTotalNum);
   // Query for daily sales revenue
   const { data: revenueData, isLoading: isRevenueLoading, error: revenueError } = useGetDailySalesRevenueQuery(
