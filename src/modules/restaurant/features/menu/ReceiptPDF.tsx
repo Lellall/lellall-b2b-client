@@ -39,6 +39,8 @@ interface OrderData {
   serviceFee: number;
   total: number;
   paymentType: string;
+  splitPayments?: { type: string; amount: number }[] | null;
+  changeAmount?: number | null;
 }
 
 const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain, orderId }: {
@@ -129,7 +131,21 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain, orderId }:
                     <p>Bank Name: {bank.bankName}</p>
                     <p>Account Number: {bank.accountNumber}</p>
                     <p>Account Name: {bank.accountName}</p>
-                    {index === 0 && <p>Payment Type: {orderData.paymentType}</p>}
+                    {index === 0 && (
+                      orderData.paymentType === 'SPLIT' && orderData.splitPayments ? (
+                        <div>
+                          <p className="font-semibold">Payment:</p>
+                          {orderData.splitPayments.map((s, i) => (
+                            <p key={i}>  {s.type.charAt(0) + s.type.slice(1).toLowerCase()}: {formatCurrency(s.amount.toFixed(2))}</p>
+                          ))}
+                          {orderData.changeAmount != null && orderData.changeAmount > 0 && (
+                            <p>Change Due: {formatCurrency(orderData.changeAmount.toFixed(2))}</p>
+                          )}
+                        </div>
+                      ) : (
+                        <p>Payment Type: {orderData.paymentType}</p>
+                      )
+                    )}
                   </div>
                 ))
               ) : (
@@ -137,7 +153,19 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain, orderId }:
                   <p>Bank Name: {(bankDetails as BankDetail)?.bankName || 'N/A'}</p>
                   <p>Account Number: {(bankDetails as BankDetail)?.accountNumber || 'N/A'}</p>
                   <p>Account Name: {(bankDetails as BankDetail)?.accountName || 'N/A'}</p>
-                  <p>Payment Type: {orderData.paymentType}</p>
+                  {orderData.paymentType === 'SPLIT' && orderData.splitPayments ? (
+                    <div>
+                      <p className="font-semibold">Payment:</p>
+                      {orderData.splitPayments.map((s, i) => (
+                        <p key={i}>  {s.type.charAt(0) + s.type.slice(1).toLowerCase()}: {formatCurrency(s.amount.toFixed(2))}</p>
+                      ))}
+                      {orderData.changeAmount != null && orderData.changeAmount > 0 && (
+                        <p>Change Due: {formatCurrency(orderData.changeAmount.toFixed(2))}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p>Payment Type: {orderData.paymentType}</p>
+                  )}
                 </div>
               )}
             </div>
@@ -216,6 +244,14 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain, orderId }:
                   )
                 }
               </p>
+              {/* Change line for single-payment overpayment */}
+              {orderData.paymentType !== 'SPLIT' && orderData.changeAmount != null && orderData.changeAmount > 0 && (
+                <p className="font-semibold">
+                  <span>Amount Tendered:</span> {formatCurrency(((orderData.total ?? 0) + orderData.changeAmount).toFixed(2))}
+                  <br />
+                  <span>Change Due:</span> {formatCurrency(orderData.changeAmount.toFixed(2))}
+                </p>
+              )}
               {subdomain === "355" ? (
                 <div className="text-right" style={{ marginTop: '-10px' }}>
                   <p className="font-bold text-sm" style={{ color: '#ff6b35', textShadow: '2px 2px 4px rgba(0,0,0,0.2)', fontWeight: '800' }}>

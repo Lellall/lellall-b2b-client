@@ -363,16 +363,17 @@ export const MemberDrawer: React.FC<MemberDrawerProps> = ({ member, isOpen, onCl
             </div>
 
             {/* Approved Guests */}
-            {member.approvedUsers && member.approvedUsers.length > 0 && (
+            {member.guests && member.guests.length > 0 && (
               <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
                  <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                    <Profile2User size="14" /> Approved Guests/Entourage
                  </h4>
-                 <div className="flex flex-wrap gap-2">
-                   {member.approvedUsers.map((user: any, idx: number) => (
-                     <span key={idx} className="bg-gray-50 border border-gray-200 text-gray-700 text-xs px-3 py-1.5 rounded-lg font-medium">
-                       {user.name}
-                     </span>
+                 <div className="space-y-4">
+                   {member.guests.map((user: any, idx: number) => (
+                     <div key={idx} className="flex justify-between items-center pb-4 border-b border-border/40 last:border-0 last:pb-0">
+                       <span className="font-medium text-foreground">{user.name}</span>
+                       <span className="text-sm text-muted-foreground">{user.occupation || 'Guest'}</span>
+                     </div>
                    ))}
                  </div>
               </div>

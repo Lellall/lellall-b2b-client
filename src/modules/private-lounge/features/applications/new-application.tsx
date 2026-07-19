@@ -25,8 +25,6 @@ interface FormData {
 
   // Step 3
   passportPhoto: File | null;
-  approvedGuests: string[];
-  currentGuestInput: string;
 }
 
 export const NewApplication: React.FC = () => {
@@ -44,9 +42,7 @@ export const NewApplication: React.FC = () => {
     requestedTier: 'BLACK',
     preferredBeverage: '',
     preferredCigar: '',
-    passportPhoto: null,
-    approvedGuests: [],
-    currentGuestInput: ''
+    passportPhoto: null
   });
 
   const [registrationType, setRegistrationType] = useState<'primary' | 'guest' | null>(null);
@@ -103,9 +99,7 @@ export const NewApplication: React.FC = () => {
         preferredCigar: formData.preferredCigar,
       };
 
-      if (formData.requestedTier === 'BLACK' && formData.approvedGuests.length > 0) {
-        payload.approvedUsers = formData.approvedGuests.map((guest: string) => ({ name: guest }));
-      }
+
 
       await submitApplication({ loungeId: user.privateLoungeId, data: payload }).unwrap();
       
@@ -117,22 +111,7 @@ export const NewApplication: React.FC = () => {
     }
   };
 
-  const addGuest = () => {
-    if (formData.currentGuestInput.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        approvedGuests: [...prev.approvedGuests, prev.currentGuestInput.trim()],
-        currentGuestInput: ''
-      }));
-    }
-  };
 
-  const removeGuest = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      approvedGuests: prev.approvedGuests.filter((_, i) => i !== index)
-    }));
-  };
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl mx-auto min-h-screen">
@@ -420,47 +399,7 @@ export const NewApplication: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="border-t border-gray-100 pt-6 mt-6">
-                  <div className="mb-4">
-                    <h4 className="text-sm font-semibold text-gray-900">Approved Guests & Entourage</h4>
-                    <p className="text-xs text-gray-500 mt-1">Add individuals authorized to access the lounge under this membership (e.g., PA, Driver, Spouse).</p>
-                  </div>
-                  
-                  <div className="flex gap-3 mb-4">
-                     <input 
-                       type="text" 
-                       name="currentGuestInput" 
-                       value={formData.currentGuestInput} 
-                       onChange={handleInputChange} 
-                       onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addGuest())}
-                       className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#05431E]/20 focus:border-[#05431E] outline-none transition-all text-sm" 
-                       placeholder="e.g. Driver - Chukwu Eze" 
-                     />
-                     <button type="button" onClick={addGuest} className="bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-black transition-colors shrink-0">
-                       Add Guest
-                     </button>
-                  </div>
 
-                  {formData.approvedGuests.length > 0 ? (
-                    <div className="space-y-2">
-                      {formData.approvedGuests.map((guest, i) => (
-                        <div key={i} className="flex items-center justify-between bg-white border border-gray-200 p-3 rounded-xl shadow-sm">
-                           <span className="text-sm font-medium text-gray-800 flex items-center gap-2">
-                             <Profile2User size="16" className="text-gray-400" />
-                             {guest}
-                           </span>
-                           <button type="button" onClick={() => removeGuest(i)} className="text-red-500 hover:text-red-700 p-1 bg-red-50 rounded-lg transition-colors">
-                             <ArrowLeft size="16" className="rotate-45" /> {/* Makeshift cross/delete */}
-                           </button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="bg-gray-50 rounded-xl p-4 text-center border border-dashed border-gray-200">
-                      <p className="text-sm text-gray-500">No guests added yet.</p>
-                    </div>
-                  )}
-                </div>
 
               </div>
             )}

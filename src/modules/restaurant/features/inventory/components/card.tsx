@@ -32,6 +32,8 @@ interface Order {
   waiter?: { firstName: string; lastName: string };
   restaurantId: string;
   paymentType?: string | null;
+  splitPayments?: { type: string; amount: number }[] | null;
+  changeAmount?: number | null;
 }
 
 interface CardItemProps {
@@ -79,6 +81,24 @@ const CardItem: React.FC<CardItemProps> = ({
   const [selectedStatus, setSelectedStatus] = useState(order.status);
   const [isUpdating, setIsUpdating] = useState(false);
   const [discountPercentage, setDiscountPercentage] = useState<number>(order.discountPercentage || 0);
+
+  // Split payment state
+  const [isSplitMode, setIsSplitMode] = useState(order.paymentType === 'SPLIT');
+  const [splitRows, setSplitRows] = useState<{ type: string; amount: string }[]>(
+    order.splitPayments && order.splitPayments.length >= 2
+      ? order.splitPayments.map(s => ({ type: s.type, amount: String(s.amount) }))
+      : [{ type: 'CASH', amount: '' }, { type: 'TRANSFER', amount: '' }]
+  );
+  // Amount tendered for single-payment change
+  const [amountTendered, setAmountTendered] = useState<string>(
+    order.changeAmount != null ? String((order.total ?? 0) + (order.changeAmount ?? 0)) : ''
+  );
+
+  const orderTotal = order.total ?? 0;
+  const splitSum = splitRows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+  const splitChange = Math.max(0, splitSum - orderTotal);
+  const splitRemaining = Math.max(0, orderTotal - splitSum);
+  const singleChange = Math.max(0, (parseFloat(amountTendered) || 0) - orderTotal);
   const [updateOrderItems, { isLoading: isUpdatingItems }] = useUpdateOrderItemsMutation();
   const [updateOrderStatus] = useUpdateOrdersMutation();
   const {
@@ -140,7 +160,6 @@ const CardItem: React.FC<CardItemProps> = ({
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(order, 'order');
 
     if (!order.id) {
       toast.error('Invalid order ID', { position: 'top-right' });
@@ -148,15 +167,27 @@ const CardItem: React.FC<CardItemProps> = ({
     }
     setIsUpdating(true);
     try {
-      // Only include discount when closing the order (status = SERVED or CREDIT)
-      const updateData: { status: string; paymentType: string | null; discountPercentage?: number } = {
+      const updateData: {
+        status: string;
+        paymentType: string | null;
+        discountPercentage?: number;
+        splitPayments?: { type: string; amount: number }[];
+        amountTendered?: number;
+      } = {
         status: selectedStatus,
-        paymentType: selectedPaymentType || null,
+        paymentType: isSplitMode ? 'SPLIT' : (selectedPaymentType || null),
       };
 
-      // Only send discount when closing the order (SERVED or CREDIT)
       if ((selectedStatus === 'SERVED' || selectedStatus === 'CREDIT') && discountPercentage > 0) {
         updateData.discountPercentage = discountPercentage;
+      }
+
+      if (isSplitMode) {
+        updateData.splitPayments = splitRows
+          .filter(r => parseFloat(r.amount) > 0)
+          .map(r => ({ type: r.type, amount: parseFloat(r.amount) }));
+      } else if (parseFloat(amountTendered) > 0) {
+        updateData.amountTendered = parseFloat(amountTendered);
       }
 
       await updateOrderStatus({
@@ -165,9 +196,9 @@ const CardItem: React.FC<CardItemProps> = ({
         id: order.id,
       }).unwrap();
       toast.success('Order updated successfully', { position: 'top-right' });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to update order:', err);
-      toast.error('Failed to update order', { position: 'top-right' });
+      toast.error(err?.data?.message || 'Failed to update order', { position: 'top-right' });
     } finally {
       setIsUpdating(false);
     }
@@ -227,7 +258,11 @@ const CardItem: React.FC<CardItemProps> = ({
               vatTax: order.vatTax,
               serviceFee: order.serviceFee,
               total: order.total,
-              paymentType: selectedPaymentType,
+              paymentType: isSplitMode ? 'SPLIT' : (selectedPaymentType || order.paymentType || ''),
+              splitPayments: isSplitMode
+                ? splitRows.filter(r => parseFloat(r.amount) > 0).map(r => ({ type: r.type, amount: parseFloat(r.amount) }))
+                : order.splitPayments,
+              changeAmount: isSplitMode ? splitChange : (singleChange > 0 ? singleChange : order.changeAmount),
             }}
             reactToPrintFn={reactToPrintFn}
             bankDetails={bankDetails?.bankDetails}
@@ -318,40 +353,166 @@ const CardItem: React.FC<CardItemProps> = ({
           </div>
         </div>
         <form onSubmit={handleFormSubmit} className="mt-2 space-y-2">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {paymentOptions.map((option) => (
-              <label
-                key={option.value}
-                className={`flex items-center space-x-1 p-[0.5px] rounded-md  cursor-pointer text-[10px] transition-all duration-200 ${selectedPaymentType === option.value
-                  ? 'border-[#05431E] bg-[#05431E] text-white'
-                  : 'border-gray-300 bg-white text-gray-800 hover:bg-gray-50'
-                  }`}
-              >
-                <input
-                  type="radio"
-                  name="paymentType"
-                  value={option.value}
-                  checked={selectedPaymentType === option.value}
-                  onChange={(e) => setSelectedPaymentType(e.target.value)}
-                  className="hidden"
-                  aria-checked={selectedPaymentType === option.value}
-                />
-                <span
-                  className={`w-2 h-2 border rounded-sm flex items-center justify-center ${selectedPaymentType === option.value
-                    ? 'border-[#05431E] bg-[#05431E]'
-                    : 'border-gray-300'
+          {/* Payment Method Selection */}
+          {!isSplitMode ? (
+            <div className="space-y-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {paymentOptions.map((option) => (
+                  <label
+                    key={option.value}
+                    className={`flex items-center space-x-1 p-[0.5px] rounded-md cursor-pointer text-[10px] transition-all duration-200 ${
+                      selectedPaymentType === option.value
+                        ? 'border-[#05431E] bg-[#05431E] text-white'
+                        : 'border-gray-300 bg-white text-gray-800 hover:bg-gray-50'
                     }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentType"
+                      value={option.value}
+                      checked={selectedPaymentType === option.value}
+                      onChange={(e) => setSelectedPaymentType(e.target.value)}
+                      className="hidden"
+                    />
+                    <span
+                      className={`w-2 h-2 border rounded-sm flex items-center justify-center ${
+                        selectedPaymentType === option.value ? 'border-[#05431E] bg-[#05431E]' : 'border-gray-300'
+                      }`}
+                    >
+                      {selectedPaymentType === option.value && (
+                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </span>
+                    <span>{option.label}</span>
+                  </label>
+                ))}
+                {/* Split toggle */}
+                <label
+                  className={`flex items-center space-x-1 p-[0.5px] rounded-md cursor-pointer text-[10px] transition-all duration-200 ${
+                    isSplitMode
+                      ? 'border-[#05431E] bg-[#05431E] text-white'
+                      : 'border-gray-300 bg-white text-gray-800 hover:bg-gray-50'
+                  }`}
+                  onClick={() => setIsSplitMode(true)}
                 >
-                  {selectedPaymentType === option.value && (
-                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+                  <span
+                    className={`w-2 h-2 border rounded-sm flex items-center justify-center ${
+                      isSplitMode ? 'border-[#05431E] bg-[#05431E]' : 'border-gray-300'
+                    }`}
+                  >
+                    {isSplitMode && (
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </span>
+                  <span>Split</span>
+                </label>
+              </div>
+              {/* Amount Tendered (single payment change) */}
+              <div>
+                <label className="text-[10px] sm:text-xs text-gray-500 block mb-0.5">Amount Tendered (optional)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={amountTendered}
+                  onChange={(e) => setAmountTendered(e.target.value)}
+                  className="w-full border rounded-md p-1 text-[10px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-[#05431E]"
+                  placeholder={`Order total: ${formatCurrency(orderTotal.toFixed(2))}`}
+                />
+                {singleChange > 0 && (
+                  <p className="text-[10px] text-green-600 font-semibold mt-0.5">
+                    💵 Change Due: {formatCurrency(singleChange.toFixed(2))}
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : (
+            /* Split Payment Panel */
+            <div className="border border-purple-200 bg-purple-50 rounded-lg p-2 space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-semibold text-purple-700">Split Payment</span>
+                <button
+                  type="button"
+                  onClick={() => setIsSplitMode(false)}
+                  className="text-[9px] text-purple-500 hover:underline"
+                >
+                  Cancel Split
+                </button>
+              </div>
+              {splitRows.map((row, idx) => (
+                <div key={idx} className="flex gap-1 items-center">
+                  <select
+                    value={row.type}
+                    onChange={(e) => {
+                      const updated = [...splitRows];
+                      updated[idx] = { ...updated[idx], type: e.target.value };
+                      setSplitRows(updated);
+                    }}
+                    className="flex-1 border rounded-md p-1 text-[10px] focus:outline-none focus:ring-1 focus:ring-purple-400"
+                  >
+                    {paymentOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={row.amount}
+                    onChange={(e) => {
+                      const updated = [...splitRows];
+                      updated[idx] = { ...updated[idx], amount: e.target.value };
+                      setSplitRows(updated);
+                    }}
+                    placeholder="Amount"
+                    className="flex-1 border rounded-md p-1 text-[10px] focus:outline-none focus:ring-1 focus:ring-purple-400"
+                  />
+                  {splitRows.length > 2 && (
+                    <button
+                      type="button"
+                      onClick={() => setSplitRows(splitRows.filter((_, i) => i !== idx))}
+                      className="text-red-400 hover:text-red-600 text-[10px] px-1"
+                    >
+                      ✕
+                    </button>
                   )}
-                </span>
-                <span>{option.label}</span>
-              </label>
-            ))}
-          </div>
+                </div>
+              ))}
+              {splitRows.length < 5 && (
+                <button
+                  type="button"
+                  onClick={() => setSplitRows([...splitRows, { type: 'CASH', amount: '' }])}
+                  className="text-[10px] text-purple-600 hover:underline"
+                >
+                  + Add method
+                </button>
+              )}
+              <div className="text-[10px] space-y-0.5 border-t border-purple-200 pt-1">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Order Total</span>
+                  <span className="font-semibold">{formatCurrency(orderTotal.toFixed(2))}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Entered</span>
+                  <span>{formatCurrency(splitSum.toFixed(2))}</span>
+                </div>
+                {splitRemaining > 0.01 && (
+                  <div className="flex justify-between text-orange-600">
+                    <span>Remaining</span>
+                    <span className="font-semibold">{formatCurrency(splitRemaining.toFixed(2))}</span>
+                  </div>
+                )}
+                {splitChange > 0.01 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>💵 Change Due</span>
+                    <span className="font-semibold">{formatCurrency(splitChange.toFixed(2))}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}

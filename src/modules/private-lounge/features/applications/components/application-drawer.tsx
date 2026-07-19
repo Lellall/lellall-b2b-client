@@ -153,14 +153,17 @@ export const ApplicationDrawer: React.FC<ApplicationDrawerProps> = ({
               <Profile2User size="14" /> Approved Guests (Entourage)
             </h3>
             
-            {application.approvedUsers && application.approvedUsers.length > 0 ? (
-              <div className="space-y-2">
-                {application.approvedUsers.map((guest: any, idx: number) => (
-                  <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-gray-200">
-                      <UserIcon size="14" className="text-gray-400" />
+            {application.guests && application.guests.length > 0 ? (
+              <div className="bg-gray-50 p-4 rounded-xl space-y-3">
+                {application.guests.map((guest: any, idx: number) => (
+                  <div key={idx} className="flex items-center gap-3">
+                    <div className="bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
+                      <UserIcon size="16" className="text-gray-400" />
                     </div>
-                    <span className="text-sm font-medium text-gray-800">{guest.name || guest}</span>
+                    <div>
+                      <div className="font-medium text-sm text-gray-800">{guest.fullName}</div>
+                      {guest.occupation && <div className="text-xs text-gray-500">{guest.occupation}</div>}
+                    </div>
                   </div>
                 ))}
               </div>
