@@ -271,6 +271,22 @@ export const orderApi = baseApi.injectEndpoints({
       },
       providesTags: ["MENU"],
     }),
+    getPrintReceipt: builder.query<
+      Blob,
+      { subdomain: string; date: string; startTime?: string; endTime?: string }
+    >({
+      query: ({ subdomain, date, startTime, endTime }) => {
+        const queryParams = new URLSearchParams();
+        queryParams.set('date', date);
+        if (startTime) queryParams.set('startTime', startTime);
+        if (endTime) queryParams.set('endTime', endTime);
+
+        return {
+          url: `/orders/${subdomain}/stats/receipt?${queryParams.toString()}`,
+          responseType: 'blob',
+        };
+      },
+    }),
     getDailySoldItems: builder.query<
       {
         startDate: string;
@@ -515,4 +531,5 @@ export const {
   useLazyDownloadPaymentTypeSummaryCsvQuery,
   useGetDeletedOrdersQuery,
   useRestoreOrderMutation,
+  useLazyGetPrintReceiptQuery,
 } = orderApi;

@@ -8,16 +8,18 @@ interface CustomAxiosProps {
   params?: Record<string, any>;
   body?: Record<string, any> | FormData;
   formData?: boolean;
+  responseType?: 'arraybuffer' | 'blob' | 'document' | 'json' | 'text' | 'stream';
 }
 
-const baseQuery = async ({ url, method = "GET", body, params, formData }: CustomAxiosProps) => {
+const baseQuery = async ({ url, method = "GET", body, params, formData, responseType }: CustomAxiosProps) => {
   try {
     // Pass data directly - customAxios will handle Content-Type for FormData
     const result = await CustomAxios({
       url,
       method,
       params,
-      data: body
+      data: body,
+      responseType,
     });
     return { data: result.data };
   } catch (axiosError: any) {

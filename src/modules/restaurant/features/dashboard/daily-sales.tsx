@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Receipt as Btn } from 'iconsax-react';
 import { useGetDailySalesRevenueQuery, useGetDailySoldItemsQuery, useLazyDownloadDailySoldItemsCsvQuery, useGetPaymentTypeSummaryQuery } from '@/redux/api/order/order.api';
+import CustomAxios from '@/redux/api/customAxios';
 import { useGetVatConfigQuery } from '@/redux/api/vat/vat.api';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -61,7 +62,7 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
   const [queryStartTime, setQueryStartTime] = useState<string | undefined>(undefined);
   const [queryEndTime, setQueryEndTime] = useState<string | undefined>(undefined);
   const { formatCurrency, currencySymbol } = useCurrency();
-  const reactToPrintFn = useReactToPrint({ contentRef: componentRef });
+  const [isPrinting, setIsPrinting] = useState(false);
 
   // Calculate luminance to determine if the background is light or dark
   const getLuminance = (hex: string) => {
@@ -232,6 +233,50 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
     toast.success('Time range applied', { position: 'top-right' });
   };
 
+  const handlePrint = async () => {
+    setIsPrinting(true);
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.set('date', formattedStartDate);
+      if (queryStartTime) queryParams.set('startTime', queryStartTime);
+      if (queryEndTime) queryParams.set('endTime', queryEndTime);
+
+      const response = await CustomAxios({
+        url: `/orders/${subdomain}/stats/receipt?${queryParams.toString()}`,
+        method: 'GET',
+        responseType: 'blob',
+      });
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+
+      // Open the PDF directly in a new tab. Chrome/Edge support window.print() on PDF windows.
+      // After 2s (enough for the PDF to render), the OS print dialog pops up automatically,
+      // listing ALL connected printers: USB, Wi-Fi, Bluetooth, and POS thermal printers.
+      const newWindow = window.open(url, '_blank');
+      if (newWindow) {
+        newWindow.focus();
+        setTimeout(() => {
+          try { newWindow.print(); } catch (_e) { /* ignored - user can manually Ctrl+P */ }
+        }, 2000);
+      } else {
+        // Fallback: if popups are blocked, download the PDF directly
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `receipt-${formattedStartDate}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.info('Receipt downloaded. Open it and press Ctrl+P to print.', { position: 'top-right' });
+      }
+    } catch (err) {
+      console.error('Failed to print receipt', err);
+      toast.error('Failed to generate receipt', { position: 'top-right' });
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
   return (
     <>
       <style>
@@ -284,10 +329,11 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
       <div className="bg-white p-6 rounded-xl">
         <div className="flex items-center gap-2 mb-4 no-print">
           <button
-            onClick={reactToPrintFn}
-            className="flex text-[10px] sm:text-xs text-[#05431E] hover:underline focus:outline-none"
+            onClick={handlePrint}
+            disabled={isPrinting}
+            className={`flex text-[10px] sm:text-xs text-[#05431E] hover:underline focus:outline-none ${isPrinting ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            <Btn size={14} className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" /> Print Sales
+            <Btn size={14} className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" /> {isPrinting ? 'Generating...' : 'Print Sales'}
           </button>
           <input
             type="color"

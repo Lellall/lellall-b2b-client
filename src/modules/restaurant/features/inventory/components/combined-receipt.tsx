@@ -237,7 +237,7 @@ const CombinedReceipt = forwardRef<CombinedReceiptHandle, CombinedReceiptProps>(
                 </p>
               )}
               <p className="font-semibold">
-                <span className="font-semibold">Total:</span> {formatCurrency((subdomain === "355" ? combinedSubtotal - combinedDiscountAmount + combinedVatTax : combinedTotal).toFixed(2))}
+                <span className="font-semibold">Total:</span> {formatCurrency((combinedSubtotal - combinedDiscountAmount + combinedVatTax + combinedServiceFee).toFixed(2))}
               </p>
               {subdomain === "355" ? (
                 <div className="text-right" style={{ marginTop: '-10px' }}>
