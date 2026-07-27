@@ -5,9 +5,11 @@ import { toast } from "react-toastify";
 export const orderApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getOrders: builder.query({
-      query: ({ subdomain, page = 1, limit = 10, status }) => {
-        const url = `/orders/${subdomain}?page=${page}&limit=${limit}${status ? `&status=${status}` : ''}`;
-        console.log('getOrders Query URL:', url); // Debug log
+      query: ({ subdomain, page = 1, limit = 10, status, date }) => {
+        let url = `/orders/${subdomain}?page=${page}&limit=${limit}`;
+        if (status) url += `&status=${status}`;
+        if (date)   url += `&date=${date}`;
+        console.log('getOrders Query URL:', url);
         return {
           url,
           method: "GET",

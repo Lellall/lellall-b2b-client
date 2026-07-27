@@ -19,6 +19,7 @@ const KitchenView = () => {
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [expandedOrders, setExpandedOrders] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [dateFilter, setDateFilter] = useState<string>('');  // YYYY-MM-DD
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
   const combinedReceiptRef = useRef<CombinedReceiptHandle | null>(null);
 
@@ -28,6 +29,7 @@ const KitchenView = () => {
       page: currentPage + 1,
       limit: 10,
       status: statusFilter || undefined,
+      date: dateFilter || undefined,
     },
     { skip: !subdomain },
   );
@@ -79,8 +81,18 @@ const KitchenView = () => {
     const newStatus = e.target.value;
     setStatusFilter(newStatus);
     setCurrentPage(0);
-    setSelectedOrders(new Set()); // Clear selection when filter changes
-    console.log('Status filter changed to:', newStatus);
+    setSelectedOrders(new Set());
+  };
+
+  const handleDateFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDateFilter(e.target.value);
+    setCurrentPage(0);
+    setSelectedOrders(new Set());
+  };
+
+  const handleClearDateFilter = () => {
+    setDateFilter('');
+    setCurrentPage(0);
   };
 
   const toggleOrderSelection = (orderId: string) => {
@@ -169,6 +181,26 @@ const KitchenView = () => {
               <option value="RESERVED">Reserved</option>
               <option value="CANCELLED">Cancelled</option>
             </select>
+          </div>
+          {/* Date filter */}
+          <div className="flex items-center gap-2">
+            <input
+              id="order-date-filter"
+              type="date"
+              value={dateFilter}
+              onChange={handleDateFilterChange}
+              className="border rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#05431E]"
+              title="Filter orders by date"
+            />
+            {dateFilter && (
+              <button
+                onClick={handleClearDateFilter}
+                className="text-xs text-gray-500 hover:text-red-500 focus:outline-none px-1"
+                title="Clear date filter"
+              >
+                ✕
+              </button>
+            )}
           </div>
         </div>
         {orders.length > 0 && (
