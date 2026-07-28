@@ -15,8 +15,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
   const { isAuthenticated, user, subscription } = useSelector(selectAuth);
   const location = useLocation();
   const userRole = (user?.role || 'WAITER').toUpperCase();
-  const isLoungeAdmin = userRole === 'ADMIN' && !!user?.privateLoungeId;
-  const effectiveRole = isLoungeAdmin ? 'PRIVATE_LOUNGE_ADMIN' : userRole;
+  const isLoungeUser = !!user?.privateLoungeId;
+  const isLoungeAdmin = (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') && isLoungeUser;
+  const isLoungeHostess = (userRole === 'HOST' || userRole === 'HOSTESS' || userRole === 'WAITER' || userRole === 'MANAGER') && isLoungeUser;
+  const effectiveRole = isLoungeAdmin
+    ? 'PRIVATE_LOUNGE_ADMIN'
+    : isLoungeHostess
+    ? 'PRIVATE_LOUNGE_HOSTESS'
+    : userRole;
   const isSuperAdmin = effectiveRole === 'SUPER_ADMIN';
 
   // Calculate days left for subscription (non-SUPER_ADMIN only)
@@ -44,7 +50,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
   const currentSubscription = isSuperAdmin
     ? null
     : user?.ownedRestaurant?.subscription || user?.restaurant?.subscription || subscription;
-  let daysLeft = isSuperAdmin || isLoungeAdmin ? Infinity : calculateDaysLeft(currentSubscription);
+  let daysLeft = isSuperAdmin || isLoungeAdmin || isLoungeHostess ? Infinity : calculateDaysLeft(currentSubscription);
   let planName = isSuperAdmin ? 'Super Admin' : currentSubscription?.plan?.name;
 
   // Temporary 30-day override for no5ive (overcharge compensation — expires 2026-04-04)
@@ -81,7 +87,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
   }
 
   // Handle expired subscription for non-SUPER_ADMIN
-  if (!isSuperAdmin && !isLoungeAdmin && daysLeft === 0) {
+  if (!isSuperAdmin && !isLoungeAdmin && !isLoungeHostess && daysLeft === 0) {
     const allowedRoutes = getNavItemsByRole(effectiveRole, daysLeft, planName);
     const targetRoute = allowedRoutes[0]?.to; // Either /expired or /subscriptions
     if (currentPath !== targetRoute) {

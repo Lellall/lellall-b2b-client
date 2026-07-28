@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useSelector } from 'react-redux';
 import { selectAuth } from '@/redux/api/auth/auth.slice';
@@ -58,6 +59,14 @@ const MiddleSection = styled.div`
 
 const LoungeDashboard: React.FC = () => {
   const { user } = useSelector(selectAuth);
+  const navigate = useNavigate();
+  const userRole = (user?.role || '').toUpperCase();
+
+  useEffect(() => {
+    if (userRole === 'HOSTESS' || userRole === 'HOST') {
+      navigate('/lounge/members', { replace: true });
+    }
+  }, [userRole, navigate]);
   
   const { data: statsData, isLoading } = useGetDashboardStatsQuery(
     user?.privateLoungeId || '',

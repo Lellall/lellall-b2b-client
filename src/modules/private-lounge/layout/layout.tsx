@@ -252,7 +252,10 @@ const LoungeLayout: React.FC = () => {
   // Sidebar as overlay only on true mobile, not tablet
   const sidebarIsOverlay = isMobile;
 
-  const navItems = navItemsByRole['PRIVATE_LOUNGE_ADMIN'] || [];
+  const userRole = (user?.role || '').toUpperCase();
+  const isHostess = userRole === 'HOSTESS' || userRole === 'HOST';
+  const roleKey = isHostess ? 'PRIVATE_LOUNGE_HOSTESS' : 'PRIVATE_LOUNGE_ADMIN';
+  const navItems = navItemsByRole[roleKey] || navItemsByRole['PRIVATE_LOUNGE_ADMIN'] || [];
 
   return (
     <ThemeProvider theme={theme}>

@@ -40,6 +40,9 @@ import { WalkIns } from './modules/private-lounge/features/walk-ins/walk-ins';
 import { Applications } from './modules/private-lounge/features/applications/applications';
 import { NewApplication } from './modules/private-lounge/features/applications/new-application';
 import LoungeMenuPage from './modules/private-lounge/features/menu/LoungeMenuPage';
+import { LoungeStaffPage } from './modules/private-lounge/features/staff/LoungeStaffPage';
+import LoungeSettingsPage from './modules/private-lounge/features/settings/LoungeSettingsPage';
+import LoungeBillingPage from './modules/private-lounge/features/billing/LoungeBillingPage';
 import SubscriptionExpired from './SubscriptionExpired';
 import Insights from './modules/restaurant/features/insights/insights';
 import Attendance from './modules/human-resource/features/attendance/attendance';
@@ -65,15 +68,16 @@ const App = () => {
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
   const isAdminSubdomain = subdomain === 'admin';
   const isHumanResource = user?.role === 'HUMAN_RESOURCE';
-  const isLoungeAdmin = user?.role === 'ADMIN' && !!user?.privateLoungeId;
+  const isLoungeUser = !!user?.privateLoungeId;
+  const isLoungeAdmin = user?.role === 'ADMIN' && isLoungeUser;
 
   // Check if user is allowed to access the dashboard
   // Anyone reaching this point for the index route has already been authorized by protect-routes.tsx
   const canAccessDashboard = true;
 
-  // Query restaurant data — skip for admin subdomain, and skip for lounge admins
+  // Query restaurant data — skip for admin subdomain, and skip for lounge users
   // (lounge subdomains like 'sanctum' are not restaurants and would 404)
-  const shouldSkipRestaurantQuery = (isAdminSubdomain && isSuperAdmin) || isLoungeAdmin;
+  const shouldSkipRestaurantQuery = (isAdminSubdomain && isSuperAdmin) || isLoungeUser;
   const { data: restaurant, isLoading, isError } = useGetRestaurantBySubdomainQuery(subdomain, {
     skip: shouldSkipRestaurantQuery,
   });
@@ -184,6 +188,7 @@ const App = () => {
         <Route path="new" element={<NewApplication />} />
       </Route>
       <Route path="members" element={<Members />} />
+      <Route path="staff" element={<LoungeStaffPage />} />
       <Route path="deleted-members" element={<DeletedMembers />} />
       <Route path="walk-ins" element={<WalkIns />} />
       <Route path="bottles" element={<BottleStoragePage />} />
@@ -191,9 +196,18 @@ const App = () => {
       <Route path="reservations" element={<div>Lounge Reservations Placeholder</div>} />
       <Route path="partners" element={<div>Lounge Partners Placeholder</div>} />
       <Route path="revenue" element={<div>Lounge Revenue Placeholder</div>} />
-      <Route path="billing" element={<div>Lounge Billing Placeholder</div>} />
-      <Route path="settings" element={<div>Lounge Settings Placeholder</div>} />
-      <Route index element={<Navigate to="dashboard" replace />} />
+      <Route path="billing" element={<LoungeBillingPage />} />
+      <Route path="settings" element={<LoungeSettingsPage />} />
+      <Route
+        index
+        element={
+          user?.role === 'HOSTESS' || user?.role === 'HOST' ? (
+            <Navigate to="members" replace />
+          ) : (
+            <Navigate to="dashboard" replace />
+          )
+        }
+      />
     </>
   );
 
@@ -239,17 +253,26 @@ const App = () => {
                   </Route>
                 )}
 
-                {isLoungeAdmin && (
+                {isLoungeUser && (
                   <Route element={<ProtectedRoute isAdminRoute={false} />}>
                     <Route path="/lounge" element={<LoungeLayout />}>
                       {loungeRoutes}
                     </Route>
-                    {/* Redirect root to lounge dashboard if they are a lounge admin */}
-                    <Route path="/" element={<Navigate to="/lounge/dashboard" replace />} />
+                    {/* Redirect root to lounge members if HOST/HOSTESS, otherwise dashboard */}
+                    <Route
+                      path="/"
+                      element={
+                        user?.role === 'HOSTESS' || user?.role === 'HOST' ? (
+                          <Navigate to="/lounge/members" replace />
+                        ) : (
+                          <Navigate to="/lounge/dashboard" replace />
+                        )
+                      }
+                    />
                   </Route>
                 )}
 
-                {!isSuperAdmin && !isHumanResource && !isLoungeAdmin && (
+                {!isSuperAdmin && !isHumanResource && !isLoungeUser && (
                   <Route element={<ProtectedRoute isAdminRoute={false} />}>
                     <Route path="/" element={<Layout subdomainData={restaurant} />}>
                       {restaurantRoutes}
