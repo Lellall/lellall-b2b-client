@@ -24,6 +24,14 @@ export const inventoryApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['LOUNGE_INVENTORY'],
     }),
+    updateInventoryItem: builder.mutation({
+      query: ({ id, data }: { id: string; data: any }) => ({
+        url: `/private-lounge/admin/inventory/${id}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['LOUNGE_INVENTORY'],
+    }),
     deleteLoungeInventoryItem: builder.mutation({
       query: (id: string) => ({
         url: `/private-lounge/admin/inventory/${id}`,
@@ -39,5 +47,6 @@ export const {
   useGetInventoryItemsQuery,
   useAddInventoryItemMutation,
   useRestockInventoryItemMutation,
+  useUpdateInventoryItemMutation,
   useDeleteLoungeInventoryItemMutation
 } = inventoryApi;

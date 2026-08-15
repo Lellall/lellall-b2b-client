@@ -206,8 +206,8 @@ const Orders = () => {
     let computedVatTax = 0;
     let computedTotal = discountedSubtotal;
 
-    if (subdomain === "355") {
-      const vatRate = vatConfig?.rate || 0;
+    if (subdomain === "355" && (vatConfig?.vatEnabled ?? true)) {
+      const vatRate = vatConfig?.vatRate || vatConfig?.rate || 0.075;
       computedVatTax = discountedSubtotal * vatRate;
       computedTotal = discountedSubtotal + computedVatTax;
     }
@@ -699,7 +699,7 @@ const Orders = () => {
                 )}
                 {subdomain === "355" && vatTax > 0 && (
                   <div className="flex justify-between mt-2">
-                    <p className="text-xs sm:text-sm">VAT ({(vatConfig?.rate || 0) * 100}%)</p>
+                    <p className="text-xs sm:text-sm">VAT ({Number(((vatConfig?.vatRate || vatConfig?.rate || 0.075) * 100).toFixed(1))}%)</p>
                     <p className="text-xs sm:text-sm">{formatCurrency(vatTax.toLocaleString())}</p>
                   </div>
                 )}
