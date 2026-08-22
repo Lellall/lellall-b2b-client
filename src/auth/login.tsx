@@ -1,4 +1,5 @@
 import { useForm, Controller } from "react-hook-form"
+import { useNavigate } from "react-router-dom"
 import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
 import { StyledButton } from "@/components/button/button-lellall"
@@ -26,6 +27,7 @@ const Login = () => {
   })
 
   const [login, { isLoading }] = useLoginMutation()
+  const navigate = useNavigate()
 
   const onSubmit = async (data) => {
     try {
@@ -43,6 +45,7 @@ const Login = () => {
       localStorage.setItem("access_token", result.accessToken)
 
       toast.success("Login successful!")
+      navigate("/")
     } catch (error) {
       // Handle login error
       toast.error("Login failed: " + error.data?.message || "An error occurred")
