@@ -542,13 +542,18 @@ const LoungeMenuPage: React.FC = () => {
   const [isPourModalOpen, setIsPourModalOpen] = useState(false);
 
   const { data: inventory = [] } = useGetInventoryItemsQuery(user?.privateLoungeId || '', { skip: !user?.privateLoungeId });
-  
-  const mappedFoodItems = inventory.filter(i => i.category === 'Food').map(i => ({
+
+  // Known drink/spirit categories in the DB — everything else is treated as food
+  const DRINK_CATEGORIES = new Set([
+    'Whisky', 'Wine', 'Liquor', 'Gin', 'Drink', 'Cognac',
+    'Single pour', 'Bottle', 'Mocktail', 'Signature', 'Spirits & Wine',
+  ]);
+
+  const mappedFoodItems = inventory.filter(i => !DRINK_CATEGORIES.has(i.category)).map(i => ({
     id: i.id, name: i.name, description: i.brand, price: i.cost, category: i.subCategory || i.category, emoji: i.emoji, color: i.accentColor
   }));
-  // Show ALL non-Food inventory items under Drinks & Spirits
-  // Categories in the DB include: Whisky, Wine, Cognac, Gin, Liquor, Drink, Single pour, Bottle, Mocktail, Signature, etc.
-  const mappedDrinkItems = inventory.filter(i => i.category !== 'Food').map(i => ({
+  // Show ALL drink/spirit inventory items under Drinks & Spirits
+  const mappedDrinkItems = inventory.filter(i => DRINK_CATEGORIES.has(i.category)).map(i => ({
     id: i.id, name: i.name, description: i.brand, price: i.cost, category: i.subCategory || i.category, emoji: i.emoji, color: i.accentColor
   }));
 
