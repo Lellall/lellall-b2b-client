@@ -544,10 +544,12 @@ const LoungeMenuPage: React.FC = () => {
   const { data: inventory = [] } = useGetInventoryItemsQuery(user?.privateLoungeId || '', { skip: !user?.privateLoungeId });
   
   const mappedFoodItems = inventory.filter(i => i.category === 'Food').map(i => ({
-    id: i.id, name: i.name, description: i.brand, price: i.cost, category: i.subCategory, emoji: i.emoji, color: i.accentColor
+    id: i.id, name: i.name, description: i.brand, price: i.cost, category: i.subCategory || i.category, emoji: i.emoji, color: i.accentColor
   }));
-  const mappedDrinkItems = inventory.filter(i => i.category === 'Spirits & Wine').map(i => ({
-    id: i.id, name: i.name, description: i.brand, price: i.cost, category: i.subCategory, emoji: i.emoji, color: i.accentColor
+  // Show ALL non-Food inventory items under Drinks & Spirits
+  // Categories in the DB include: Whisky, Wine, Cognac, Gin, Liquor, Drink, Single pour, Bottle, Mocktail, Signature, etc.
+  const mappedDrinkItems = inventory.filter(i => i.category !== 'Food').map(i => ({
+    id: i.id, name: i.name, description: i.brand, price: i.cost, category: i.subCategory || i.category, emoji: i.emoji, color: i.accentColor
   }));
 
   const items = activeTab === 'food' ? mappedFoodItems : activeTab === 'drinks' ? mappedDrinkItems : [];
