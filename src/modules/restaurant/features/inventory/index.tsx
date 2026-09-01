@@ -55,7 +55,7 @@ const Inventory = () => {
               className={`py-2 px-4 text-xs text-center text-gray-600 hover:text-gray-800 focus:outline-none ${activeTab === "tab-3" ? "border-b-2 border-green-900 text-green-900" : ""}`}
               onClick={() => openTab("tab-3")}
             >
-              Kitchen
+              Menu Setup
             </button>
             <button
               className={`py-2 px-4 text-xs text-center text-gray-600 hover:text-gray-800 focus:outline-none ${activeTab === "tab-4" ? "border-b-2 border-green-900 text-green-900" : ""}`}

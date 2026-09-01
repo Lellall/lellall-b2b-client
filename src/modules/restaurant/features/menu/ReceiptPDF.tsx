@@ -255,11 +255,11 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain, orderId }:
               {subdomain === "355" ? (
                 <div className="text-right" style={{ marginTop: '-10px' }}>
                   <p className="font-bold text-sm" style={{ color: '#ff6b35', textShadow: '2px 2px 4px rgba(0,0,0,0.2)', fontWeight: '800' }}>
-                    🎉 Thank you for dining with us! 🎉
+                    🎉 Thank you! 🎉
                   </p>
                 </div>
               ) : (
-                <p className="mt-1">Thank you for dining with us!</p>
+                <p className="mt-1">Thank you!</p>
               )}
             </div>
           </div>
