@@ -167,7 +167,7 @@ const VerifyPaymentPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [verifyPayment, { isLoading }] = useVerifyPaymentMutation();
-  const { user, accessToken, refreshToken } = useSelector(selectAuth);
+  const { user, accessToken, refreshToken, restaurant } = useSelector(selectAuth);
   const hasVerified = useRef(false); // Track verification attempt
 
   const status = searchParams.get("status");
@@ -242,6 +242,7 @@ const VerifyPaymentPage: React.FC = () => {
             accessToken: accessToken || null,
             refreshToken: refreshToken || null,
             user: updatedUser,
+            restaurant: restaurant,
             subscription: response.subscription,
           })
         );

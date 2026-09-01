@@ -1,10 +1,12 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { authApi } from "./auth.api";
 
 interface AuthState {
   isAuthenticated: boolean;
   accessToken: string | null;
   refreshToken: string | null;
   user: any;
+  restaurant: any;
   isAdmin: boolean;
   isSuperAdmin: boolean;
   subdomain: string | null;
@@ -16,6 +18,7 @@ const initialState: AuthState = {
   accessToken: "",
   refreshToken: "",
   user: null,
+  restaurant: null,
   isAdmin: false,
   isSuperAdmin: false,
   subdomain: null,
@@ -31,6 +34,7 @@ const authSlice = createSlice({
       state.accessToken = action.payload.accessToken;
       state.refreshToken = action.payload.refreshToken;
       state.user = action.payload.user;
+      state.restaurant = action.payload.restaurant;
       state.isAdmin = action.payload.user?.role === "ADMIN" || action.payload.user?.role === "SUPERADMIN";
       state.isSuperAdmin = action.payload.user?.role === "SUPERADMIN";
       state.subscription = action.payload.subscription; // Store subscription
@@ -44,10 +48,35 @@ const authSlice = createSlice({
       state.isSuperAdmin = false;
       state.subscription = null; // Clear subscription on logout
     },
-    setSubdomain: (state, action) => {
+    setSubdomain: (state, action: { payload: string }) => {
       state.subdomain = action.payload;
       localStorage.setItem("subdomain", action.payload);
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addMatcher(authApi.endpoints.login.matchFulfilled, (state, action: any) => {
+        const { user, restaurant, perfumeStore, privateLounge, subscription } = action.payload;
+        state.isAuthenticated = true;
+        state.user = {
+          ...user,
+          ...(perfumeStore ? { perfumeStoreId: perfumeStore.id } : {}),
+          ...(privateLounge ? { privateLoungeId: privateLounge.id } : {}),
+        };
+        state.restaurant = restaurant || perfumeStore || privateLounge;
+        state.subscription = subscription;
+        state.subdomain = restaurant?.subdomain || perfumeStore?.subdomain || privateLounge?.subdomain;
+      })
+      .addMatcher(authApi.endpoints.logout.matchFulfilled, (state) => {
+        state.isAuthenticated = false;
+        state.accessToken = null;
+        state.refreshToken = null;
+        state.user = null;
+        state.isAdmin = false;
+        state.isSuperAdmin = false;
+        state.subscription = null;
+        state.subdomain = null;
+      });
   },
 })
 

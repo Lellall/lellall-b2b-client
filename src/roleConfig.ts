@@ -1,4 +1,4 @@
-import { Home, UserSearch, Car, MessageQuestion, Setting, Element2, ArchiveBox, Calendar2, MoneyChange, TrendUp, DocumentText } from 'iconsax-react';
+import { Home, UserSearch, Car, MessageQuestion, Setting, Element2, ArchiveBox, Calendar2, MoneyChange, TrendUp, DocumentText, ShoppingCart } from 'iconsax-react';
 import { MessageSquare } from 'lucide-react';
 
 export interface NavItemConfig {
@@ -30,6 +30,19 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
     { to: '/lounge/members', icon: UserSearch, text: 'Members' },
     { to: '/lounge/walk-ins', icon: ArchiveBox, text: 'Walk-ins' },
     { to: '/lounge/menu', icon: Element2, text: 'Menu' },
+  ],
+  PERFUME_STORE_ADMIN: [
+    { to: '/perfume/dashboard', icon: Home, text: 'Dashboard', end: true },
+    { to: '/perfume/menu', icon: ShoppingCart, text: 'POS / Sell' },
+    { to: '/perfume/staff', icon: UserSearch, text: 'Staff' },
+    { to: '/perfume/vault', icon: ArchiveBox, text: 'Vault' },
+    { to: '/perfume/settings', icon: Setting, text: 'Settings' },
+  ],
+  PERFUME_STORE_HOSTESS: [
+    { to: '/perfume/menu', icon: ShoppingCart, text: 'POS / Sell' },
+  ],
+  PERFUME_STORE_HOST: [
+    { to: '/perfume/menu', icon: ShoppingCart, text: 'POS / Sell' },
   ],
   WAITER: [
     // { to: '/', icon: Home, text: 'Dashboard', end: true },
@@ -335,6 +348,13 @@ export const isRouteAllowed = (
   if (role === 'PRIVATE_LOUNGE_ADMIN') {
     if (path === '/') {
       return true; // Allow root so the redirect to /lounge/dashboard can occur
+    }
+  }
+
+  // Special handling for PERFUME_STORE roles
+  if (role === 'PERFUME_STORE_ADMIN' || role === 'PERFUME_STORE_HOSTESS' || role === 'PERFUME_STORE_HOST') {
+    if (path === '/' || path.startsWith('/perfume')) {
+      return true; // Allow root redirect and all /perfume/* routes
     }
   }
 

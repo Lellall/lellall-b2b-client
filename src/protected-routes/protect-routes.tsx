@@ -18,10 +18,17 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
   const isLoungeUser = !!user?.privateLoungeId;
   const isLoungeAdmin = (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') && isLoungeUser;
   const isLoungeHostess = (userRole === 'HOST' || userRole === 'HOSTESS' || userRole === 'WAITER' || userRole === 'MANAGER') && isLoungeUser;
+  const isPerfumeUser = !!user?.perfumeStoreId;
+  const isPerfumeAdmin = (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') && isPerfumeUser;
+  const isPerfumeHostess = (userRole === 'HOST' || userRole === 'HOSTESS' || userRole === 'WAITER' || userRole === 'MANAGER') && isPerfumeUser;
   const effectiveRole = isLoungeAdmin
     ? 'PRIVATE_LOUNGE_ADMIN'
     : isLoungeHostess
     ? 'PRIVATE_LOUNGE_HOSTESS'
+    : isPerfumeAdmin
+    ? 'PERFUME_STORE_ADMIN'
+    : isPerfumeHostess
+    ? 'PERFUME_STORE_HOSTESS'
     : userRole;
   const isSuperAdmin = effectiveRole === 'SUPER_ADMIN';
 
@@ -50,7 +57,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
   const currentSubscription = isSuperAdmin
     ? null
     : user?.ownedRestaurant?.subscription || user?.restaurant?.subscription || subscription;
-  let daysLeft = isSuperAdmin || isLoungeAdmin || isLoungeHostess ? Infinity : calculateDaysLeft(currentSubscription);
+  let daysLeft = isSuperAdmin || isLoungeAdmin || isLoungeHostess || isPerfumeAdmin || isPerfumeHostess ? Infinity : calculateDaysLeft(currentSubscription);
   let planName = isSuperAdmin ? 'Super Admin' : currentSubscription?.plan?.name;
 
   // Temporary 30-day override for no5ive (overcharge compensation — expires 2026-04-04)
@@ -87,7 +94,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
   }
 
   // Handle expired subscription for non-SUPER_ADMIN
-  if (!isSuperAdmin && !isLoungeAdmin && !isLoungeHostess && daysLeft === 0) {
+  if (!isSuperAdmin && !isLoungeAdmin && !isLoungeHostess && !isPerfumeAdmin && !isPerfumeHostess && daysLeft === 0) {
     const allowedRoutes = getNavItemsByRole(effectiveRole, daysLeft, planName);
     const targetRoute = allowedRoutes[0]?.to; // Either /expired or /subscriptions
     if (currentPath !== targetRoute) {
@@ -104,6 +111,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
   // Redirect HUMAN_RESOURCE to /attendance if trying to access the root route (/)
   if (effectiveRole === 'HUMAN_RESOURCE' && currentPath === '/' && daysLeft > 0) { 
     return <Navigate to="/attendance" replace />;
+  }
+
+  // Redirect PERFUME_STORE_ADMIN to /perfume/dashboard at root
+  if ((effectiveRole === 'PERFUME_STORE_ADMIN' || effectiveRole === 'PERFUME_STORE_HOSTESS') && currentPath === '/') {
+    return <Navigate to="/perfume/dashboard" replace />;
   }
 
   // Allow leave-tracker for all staff roles (any role that's not SUPER_ADMIN)

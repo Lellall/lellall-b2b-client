@@ -1,0 +1,50 @@
+import { baseApi } from '../baseApi';
+
+export const walkInsApi = baseApi.injectEndpoints({
+  endpoints: (builder) => ({
+    getTodaysWalkIns: builder.query({
+      query: (storeId: string) => ({ url: `/perfume-store/admin/walkin/${storeId}/today` }),
+      providesTags: ['WalkIns'],
+    }),
+    createWalkIn: builder.mutation({
+      query: ({ storeId, guestName, guestPhone, guestEmail, adultCount, childrenCount, notes, method = 'POS_TERMINAL' }: { storeId: string; guestName?: string; guestPhone?: string; guestEmail?: string; adultCount?: number; childrenCount?: number; notes?: string; method?: string }) => ({
+        url: `/perfume-store/admin/walkin/${storeId}`,
+        method: 'POST',
+        body: { guestName, guestPhone, guestEmail, adultCount, childrenCount, notes, method },
+      }),
+      invalidatesTags: ['WalkIns'],
+    }),
+    confirmWalkInPayment: builder.mutation({
+      query: ({ id, paymentReference, method }: { id: string; paymentReference?: string; method: string }) => ({
+        url: `/perfume-store/admin/walkin/${id}/confirm-payment`,
+        method: 'PATCH',
+        body: { paymentReference, method },
+      }),
+      invalidatesTags: ['WalkIns'],
+    }),
+    logDishSelection: builder.mutation({
+      query: ({ id, dishName, notes }: { id: string; dishName: string; notes?: string }) => ({
+        url: `/perfume-store/admin/walkin/${id}/dish`,
+        method: 'POST',
+        body: { dishName, notes },
+      }),
+      invalidatesTags: ['WalkIns'],
+    }),
+    checkOutWalkIn: builder.mutation({
+      query: (id: string) => ({
+        url: `/perfume-store/admin/walkin/${id}/checkout`,
+        method: 'PATCH',
+      }),
+      invalidatesTags: ['WalkIns'],
+    }),
+  }),
+  overrideExisting: false,
+});
+
+export const { 
+  useGetTodaysWalkInsQuery, 
+  useCreateWalkInMutation,
+  useConfirmWalkInPaymentMutation,
+  useLogDishSelectionMutation,
+  useCheckOutWalkInMutation
+} = walkInsApi;

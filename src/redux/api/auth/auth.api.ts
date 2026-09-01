@@ -80,11 +80,16 @@ const authApi = baseApi.injectEndpoints({
         body: credentials,
       }),
       transformResponse: (response: LoginResponse) => {
+        const enrichedUser = {
+          ...response.user,
+          ...(response.perfumeStore ? { perfumeStoreId: (response as any).perfumeStore.id } : {}),
+          ...(response.privateLounge ? { privateLoungeId: (response as any).privateLounge.id } : {}),
+        };
         localStorage.setItem('access_token', response.accessToken);
         localStorage.setItem('refresh_token', response.refreshToken);
-        localStorage.setItem('user', JSON.stringify(response.user)); // Stringify user object
-        localStorage.setItem('subscription', JSON.stringify(response.subscription)); // Store subscription
-        return response;
+        localStorage.setItem('user', JSON.stringify(enrichedUser));
+        localStorage.setItem('subscription', JSON.stringify(response.subscription));
+        return { ...response, user: enrichedUser };
       },
       async onQueryStarted(_args, { dispatch, queryFulfilled }) {
         try {
@@ -94,8 +99,9 @@ const authApi = baseApi.injectEndpoints({
               isAuthenticated: true,
               accessToken: data.accessToken,
               refreshToken: data.refreshToken,
-              user: data.user,
-              subscription: data.subscription, // Add subscription to Redux state
+              user: data.user, // Already enriched by transformResponse
+              subscription: data.subscription,
+              restaurant: (data as any).restaurant || (data as any).perfumeStore || (data as any).privateLounge,
             })
           );
           toast.success("Login successful", {
@@ -125,6 +131,7 @@ const authApi = baseApi.injectEndpoints({
               accessToken: data.accessToken,
               refreshToken: data.refreshToken,
               user: data.user,
+              restaurant: (data as any).restaurant || (data as any).perfumeStore || (data as any).privateLounge,
             })
           );
           toast.success("Registration successful. Please verify your email.", {
@@ -225,3 +232,5 @@ export const {
   useResetPasswordMutation,
   useRequestPasswordResetMutation,
 } = authApi;
+
+export { authApi };

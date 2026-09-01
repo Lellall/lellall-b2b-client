@@ -16,6 +16,7 @@ import Reservations from './modules/restaurant/features/reservations/reservation
 import Reservation from './modules/restaurant/features/reservations/reservation';
 import AdminLayout from './modules/admin/features/layout/layout';
 import LoungeLayout from './modules/private-lounge/layout/layout';
+import StoreLayout from './modules/perfume/layout/layout';
 import Operations from './modules/admin/features/operations/operations';
 import ViewOrderOperations from './modules/admin/features/operations/view-order-operations';
 import Settings from './modules/restaurant/features/settings/settings';
@@ -43,6 +44,12 @@ import LoungeMenuPage from './modules/private-lounge/features/menu/LoungeMenuPag
 import { LoungeStaffPage } from './modules/private-lounge/features/staff/LoungeStaffPage';
 import LoungeSettingsPage from './modules/private-lounge/features/settings/LoungeSettingsPage';
 import LoungeBillingPage from './modules/private-lounge/features/billing/LoungeBillingPage';
+import PerfumeDashboard from './modules/perfume/features/dashboard/dashboard';
+import PerfumeVaultPage from './modules/perfume/features/bottles/BottleStoragePage';
+import { Members as PerfumeClients } from './modules/perfume/features/members/members';
+import PerfumeStaffPage from './modules/perfume/features/staff/LoungeStaffPage';
+import PerfumeSettingsPage from './modules/perfume/features/settings/LoungeSettingsPage';
+import PerfumeMenuPage from './modules/perfume/features/menu/LoungeMenuPage';
 import SubscriptionExpired from './SubscriptionExpired';
 import Insights from './modules/restaurant/features/insights/insights';
 import Attendance from './modules/human-resource/features/attendance/attendance';
@@ -70,6 +77,8 @@ const App = () => {
   const isHumanResource = user?.role === 'HUMAN_RESOURCE';
   const isLoungeUser = !!user?.privateLoungeId;
   const isLoungeAdmin = user?.role === 'ADMIN' && isLoungeUser;
+  const isPerfumeUser = !!user?.perfumeStoreId;
+  const isPerfumeAdmin = user?.role === 'ADMIN' && isPerfumeUser;
 
   // Check if user is allowed to access the dashboard
   // Anyone reaching this point for the index route has already been authorized by protect-routes.tsx
@@ -77,7 +86,7 @@ const App = () => {
 
   // Query restaurant data — skip for admin subdomain, and skip for lounge users
   // (lounge subdomains like 'sanctum' are not restaurants and would 404)
-  const shouldSkipRestaurantQuery = (isAdminSubdomain && isSuperAdmin) || isLoungeUser;
+  const shouldSkipRestaurantQuery = (isAdminSubdomain && isSuperAdmin) || isLoungeUser || isPerfumeUser;
   const { data: restaurant, isLoading, isError } = useGetRestaurantBySubdomainQuery(subdomain, {
     skip: shouldSkipRestaurantQuery,
   });
@@ -211,6 +220,27 @@ const App = () => {
     </>
   );
 
+  // Define perfume routes
+  const perfumeRoutes = (
+    <>
+      <Route path="dashboard" element={<PerfumeDashboard />} />
+      <Route path="menu" element={<PerfumeMenuPage />} />
+      <Route path="staff" element={<PerfumeStaffPage />} />
+      <Route path="vault" element={<PerfumeVaultPage />} />
+      <Route path="settings" element={<PerfumeSettingsPage />} />
+      <Route
+        index
+        element={
+          user?.role === 'HOSTESS' || user?.role === 'HOST' ? (
+            <Navigate to="menu" replace />
+          ) : (
+            <Navigate to="dashboard" replace />
+          )
+        }
+      />
+    </>
+  );
+
   return (
     <CurrencyProvider>
       <Router>
@@ -272,7 +302,25 @@ const App = () => {
                   </Route>
                 )}
 
-                {!isSuperAdmin && !isHumanResource && !isLoungeUser && (
+                {isPerfumeUser && (
+                  <Route element={<ProtectedRoute isAdminRoute={false} />}>
+                    <Route path="/perfume" element={<StoreLayout />}>
+                      {perfumeRoutes}
+                    </Route>
+                    <Route
+                      path="/"
+                      element={
+                        user?.role === 'HOSTESS' || user?.role === 'HOST' ? (
+                          <Navigate to="/perfume/menu" replace />
+                        ) : (
+                          <Navigate to="/perfume/dashboard" replace />
+                        )
+                      }
+                    />
+                  </Route>
+                )}
+
+                {!isSuperAdmin && !isHumanResource && !isLoungeUser && !isPerfumeUser && (
                   <Route element={<ProtectedRoute isAdminRoute={false} />}>
                     <Route path="/" element={<Layout subdomainData={restaurant} />}>
                       {restaurantRoutes}
