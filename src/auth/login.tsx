@@ -45,7 +45,7 @@ const Login = () => {
       localStorage.setItem("access_token", result.accessToken)
 
       toast.success("Login successful!")
-      navigate("/")
+      window.location.href = "/"
     } catch (error) {
       // Handle login error
       toast.error("Login failed: " + error.data?.message || "An error occurred")

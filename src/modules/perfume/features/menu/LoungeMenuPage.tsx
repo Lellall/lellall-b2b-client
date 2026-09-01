@@ -360,6 +360,7 @@ const CartPanel: React.FC<{
           order={receiptOrder} 
           storeName={storeName}
           restaurantId={restaurantId}
+          storeId={storeId}
           onClose={() => { setReceiptOrder(null); onClose(); }} 
         />
       )}
@@ -369,9 +370,15 @@ const CartPanel: React.FC<{
 
 // ─── RECEIPT MODAL ────────────────────────────────────────────────────────────
 
-const ReceiptModal: React.FC<{ order: any; storeName: string; restaurantId: string; onClose: () => void }> = ({ order, storeName, restaurantId, onClose }) => {
+const ReceiptModal: React.FC<{ order: any; storeName: string; restaurantId: string; storeId?: string; onClose: () => void }> = ({ order, storeName, restaurantId, storeId, onClose }) => {
   const { data: bankData } = useGetBankDetailsQuery(restaurantId, { skip: !restaurantId });
-  const bankDetails = bankData?.bankDetails?.[0];
+  
+  // Use hardcoded bank details for specific perfume store
+  const hardcodedBankDetails = storeId === '140558b6-f4e6-410c-9397-96654921a52f'
+    ? { bankName: 'TAJ BANK', accountNumber: '0002897287', accountName: 'RAKIYA SULEIMAN SAJE' }
+    : null;
+
+  const bankDetails = bankData?.bankDetails?.[0] || hardcodedBankDetails;
 
   return (
     <>
