@@ -3,7 +3,9 @@ import { baseApi } from '../baseApi';
 export const walkInsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getTodaysWalkIns: builder.query({
-      query: (storeId: string) => ({ url: `/perfume-store/admin/walkin/${storeId}/today` }),
+      query: ({ storeId, date }: { storeId: string; date?: string }) => ({ 
+        url: `/perfume-store/admin/walkin/${storeId}/today${date ? `?date=${date}` : ''}` 
+      }),
       providesTags: ['WalkIns'],
     }),
     createWalkIn: builder.mutation({

@@ -49,10 +49,17 @@ const StatusBadge = ({ status, paymentConfirmed }: { status: string; paymentConf
 // ─── WALK-INS LIST ────────────────────────────────────────────────────────────
 export const WalkIns: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
-  const { data: response, isLoading } = useGetTodaysWalkInsQuery(user?.privateLoungeId || '', {
-    skip: !user?.privateLoungeId,
-    pollingInterval: 30000,
-  });
+  
+  // Default to today in YYYY-MM-DD format
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
+
+  const { data: response, isLoading } = useGetTodaysWalkInsQuery(
+    { loungeId: user?.privateLoungeId || '', date: selectedDate }, 
+    {
+      skip: !user?.privateLoungeId,
+      pollingInterval: 30000,
+    }
+  );
 
   const [checkoutWalkIn] = useCheckOutWalkInMutation();
   const [confirmPayment] = useConfirmWalkInPaymentMutation();
@@ -213,6 +220,14 @@ export const WalkIns: React.FC = () => {
               <option value="COMPLETED">Completed</option>
               <option value="VOIDED">Voided</option>
             </select>
+          </div>
+          <div className="relative">
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#05431E]/20 focus:border-[#05431E] shadow-sm cursor-pointer"
+            />
           </div>
         </div>
       </div>

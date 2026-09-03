@@ -17,6 +17,7 @@ export const NewWalkInModal: React.FC<NewWalkInModalProps> = ({ isOpen, onClose,
     childrenCount: 0,
     notes: '',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const totalAmount = formData.adultCount * 20000 + formData.childrenCount * 10000;
 
@@ -29,11 +30,13 @@ export const NewWalkInModal: React.FC<NewWalkInModalProps> = ({ isOpen, onClose,
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     if (!formData.fullName.trim()) {
       toast.error('Guest name is required');
       return;
     }
     
+    setIsSubmitting(true);
     try {
       await onSubmit(formData);
       toast.success('Walk-in guest registered successfully!');
@@ -48,6 +51,8 @@ export const NewWalkInModal: React.FC<NewWalkInModalProps> = ({ isOpen, onClose,
       onClose();
     } catch (error) {
       // Error is handled by the parent component
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -178,10 +183,15 @@ export const NewWalkInModal: React.FC<NewWalkInModalProps> = ({ isOpen, onClose,
             <button
               onClick={handleSubmit}
               type="button"
-              className="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-[#05431E] hover:bg-[#042f15] transition-colors shadow-sm flex items-center gap-2"
+              disabled={isSubmitting}
+              className="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-[#05431E] hover:bg-[#042f15] transition-colors shadow-sm flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              <Plus size="16" />
-              Register Guest
+              {isSubmitting ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                <Plus size="16" />
+              )}
+              {isSubmitting ? 'Registering...' : 'Register Guest'}
             </button>
           </div>
           

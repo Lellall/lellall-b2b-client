@@ -244,6 +244,18 @@ const AddItemModal: React.FC<{
     photo: null as File | null,
   });
 
+  React.useEffect(() => {
+    if (isOpen) {
+      setForm({
+        name: '', brand: '', category: '',
+        subCategory: '', emoji: '', unit: 'ml',
+        totalCapacity: '', currentStock: '', reorderAt: '', cost: '',
+        accentColor: '#92400e',
+        photo: null as File | null,
+      });
+    }
+  }, [isOpen]);
+
   const [addInventory] = useAddInventoryItemMutation();
   const user = useSelector((state: RootState) => state.auth.user);
 
@@ -398,6 +410,18 @@ const EditItemModal: React.FC<{
     accentColor: item.accentColor,
     photo: null as File | null,
   });
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setForm({
+        name: item.name, brand: item.brand, category: item.category,
+        subCategory: item.subCategory, emoji: item.emoji, unit: item.unit,
+        totalCapacity: item.totalCapacity.toString(), currentStock: item.currentStock.toString(), reorderAt: item.reorderAt.toString(), cost: item.cost.toString(),
+        accentColor: item.accentColor,
+        photo: null as File | null,
+      });
+    }
+  }, [item, isOpen]);
 
   const [updateInventory, { isLoading }] = useUpdateInventoryItemMutation();
 
