@@ -373,7 +373,7 @@ const OrderPanel: React.FC<{
   activeLoungeId: string;
 }> = ({ order, onRemove, onClear, total, isOpen, onClose, activeLoungeId }) => {
   const [createOrder, { isLoading }] = useCreateOrderMutation();
-  const { data: walkInsData } = useGetTodaysWalkInsQuery(activeLoungeId, { skip: !activeLoungeId });
+  const { data: walkInsData } = useGetTodaysWalkInsQuery({ loungeId: activeLoungeId }, { skip: !activeLoungeId });
   const walkIns = walkInsData?.walkIns || [];
   const { data: members = [] } = useGetAllMembersQuery(activeLoungeId, { skip: !activeLoungeId });
   const [selectedCustomer, setSelectedCustomer] = useState<string>(''); // format "walkIn:id" or "member:id" or "anonymous"
