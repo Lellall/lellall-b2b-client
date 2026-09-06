@@ -11,9 +11,16 @@ export const ordersApi = baseApi.injectEndpoints({
       invalidatesTags: ['LOUNGE_INVENTORY', 'LOUNGE_DASHBOARD'],
     }),
     getPerfumeOrders: builder.query({
-      query: (storeId: string) => ({
-        url: `/perfume-store/${storeId}/orders`,
-      }),
+      query: (params: { storeId: string; startDate?: string; endDate?: string; page?: number; limit?: number }) => {
+        const { storeId, startDate, endDate, page, limit } = params;
+        const searchParams = new URLSearchParams();
+        if (startDate) searchParams.set('startDate', startDate);
+        if (endDate) searchParams.set('endDate', endDate);
+        if (page) searchParams.set('page', String(page));
+        if (limit) searchParams.set('limit', String(limit));
+        const qs = searchParams.toString();
+        return { url: `/perfume-store/${storeId}/orders${qs ? `?${qs}` : ''}` };
+      },
       providesTags: ['LOUNGE_DASHBOARD'],
     }),
     getPerfumeReceipt: builder.query({
