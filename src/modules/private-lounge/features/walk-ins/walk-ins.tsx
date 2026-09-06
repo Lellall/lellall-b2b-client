@@ -1,9 +1,18 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Plus, Eye } from 'lucide-react';
+import { Search, Filter, Plus, Eye, Trash2 } from 'lucide-react';
 import { DocumentText, TickCircle, CloseCircle, Clock, Profile2User } from 'iconsax-react';
 import { WalkInDrawer } from './components/walk-in-drawer';
 import { NewWalkInModal } from './components/new-walk-in-modal';
-import { useGetTodaysWalkInsQuery, useCheckOutWalkInMutation, useConfirmWalkInPaymentMutation, useLogDishSelectionMutation, useCreateWalkInMutation } from '../../../../redux/api/private-lounge/walk-ins.api';
+import {
+  useGetTodaysWalkInsQuery,
+  useCheckOutWalkInMutation,
+  useConfirmWalkInPaymentMutation,
+  useLogDishSelectionMutation,
+  useCreateWalkInMutation,
+  useDeleteWalkInMutation,
+  useUpdateOrderItemQuantityMutation,
+  useRemoveOrderItemMutation,
+} from '../../../../redux/api/private-lounge/walk-ins.api';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store';
 import { toast } from 'react-toastify';
@@ -64,6 +73,9 @@ export const WalkIns: React.FC = () => {
   const [checkoutWalkIn] = useCheckOutWalkInMutation();
   const [confirmPayment] = useConfirmWalkInPaymentMutation();
   const [logDish] = useLogDishSelectionMutation();
+  const [deleteWalkIn] = useDeleteWalkInMutation();
+  const [updateOrderItem] = useUpdateOrderItemQuantityMutation();
+  const [removeOrderItem] = useRemoveOrderItemMutation();
 
   const walkins = useMemo(() => {
     if (!response?.walkIns) return [];
@@ -121,6 +133,16 @@ export const WalkIns: React.FC = () => {
         toast.error(error?.data?.message || 'Failed to checkout');
       }
     }
+  };
+
+  const applyOrderResultToDrawer = (orderId: string, result: any) => {
+    setSelectedWalkIn((prev: any) => {
+      if (!prev) return prev;
+      const orders = result?.deleted
+        ? prev.orders.filter((o: any) => o.id !== orderId)
+        : prev.orders.map((o: any) => (o.id === orderId ? result : o));
+      return { ...prev, orders };
+    });
   };
 
   const [createWalkIn] = useCreateWalkInMutation();
@@ -283,12 +305,28 @@ export const WalkIns: React.FC = () => {
               <span className="text-sm text-gray-500 hidden md:block font-medium">
                 {new Date(w.timeIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
-              <button 
+              <button
                 onClick={() => setSelectedWalkIn(w)}
                 className="p-2 text-gray-400 hover:text-[#05431E] hover:bg-[#05431E]/10 rounded-lg transition-colors"
                 title="View Walk-in Details"
               >
                 <Eye size="18" />
+              </button>
+              <button
+                onClick={async () => {
+                  if (!window.confirm(`Delete this walk-in record for ${w.fullName}? This cannot be undone.`)) return;
+                  try {
+                    await deleteWalkIn(w.id).unwrap();
+                    toast.success('Walk-in deleted');
+                    if (selectedWalkIn?.id === w.id) setSelectedWalkIn(null);
+                  } catch (error: any) {
+                    toast.error(error?.data?.message || 'Failed to delete walk-in');
+                  }
+                }}
+                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                title="Delete Walk-in"
+              >
+                <Trash2 size={18} />
               </button>
             </div>
           </div>
@@ -335,6 +373,33 @@ export const WalkIns: React.FC = () => {
             });
           } catch (error: any) {
             toast.error(error?.data?.message || 'Failed to log dish');
+          }
+        }}
+        onDeleteWalkIn={async (id) => {
+          if (!window.confirm('Delete this walk-in record? This cannot be undone.')) return;
+          try {
+            await deleteWalkIn(id).unwrap();
+            toast.success('Walk-in deleted');
+            setSelectedWalkIn(null);
+          } catch (error: any) {
+            toast.error(error?.data?.message || 'Failed to delete walk-in');
+          }
+        }}
+        onUpdateOrderItem={async (orderId, itemId, quantity) => {
+          try {
+            const result = await updateOrderItem({ orderId, itemId, quantity }).unwrap();
+            applyOrderResultToDrawer(orderId, result);
+          } catch (error: any) {
+            toast.error(error?.data?.message || 'Failed to update item');
+          }
+        }}
+        onRemoveOrderItem={async (orderId, itemId) => {
+          try {
+            const result = await removeOrderItem({ orderId, itemId }).unwrap();
+            applyOrderResultToDrawer(orderId, result);
+            toast.success('Item removed');
+          } catch (error: any) {
+            toast.error(error?.data?.message || 'Failed to remove item');
           }
         }}
       />

@@ -39,14 +39,39 @@ export const walkInsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['WalkIns'],
     }),
+    deleteWalkIn: builder.mutation({
+      query: (id: string) => ({
+        url: `/private-lounge/admin/walkin/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['WalkIns'],
+    }),
+    updateOrderItemQuantity: builder.mutation({
+      query: ({ orderId, itemId, quantity }: { orderId: string; itemId: string; quantity: number }) => ({
+        url: `/private-lounge/admin/order/${orderId}/item/${itemId}`,
+        method: 'PATCH',
+        body: { quantity },
+      }),
+      invalidatesTags: ['WalkIns'],
+    }),
+    removeOrderItem: builder.mutation({
+      query: ({ orderId, itemId }: { orderId: string; itemId: string }) => ({
+        url: `/private-lounge/admin/order/${orderId}/item/${itemId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['WalkIns'],
+    }),
   }),
   overrideExisting: false,
 });
 
-export const { 
-  useGetTodaysWalkInsQuery, 
+export const {
+  useGetTodaysWalkInsQuery,
   useCreateWalkInMutation,
   useConfirmWalkInPaymentMutation,
   useLogDishSelectionMutation,
-  useCheckOutWalkInMutation
+  useCheckOutWalkInMutation,
+  useDeleteWalkInMutation,
+  useUpdateOrderItemQuantityMutation,
+  useRemoveOrderItemMutation,
 } = walkInsApi;

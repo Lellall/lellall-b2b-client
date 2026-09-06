@@ -2,16 +2,20 @@ import React from 'react';
 import styled from 'styled-components';
 import { User } from 'iconsax-react';
 import { formatDistanceToNow } from 'date-fns';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 export interface RecentActivity {
   member: string;
   tier: string;
   action: string;
   time: string;
+  amount?: number;
 }
 
 interface ActivityTableProps {
   activities?: RecentActivity[];
+  headerRight?: React.ReactNode;
+  footer?: React.ReactNode;
 }
 
 const Container = styled.div`
@@ -128,14 +132,15 @@ const TierBadge = styled.span<{ tier: 'Black' | 'Gold' | 'Silver' }>`
 
 // Static data removed
 
-const ActivityTable: React.FC<ActivityTableProps> = ({ activities = [] }) => {
+const ActivityTable: React.FC<ActivityTableProps> = ({ activities = [], headerRight, footer }) => {
+  const { formatCurrency } = useCurrency();
   return (
     <Container>
       <Header>
         <TitleText>Recent Premium Activity</TitleText>
-        <ViewAllButton>View All</ViewAllButton>
+        {headerRight ?? <ViewAllButton>View All</ViewAllButton>}
       </Header>
-      
+
       <Table>
         <thead>
           <tr>
@@ -143,6 +148,7 @@ const ActivityTable: React.FC<ActivityTableProps> = ({ activities = [] }) => {
             <Th>Tier</Th>
             <Th>Action</Th>
             <Th>Time</Th>
+            <Th>Amount</Th>
           </tr>
         </thead>
         <tbody>
@@ -163,16 +169,20 @@ const ActivityTable: React.FC<ActivityTableProps> = ({ activities = [] }) => {
               <Td style={{ color: '#6B7280' }}>
                 {activity.time ? formatDistanceToNow(new Date(activity.time), { addSuffix: true }) : ''}
               </Td>
+              <Td style={{ fontWeight: 600 }}>
+                {activity.amount ? formatCurrency(activity.amount) : '—'}
+              </Td>
             </tr>
           )) : (
             <tr>
-              <Td colSpan={4} style={{ textAlign: 'center', color: '#6B7280' }}>
+              <Td colSpan={5} style={{ textAlign: 'center', color: '#6B7280' }}>
                 No recent activity.
               </Td>
             </tr>
           )}
         </tbody>
       </Table>
+      {footer}
     </Container>
   );
 };

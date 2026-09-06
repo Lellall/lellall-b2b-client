@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Phone, User as UserIcon, Users, AlignLeft } from 'lucide-react';
+import { X, Phone, User as UserIcon, Users, AlignLeft, Minus, Plus, Trash2 } from 'lucide-react';
 import { Profile2User, TickCircle, CloseCircle, Clock } from 'iconsax-react';
 import { toast } from 'react-toastify';
 
@@ -10,15 +10,21 @@ interface WalkInDrawerProps {
   onStatusChange: (id: string, newStatus: string) => void;
   onConfirmPayment?: (id: string, ref: string, method: string) => void;
   onLogDish?: (id: string, dishName: string, notes: string) => void;
+  onDeleteWalkIn?: (id: string) => void;
+  onUpdateOrderItem?: (orderId: string, itemId: string, quantity: number) => void;
+  onRemoveOrderItem?: (orderId: string, itemId: string) => void;
 }
 
-export const WalkInDrawer: React.FC<WalkInDrawerProps> = ({ 
-  walkIn, 
-  isOpen, 
+export const WalkInDrawer: React.FC<WalkInDrawerProps> = ({
+  walkIn,
+  isOpen,
   onClose,
   onStatusChange,
   onConfirmPayment,
-  onLogDish
+  onLogDish,
+  onDeleteWalkIn,
+  onUpdateOrderItem,
+  onRemoveOrderItem,
 }) => {
   if (!isOpen || !walkIn) return null;
 
@@ -133,9 +139,34 @@ export const WalkInDrawer: React.FC<WalkInDrawerProps> = ({
                   {walkIn.orders.map((order: any, idx: number) => (
                     <div key={order.id || idx} className="mb-2">
                       {order.items?.map((item: any, iIdx: number) => (
-                        <div key={iIdx} className="flex justify-between items-center text-sm font-medium text-gray-900 bg-gray-50 p-2 rounded mb-1">
-                          <span>{item.quantity}x {item.inventoryItem?.name || 'Item'}</span>
-                          <span>₦{(item.totalPrice || 0).toLocaleString()}</span>
+                        <div key={item.id || iIdx} className="flex justify-between items-center text-sm font-medium text-gray-900 bg-gray-50 p-2 rounded mb-1">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => onUpdateOrderItem?.(order.id, item.id, item.quantity - 1)}
+                              className="w-6 h-6 flex items-center justify-center rounded-md bg-white border border-gray-200 text-gray-500 hover:text-[#05431E] hover:border-[#05431E] transition-colors"
+                              title="Reduce quantity"
+                            >
+                              <Minus size={12} />
+                            </button>
+                            <span>{item.quantity}x {item.inventoryItem?.name || 'Item'}</span>
+                            <button
+                              onClick={() => onUpdateOrderItem?.(order.id, item.id, item.quantity + 1)}
+                              className="w-6 h-6 flex items-center justify-center rounded-md bg-white border border-gray-200 text-gray-500 hover:text-[#05431E] hover:border-[#05431E] transition-colors"
+                              title="Increase quantity"
+                            >
+                              <Plus size={12} />
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span>₦{(item.totalPrice || 0).toLocaleString()}</span>
+                            <button
+                              onClick={() => onRemoveOrderItem?.(order.id, item.id)}
+                              className="text-gray-400 hover:text-red-500 transition-colors"
+                              title="Remove item"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -169,18 +200,29 @@ export const WalkInDrawer: React.FC<WalkInDrawerProps> = ({
         </div>
 
         {/* Action Footer */}
-        <div className="p-6 bg-white border-t border-gray-200 shrink-0">
+        <div className="p-6 bg-white border-t border-gray-200 shrink-0 space-y-3">
           {walkIn.status === 'CHECKED_IN' && (
-            <div className="space-y-3">
-              <button
-                onClick={() => {
-                  onConfirmPayment?.(walkIn.id, '', 'POS_TERMINAL');
-                }}
-                className="w-full py-3 rounded-xl text-sm font-bold text-white bg-[#05431E] hover:bg-[#042f15] transition-colors shadow-md"
-              >
-                Confirm Payment & Close Tab
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                onConfirmPayment?.(walkIn.id, '', 'POS_TERMINAL');
+              }}
+              className="w-full py-3 rounded-xl text-sm font-bold text-white bg-[#05431E] hover:bg-[#042f15] transition-colors shadow-md"
+            >
+              Confirm Payment & Close Tab
+            </button>
+          )}
+          {onDeleteWalkIn && (
+            <button
+              onClick={() => {
+                if (window.confirm(`Delete this walk-in record for ${walkIn.fullName}? This cannot be undone.`)) {
+                  onDeleteWalkIn(walkIn.id);
+                }
+              }}
+              className="w-full py-3 rounded-xl text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition-colors flex items-center justify-center gap-2"
+            >
+              <Trash2 size={16} />
+              Delete Walk-In
+            </button>
           )}
         </div>
       </div>
