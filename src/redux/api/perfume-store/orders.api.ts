@@ -28,13 +28,21 @@ export const ordersApi = baseApi.injectEndpoints({
         url: `/perfume-store/${data.storeId}/order/${data.orderId}/receipt`,
       }),
     }),
+    deletePerfumeOrder: builder.mutation({
+      query: ({ storeId, orderId }: { storeId: string; orderId: string }) => ({
+        url: `/perfume-store/${storeId}/order/${orderId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['LOUNGE_DASHBOARD'],
+    }),
   }),
   overrideExisting: false,
 });
 
-export const { 
+export const {
   useCreatePerfumeOrderMutation,
   useGetPerfumeOrdersQuery,
   useGetPerfumeReceiptQuery,
-  useLazyGetPerfumeReceiptQuery
+  useLazyGetPerfumeReceiptQuery,
+  useDeletePerfumeOrderMutation,
 } = ordersApi;

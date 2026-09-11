@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import {
   Search, Plus, Minus, Package, Wine, Utensils,
   AlertTriangle, CheckCircle, ChevronDown, X,
-  Archive, RefreshCcw, Droplets, ImagePlus, Trash, Trash2, Edit2,
+  Archive, RefreshCcw, Droplets, ImagePlus, Trash, Edit2,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store';
@@ -14,6 +14,7 @@ import {
   useUpdateInventoryItemMutation,
   useDeleteLoungeInventoryItemMutation
 } from '../../../../redux/api/private-lounge/inventory.api';
+import ConfirmDialog from '@/components/modal/confirm-dialog';
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -93,9 +94,10 @@ const StockBar: React.FC<{ item: StorageItem }> = ({ item }) => {
 const RestockModal: React.FC<{
   item: StorageItem | null;
   isOpen: boolean;
+  isSubmitting?: boolean;
   onClose: () => void;
   onConfirm: (itemId: string, amount: number, customCost: number) => void;
-}> = ({ item, isOpen, onClose, onConfirm }) => {
+}> = ({ item, isOpen, isSubmitting = false, onClose, onConfirm }) => {
   const [amount, setAmount] = useState(0);
   const [customCost, setCustomCost] = useState<string>('');
 
@@ -209,17 +211,17 @@ const RestockModal: React.FC<{
             )}
 
             <div className="flex gap-2 pt-1">
-              <button onClick={onClose}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-all">
+              <button onClick={onClose} disabled={isSubmitting}
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                 Cancel
               </button>
               <button
-                disabled={amount === 0}
-                onClick={() => { onConfirm(item.id, amount, finalCost); onClose(); }}
+                disabled={amount === 0 || isSubmitting}
+                onClick={() => onConfirm(item.id, amount, finalCost)}
                 className="flex-1 py-2.5 rounded-xl bg-[#05431E] hover:bg-[#042f15] text-white text-sm font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm flex items-center justify-center gap-2 active:scale-[0.98]"
               >
                 <RefreshCcw size={14} />
-                Confirm Restock
+                {isSubmitting ? 'Restocking…' : 'Confirm Restock'}
               </button>
             </div>
           </div>
@@ -256,7 +258,7 @@ const AddItemModal: React.FC<{
     }
   }, [isOpen]);
 
-  const [addInventory] = useAddInventoryItemMutation();
+  const [addInventory, { isLoading: isAddingInventory }] = useAddInventoryItemMutation();
   const user = useSelector((state: RootState) => state.auth.user);
 
   if (!isOpen) return null;
@@ -378,14 +380,14 @@ const AddItemModal: React.FC<{
               </div>
             </div>
             <div className="flex gap-2 pt-2">
-              <button type="button" onClick={onClose}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-all">
+              <button type="button" onClick={onClose} disabled={isAddingInventory}
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                 Cancel
               </button>
-              <button type="submit"
-                className="flex-1 py-2.5 rounded-xl bg-[#05431E] hover:bg-[#042f15] text-white text-sm font-bold transition-all shadow-sm flex items-center justify-center gap-2 active:scale-[0.98]">
+              <button type="submit" disabled={isAddingInventory}
+                className="flex-1 py-2.5 rounded-xl bg-[#05431E] hover:bg-[#042f15] text-white text-sm font-bold transition-all shadow-sm flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed">
                 <Plus size={14} />
-                Add to Storage
+                {isAddingInventory ? 'Adding…' : 'Add to Storage'}
               </button>
             </div>
           </form>
@@ -627,7 +629,6 @@ const StoragePage: React.FC = () => {
   const [isRestockOpen, setIsRestockOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const user = useSelector((state: RootState) => state.auth.user);
   const { data: fetchedItems = [] } = useGetInventoryItemsQuery(
@@ -636,8 +637,8 @@ const StoragePage: React.FC = () => {
   );
   
   const items = fetchedItems;
-  const [restockItemMutation] = useRestockInventoryItemMutation();
-  const [deleteItemMutation] = useDeleteLoungeInventoryItemMutation();
+  const [restockItemMutation, { isLoading: isRestocking }] = useRestockInventoryItemMutation();
+  const [deleteItemMutation, { isLoading: isDeleting }] = useDeleteLoungeInventoryItemMutation();
 
   const subCategories = useMemo(() => {
     const source = activeTab === 'All' ? items : items.filter(i => i.category === activeTab);
@@ -678,6 +679,7 @@ const StoragePage: React.FC = () => {
     try {
       await restockItemMutation({ id: itemId, amount, cost: customCost }).unwrap();
       toast.success(`Stock updated successfully`);
+      setIsRestockOpen(false);
     } catch (err) {
       toast.error('Failed to restock item');
     }
@@ -685,15 +687,12 @@ const StoragePage: React.FC = () => {
 
   const confirmDelete = async () => {
     if (!deleteItemId) return;
-    setIsDeleting(true);
     try {
       await deleteItemMutation(deleteItemId).unwrap();
       toast.success("Item deleted successfully");
       setDeleteItemId(null);
     } catch (err: any) {
       toast.error(err.data?.message || "Failed to delete item");
-    } finally {
-      setIsDeleting(false);
     }
   };
 
@@ -788,35 +787,15 @@ const StoragePage: React.FC = () => {
         </div>
       ))}
 
-      {deleteItemId && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6">
-              <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-4 text-red-600">
-                <Trash2 size="24" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Storage Item</h3>
-              <p className="text-sm text-gray-500 mb-6">Are you sure you want to delete this item? This action cannot be undone.</p>
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => setDeleteItemId(null)}
-                  disabled={isDeleting}
-                  className="px-5 py-2.5 rounded-xl font-medium text-sm text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmDelete}
-                  disabled={isDeleting}
-                  className="px-5 py-2.5 rounded-xl font-medium text-sm text-white bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-                >
-                  {isDeleting ? 'Deleting...' : 'Yes, Delete'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        isOpen={!!deleteItemId}
+        title="Delete Storage Item"
+        message="Are you sure you want to delete this item? This action cannot be undone."
+        isLoading={isDeleting}
+        confirmText="Yes, Delete"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteItemId(null)}
+      />
       <AddItemModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
@@ -825,6 +804,7 @@ const StoragePage: React.FC = () => {
       <RestockModal
         item={restockItem}
         isOpen={isRestockOpen}
+        isSubmitting={isRestocking}
         onClose={() => setIsRestockOpen(false)}
         onConfirm={handleRestock}
       />

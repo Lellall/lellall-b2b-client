@@ -8,6 +8,7 @@ import {
 } from '@/redux/api/lounge/lounge.api';
 import { toast } from 'react-toastify';
 import { UserAdd, Trash, Shield, Sms, Call, User } from 'iconsax-react';
+import ConfirmDialog from '@/components/modal/confirm-dialog';
 
 export const LoungeStaffPage: React.FC = () => {
   const { user } = useSelector(selectAuth);
@@ -19,6 +20,7 @@ export const LoungeStaffPage: React.FC = () => {
 
   const [createStaff, { isLoading: isCreating }] = useCreateLoungeStaffMutation();
   const [deleteStaff, { isLoading: isDeleting }] = useDeleteLoungeStaffMutation();
+  const [staffPendingDelete, setStaffPendingDelete] = useState<{ id: string; name: string } | null>(null);
 
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -64,11 +66,12 @@ export const LoungeStaffPage: React.FC = () => {
     }
   };
 
-  const handleDeleteStaff = async (userId: string, name: string) => {
-    if (!window.confirm(`Are you sure you want to delete ${name}?`)) return;
+  const confirmDeleteStaff = async () => {
+    if (!staffPendingDelete) return;
     try {
-      await deleteStaff({ loungeId, userId }).unwrap();
+      await deleteStaff({ loungeId, userId: staffPendingDelete.id }).unwrap();
       toast.success('Staff user removed successfully.');
+      setStaffPendingDelete(null);
       refetch();
     } catch (err: any) {
       toast.error(err?.data?.message || 'Failed to delete staff user.');
@@ -178,7 +181,7 @@ export const LoungeStaffPage: React.FC = () => {
                     </td>
                     <td className="py-4 px-6 text-right">
                       <button
-                        onClick={() => handleDeleteStaff(s.id, `${s.firstName} ${s.lastName}`)}
+                        onClick={() => setStaffPendingDelete({ id: s.id, name: `${s.firstName} ${s.lastName}` })}
                         disabled={isDeleting}
                         className="p-2 text-gray-400 hover:text-red-600 transition-colors rounded-lg hover:bg-red-50"
                         title="Delete staff account"
@@ -330,6 +333,15 @@ export const LoungeStaffPage: React.FC = () => {
           </div>
         </>
       )}
+
+      <ConfirmDialog
+        isOpen={!!staffPendingDelete}
+        title="Delete staff account"
+        message={`Are you sure you want to delete ${staffPendingDelete?.name}?`}
+        isLoading={isDeleting}
+        onConfirm={confirmDeleteStaff}
+        onCancel={() => setStaffPendingDelete(null)}
+      />
     </div>
   );
 };

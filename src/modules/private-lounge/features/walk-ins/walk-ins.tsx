@@ -16,6 +16,7 @@ import {
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store';
 import { toast } from 'react-toastify';
+import ConfirmDialog from '@/components/modal/confirm-dialog';
 
 // ─── STATUS BADGE COMPONENT ───────────────────────────────────────────────────
 const StatusBadge = ({ status, paymentConfirmed }: { status: string; paymentConfirmed?: boolean }) => {
@@ -73,9 +74,10 @@ export const WalkIns: React.FC = () => {
   const [checkoutWalkIn] = useCheckOutWalkInMutation();
   const [confirmPayment] = useConfirmWalkInPaymentMutation();
   const [logDish] = useLogDishSelectionMutation();
-  const [deleteWalkIn] = useDeleteWalkInMutation();
+  const [deleteWalkIn, { isLoading: isDeletingWalkIn }] = useDeleteWalkInMutation();
   const [updateOrderItem] = useUpdateOrderItemQuantityMutation();
   const [removeOrderItem] = useRemoveOrderItemMutation();
+  const [walkInPendingDelete, setWalkInPendingDelete] = useState<{ id: string; name: string } | null>(null);
 
   const walkins = useMemo(() => {
     if (!response?.walkIns) return [];
@@ -132,6 +134,18 @@ export const WalkIns: React.FC = () => {
       } catch (error: any) {
         toast.error(error?.data?.message || 'Failed to checkout');
       }
+    }
+  };
+
+  const confirmDeleteWalkIn = async () => {
+    if (!walkInPendingDelete) return;
+    try {
+      await deleteWalkIn(walkInPendingDelete.id).unwrap();
+      toast.success('Walk-in deleted');
+      if (selectedWalkIn?.id === walkInPendingDelete.id) setSelectedWalkIn(null);
+      setWalkInPendingDelete(null);
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to delete walk-in');
     }
   };
 
@@ -313,16 +327,7 @@ export const WalkIns: React.FC = () => {
                 <Eye size="18" />
               </button>
               <button
-                onClick={async () => {
-                  if (!window.confirm(`Delete this walk-in record for ${w.fullName}? This cannot be undone.`)) return;
-                  try {
-                    await deleteWalkIn(w.id).unwrap();
-                    toast.success('Walk-in deleted');
-                    if (selectedWalkIn?.id === w.id) setSelectedWalkIn(null);
-                  } catch (error: any) {
-                    toast.error(error?.data?.message || 'Failed to delete walk-in');
-                  }
-                }}
+                onClick={() => setWalkInPendingDelete({ id: w.id, name: w.fullName })}
                 className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                 title="Delete Walk-in"
               >
@@ -375,15 +380,9 @@ export const WalkIns: React.FC = () => {
             toast.error(error?.data?.message || 'Failed to log dish');
           }
         }}
-        onDeleteWalkIn={async (id) => {
-          if (!window.confirm('Delete this walk-in record? This cannot be undone.')) return;
-          try {
-            await deleteWalkIn(id).unwrap();
-            toast.success('Walk-in deleted');
-            setSelectedWalkIn(null);
-          } catch (error: any) {
-            toast.error(error?.data?.message || 'Failed to delete walk-in');
-          }
+        onDeleteWalkIn={(id) => {
+          const target = walkins.find((w) => w.id === id);
+          setWalkInPendingDelete({ id, name: target?.fullName || 'this guest' });
         }}
         onUpdateOrderItem={async (orderId, itemId, quantity) => {
           try {
@@ -409,7 +408,15 @@ export const WalkIns: React.FC = () => {
         onClose={() => setIsNewModalOpen(false)}
         onSubmit={handleAddNew}
       />
-      
+
+      <ConfirmDialog
+        isOpen={!!walkInPendingDelete}
+        title="Delete walk-in"
+        message={`Delete this walk-in record for ${walkInPendingDelete?.name}? This cannot be undone.`}
+        isLoading={isDeletingWalkIn}
+        onConfirm={confirmDeleteWalkIn}
+        onCancel={() => setWalkInPendingDelete(null)}
+      />
     </div>
   );
 };

@@ -1,7 +1,6 @@
 import React from 'react';
 import { ShieldTick, Profile2User, TickCircle, CloseCircle } from 'iconsax-react';
 import { X, Mail, Phone, User as UserIcon, Briefcase } from 'lucide-react';
-import { toast } from 'react-toastify';
 
 interface ApplicationDrawerProps {
   application: any | null;
@@ -10,15 +9,21 @@ interface ApplicationDrawerProps {
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
   onConfirmPayment: (id: string) => void;
+  isApproving?: boolean;
+  isRejecting?: boolean;
+  isConfirmingPayment?: boolean;
 }
 
-export const ApplicationDrawer: React.FC<ApplicationDrawerProps> = ({ 
-  application, 
-  isOpen, 
+export const ApplicationDrawer: React.FC<ApplicationDrawerProps> = ({
+  application,
+  isOpen,
   onClose,
   onApprove,
   onReject,
-  onConfirmPayment
+  onConfirmPayment,
+  isApproving = false,
+  isRejecting = false,
+  isConfirmingPayment = false,
 }) => {
   if (!isOpen || !application) return null;
 
@@ -181,22 +186,18 @@ export const ApplicationDrawer: React.FC<ApplicationDrawerProps> = ({
             </p>
             <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => {
-                  onReject(application.id);
-                  toast.error(`Application for ${application.fullName} rejected.`);
-                }}
-                className="w-full py-3 rounded-xl text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-colors border border-red-100"
+                onClick={() => onReject(application.id)}
+                disabled={isRejecting || isApproving}
+                className="w-full py-3 rounded-xl text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-colors border border-red-100 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Reject
+                {isRejecting ? 'Rejecting…' : 'Reject'}
               </button>
               <button
-                onClick={() => {
-                  onApprove(application.id);
-                  toast.success(`${application.fullName} has been approved as a new member!`);
-                }}
-                className="w-full py-3 rounded-xl text-sm font-bold text-white bg-[#05431E] hover:bg-[#042f15] transition-colors shadow-md"
+                onClick={() => onApprove(application.id)}
+                disabled={isApproving || isRejecting}
+                className="w-full py-3 rounded-xl text-sm font-bold text-white bg-[#05431E] hover:bg-[#042f15] transition-colors shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Approve & Add Member
+                {isApproving ? 'Approving…' : 'Approve & Add Member'}
               </button>
             </div>
           </div>
@@ -207,12 +208,11 @@ export const ApplicationDrawer: React.FC<ApplicationDrawerProps> = ({
               This application has been approved. The final step is to confirm their membership payment to fully activate the profile.
             </p>
             <button
-              onClick={() => {
-                onConfirmPayment(application.id);
-              }}
-              className="w-full py-3 rounded-xl text-sm font-bold text-white bg-[#05431E] hover:bg-[#042f15] transition-colors shadow-md"
+              onClick={() => onConfirmPayment(application.id)}
+              disabled={isConfirmingPayment}
+              className="w-full py-3 rounded-xl text-sm font-bold text-white bg-[#05431E] hover:bg-[#042f15] transition-colors shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Confirm Payment & Activate Member
+              {isConfirmingPayment ? 'Confirming…' : 'Confirm Payment & Activate Member'}
             </button>
           </div>
         )}

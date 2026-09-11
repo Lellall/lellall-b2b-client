@@ -4,11 +4,13 @@ import styled from 'styled-components';
 import { useSelector } from 'react-redux';
 import { format } from 'date-fns';
 import { selectAuth } from '@/redux/api/auth/auth.slice';
-import { ShoppingCart, Printer } from 'iconsax-react';
+import { ShoppingCart, Printer, Trash } from 'iconsax-react';
+import { toast } from 'react-toastify';
 import { useGetPerfumeDashboardStatsQuery } from '@/redux/api/perfume-store/dashboard.api';
-import { useGetPerfumeOrdersQuery } from '@/redux/api/perfume-store/orders.api';
+import { useGetPerfumeOrdersQuery, useDeletePerfumeOrderMutation } from '@/redux/api/perfume-store/orders.api';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import SalesCard from '@/components/ui/sales-card';
+import ConfirmDialog from '@/components/modal/confirm-dialog';
 
 // ─── BRAND CONSTANT ───────────────────────────────────────────────────────────
 const BRAND_GREEN = '#05431E';
@@ -262,10 +264,24 @@ const StoreDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { formatCurrency } = useCurrency();
   const userRole = (user?.role || '').toUpperCase();
+  const canDeleteOrders = ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(userRole);
 
   // perfumeStoreId may be on user (after new login), or fallback to restaurant id
   // Make sure we prefer perfumeStoreId if it exists to fetch the correct stats
   const storeId = user?.perfumeStoreId || restaurant?.id || '';
+  const [deleteOrder, { isLoading: isDeletingOrder }] = useDeletePerfumeOrderMutation();
+  const [orderPendingDelete, setOrderPendingDelete] = useState<string | null>(null);
+
+  const confirmDeleteOrder = async () => {
+    if (!orderPendingDelete) return;
+    try {
+      await deleteOrder({ storeId, orderId: orderPendingDelete }).unwrap();
+      toast.success('Order deleted');
+      setOrderPendingDelete(null);
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to delete order');
+    }
+  };
 
   useEffect(() => {
     if (userRole === 'HOSTESS' || userRole === 'HOST') {
@@ -525,6 +541,7 @@ const StoreDashboard: React.FC = () => {
               <Th>Time</Th>
               <Th>Amount</Th>
               <Th>Status</Th>
+              {canDeleteOrders && <Th>Actions</Th>}
             </tr>
           </thead>
           <tbody>
@@ -568,11 +585,34 @@ const StoreDashboard: React.FC = () => {
                     {tx.status}
                   </StatusPill>
                 </Td>
+                {canDeleteOrders && (
+                  <Td>
+                    <button
+                      onClick={() => setOrderPendingDelete(tx.id)}
+                      disabled={isDeletingOrder}
+                      title="Delete order"
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: isDeletingOrder ? 'not-allowed' : 'pointer',
+                        opacity: isDeletingOrder ? 0.5 : 1,
+                        color: '#9CA3AF',
+                        padding: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = '#DC2626')}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = '#9CA3AF')}
+                    >
+                      <Trash size={16} />
+                    </button>
+                  </Td>
+                )}
               </tr>
             ))}
             {recentTransactions.length === 0 && !isOrdersLoading && (
               <tr>
-                <td colSpan={6}>
+                <td colSpan={canDeleteOrders ? 7 : 6}>
                   <EmptyState>
                     <ShoppingCart size={32} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
                     <p style={{ fontWeight: 600, color: '#6B7280' }}>
@@ -599,6 +639,15 @@ const StoreDashboard: React.FC = () => {
           </PageControls>
         )}
       </Section>
+
+      <ConfirmDialog
+        isOpen={!!orderPendingDelete}
+        title="Delete order"
+        message="Delete this order? This will restore the inventory it used and cannot be undone."
+        isLoading={isDeletingOrder}
+        onConfirm={confirmDeleteOrder}
+        onCancel={() => setOrderPendingDelete(null)}
+      />
     </PageContainer>
   );
 };

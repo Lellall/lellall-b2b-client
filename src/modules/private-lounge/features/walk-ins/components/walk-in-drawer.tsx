@@ -213,11 +213,7 @@ export const WalkInDrawer: React.FC<WalkInDrawerProps> = ({
           )}
           {onDeleteWalkIn && (
             <button
-              onClick={() => {
-                if (window.confirm(`Delete this walk-in record for ${walkIn.fullName}? This cannot be undone.`)) {
-                  onDeleteWalkIn(walkIn.id);
-                }
-              }}
+              onClick={() => onDeleteWalkIn(walkIn.id)}
               className="w-full py-3 rounded-xl text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition-colors flex items-center justify-center gap-2"
             >
               <Trash2 size={16} />

@@ -7,6 +7,7 @@ import { useGetApplicationsQuery, useApproveApplicationMutation, useDeclineAppli
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store';
 import { toast } from 'react-toastify';
+import ConfirmDialog from '@/components/modal/confirm-dialog';
 
 
 // ─── STATUS BADGE ─────────────────────────────────────────────────────────────
@@ -57,9 +58,9 @@ export const Applications: React.FC = () => {
   const { data: response, isLoading } = useGetApplicationsQuery(user?.privateStoreId || '', {
     skip: !user?.privateStoreId
   });
-  const [approveApplication] = useApproveApplicationMutation();
-  const [declineApplication] = useDeclineApplicationMutation();
-  const [confirmPayment] = useConfirmPaymentMutation();
+  const [approveApplication, { isLoading: isApproving }] = useApproveApplicationMutation();
+  const [declineApplication, { isLoading: isDeclining }] = useDeclineApplicationMutation();
+  const [confirmPayment, { isLoading: isConfirmingPayment }] = useConfirmPaymentMutation();
   const [deleteApplication] = useDeleteApplicationMutation();
 
   const applications: any[] = useMemo(() => {
@@ -297,37 +298,15 @@ export const Applications: React.FC = () => {
       </div>
 
       {/* ─── DELETE CONFIRMATION MODAL ───────────────────── */}
-      {appToDelete && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6">
-              <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-4 text-red-600">
-                <Trash2 size="24" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Application</h3>
-              <p className="text-sm text-gray-500 mb-6">
-                Are you sure you want to delete this application? This action cannot be undone and will permanently remove the record.
-              </p>
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => setAppToDelete(null)}
-                  disabled={isDeleting}
-                  className="px-5 py-2.5 rounded-xl font-medium text-sm text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmDelete}
-                  disabled={isDeleting}
-                  className="px-5 py-2.5 rounded-xl font-medium text-sm text-white bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-                >
-                  {isDeleting ? 'Deleting...' : 'Yes, Delete'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        isOpen={!!appToDelete}
+        title="Delete Application"
+        message="Are you sure you want to delete this application? This action cannot be undone and will permanently remove the record."
+        isLoading={isDeleting}
+        confirmText="Yes, Delete"
+        onConfirm={confirmDelete}
+        onCancel={() => setAppToDelete(null)}
+      />
 
       {/* ─── APPLICATION DRAWER ──────────────────────────── */}
       <ApplicationDrawer
@@ -337,6 +316,9 @@ export const Applications: React.FC = () => {
         onApprove={handleApprove}
         onReject={handleReject}
         onConfirmPayment={handleConfirmPayment}
+        isApproving={isApproving}
+        isRejecting={isDeclining}
+        isConfirmingPayment={isConfirmingPayment}
       />
     </div>
   );
