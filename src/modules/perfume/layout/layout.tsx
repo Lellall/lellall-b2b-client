@@ -12,6 +12,8 @@ import { selectAuth, logout } from '@/redux/api/auth/auth.slice';
 import { persistor } from '@/redux/store';
 import { AppDispatch } from '@/redux/store';
 import { navItemsByRole } from '@/roleConfig';
+import SubscriptionGate from '../components/SubscriptionGate';
+import { useGetPerfumeBillingStatusQuery } from '@/redux/api/perfume-store/billing.api';
 
 interface SidebarProps {
   isMobile: boolean;
@@ -121,6 +123,48 @@ const Content = styled.main`
   width: 100%;
 `;
 
+const SubscriptionCircle = styled.div<{ status: string }>`
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background-color: ${({ status }) =>
+    status === 'TRIAL' ? '#FFA500' : status === 'ACTIVE' ? '#00CC00' : status === 'EXPIRED' ? '#FF3333' : '#808080'};
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: ${({ status }) =>
+      status === 'TRIAL'
+        ? 'rgba(255, 165, 0, 0.5)'
+        : status === 'ACTIVE'
+          ? 'rgba(0, 204, 0, 0.5)'
+          : status === 'EXPIRED'
+            ? 'rgba(255, 51, 51, 0.5)'
+            : 'rgba(128, 128, 128, 0.5)'};
+    z-index: -1;
+  }
+`;
+
+const SubscriptionInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: ${(props) => props.theme.colors.primaryFont};
+`;
+
+const TrialNotice = styled.span`
+  font-size: 12px;
+  color: #ffa500;
+  font-weight: 500;
+`;
+
 const ToggleButton = styled.button`
   background: none;
   border: none;
@@ -213,7 +257,12 @@ const StoreLayout: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, user } = useSelector(selectAuth);
+  const { isAuthenticated, user, restaurant } = useSelector(selectAuth);
+  const storeId = user?.perfumeStoreId || restaurant?.id || '';
+  const { data: billingStatus } = useGetPerfumeBillingStatusQuery(storeId, { skip: !storeId });
+  const subStatus = billingStatus?.status || 'TRIAL';
+  const daysLeft = billingStatus?.daysRemaining ?? 0;
+  const planName = billingStatus?.paystackPlanCode ? 'Core' : 'No Plan';
 
   const handleLogout = async () => {
     dispatch(logout());
@@ -300,13 +349,25 @@ const StoreLayout: React.FC = () => {
                 <img src={Menu} alt="Menu" />
               </Icon>
             </ToggleButton>
-            <UserInfoWrapper>
-              <span style={{ fontWeight: '500' }}>{user.firstName} {user.lastName}</span>
-              <span style={{ fontSize: '12px', color: theme.colors.primaryFont }}>Store Admin</span>
-            </UserInfoWrapper>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              {billingStatus && (
+                <SubscriptionInfo>
+                  <SubscriptionCircle status={subStatus} />
+                  {subStatus !== 'TRIAL' && <span>{planName}</span>}
+                  {subStatus === 'TRIAL' && <TrialNotice>Trial Account</TrialNotice>}
+                  <span>({daysLeft} day{daysLeft === 1 ? '' : 's'} left)</span>
+                </SubscriptionInfo>
+              )}
+              <UserInfoWrapper>
+                <span style={{ fontWeight: '500' }}>{user.firstName} {user.lastName}</span>
+                <span style={{ fontSize: '12px', color: theme.colors.primaryFont }}>Store Admin</span>
+              </UserInfoWrapper>
+            </div>
           </Header>
           <Content>
-            <Outlet />
+            <SubscriptionGate storeId={storeId}>
+              <Outlet />
+            </SubscriptionGate>
           </Content>
         </div>
       </LayoutWrapper>

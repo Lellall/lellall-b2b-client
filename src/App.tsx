@@ -49,6 +49,7 @@ import PerfumeVaultPage from './modules/perfume/features/bottles/BottleStoragePa
 import { Members as PerfumeClients } from './modules/perfume/features/members/members';
 import PerfumeStaffPage from './modules/perfume/features/staff/LoungeStaffPage';
 import PerfumeSettingsPage from './modules/perfume/features/settings/LoungeSettingsPage';
+import PerfumeBillingPage from './modules/perfume/features/billing/LoungeBillingPage';
 import PerfumeMenuPage from './modules/perfume/features/menu/LoungeMenuPage';
 import SubscriptionExpired from './SubscriptionExpired';
 import Insights from './modules/restaurant/features/insights/insights';
@@ -227,6 +228,7 @@ const App = () => {
       <Route path="menu" element={<PerfumeMenuPage />} />
       <Route path="staff" element={<PerfumeStaffPage />} />
       <Route path="vault" element={<PerfumeVaultPage />} />
+      <Route path="billing" element={<PerfumeBillingPage />} />
       <Route path="settings" element={<PerfumeSettingsPage />} />
       <Route
         index

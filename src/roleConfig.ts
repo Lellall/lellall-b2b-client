@@ -36,6 +36,7 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
     { to: '/perfume/menu', icon: ShoppingCart, text: 'POS / Sell' },
     { to: '/perfume/staff', icon: UserSearch, text: 'Staff' },
     { to: '/perfume/vault', icon: ArchiveBox, text: 'Vault' },
+    { to: '/perfume/billing', icon: MoneyChange, text: 'Billing' },
     { to: '/perfume/settings', icon: Setting, text: 'Settings' },
   ],
   PERFUME_STORE_HOSTESS: [
