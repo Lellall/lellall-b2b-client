@@ -202,12 +202,24 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ order, onClose }) => {
                 ))}
                 
                 <Divider />
-                
+
+                {receipt.subtotal !== undefined && (
+                  <Row>
+                    <span>Subtotal</span>
+                    <span>₦{receipt.subtotal.toLocaleString()}</span>
+                  </Row>
+                )}
+                {receipt.vatEnabled && (
+                  <Row>
+                    <span>VAT ({(receipt.vatRate * 100).toFixed(1)}%)</span>
+                    <span>₦{receipt.vatAmount.toLocaleString()}</span>
+                  </Row>
+                )}
                 <Row style={{ fontWeight: 'bold', fontSize: '16px' }}>
                   <span>TOTAL</span>
                   <span>₦{receipt.totalAmount.toLocaleString()}</span>
                 </Row>
-                
+
                 <Divider />
                 
                 <div style={{ textAlign: 'center', fontSize: '12px', marginTop: '24px', fontStyle: 'italic' }}>

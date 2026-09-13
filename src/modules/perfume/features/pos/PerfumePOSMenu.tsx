@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { selectAuth } from '@/redux/api/auth/auth.slice';
 import { useGetPerfumeInventoryItemsQuery } from '@/redux/api/perfume-store/inventory.api';
 import { useCreatePerfumeOrderMutation } from '@/redux/api/perfume-store/orders.api';
+import { useGetPerfumeVatConfigQuery } from '@/redux/api/perfume-store/vat.api';
 import { ShoppingCart, Add, Minus, TickCircle, SearchNormal1, FilterSearch } from 'iconsax-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReceiptModal from './ReceiptModal';
@@ -443,6 +444,7 @@ const CheckoutButton = styled(motion.button)`
 const PerfumePOSMenu: React.FC = () => {
   const { user } = useSelector(selectAuth);
   const { data: inventory } = useGetPerfumeInventoryItemsQuery(user?.perfumeStoreId || '', { skip: !user?.perfumeStoreId });
+  const { data: vatConfig } = useGetPerfumeVatConfigQuery(user?.perfumeStoreId || '', { skip: !user?.perfumeStoreId });
   const [createOrder, { isLoading: isCreating }] = useCreatePerfumeOrderMutation();
   
   const [cart, setCart] = useState<any[]>([]);
@@ -513,11 +515,14 @@ const PerfumePOSMenu: React.FC = () => {
     setCart(prev => prev.filter(item => item.id !== id));
   };
 
-  const total = cart.reduce((sum, item) => sum + (item.cost * item.quantity), 0);
+  const subtotal = cart.reduce((sum, item) => sum + (item.cost * item.quantity), 0);
+  const vatRate = vatConfig?.vatEnabled ? vatConfig.vatRate : 0;
+  const vatAmount = subtotal * vatRate;
+  const total = subtotal + vatAmount;
 
   const handleCheckout = async () => {
     if (cart.length === 0) return;
-    
+
     try {
       const payload = {
         storeId: user?.perfumeStoreId,
@@ -674,15 +679,15 @@ const PerfumePOSMenu: React.FC = () => {
           <CartSummary>
             <SummaryRow>
               <span>Subtotal</span>
-              <span>₦{total.toLocaleString()}</span>
+              <span>₦{subtotal.toLocaleString()}</span>
             </SummaryRow>
             <SummaryRow>
-              <span>Tax (0%)</span>
-              <span>₦0</span>
+              <span>VAT ({(vatRate * 100).toFixed(1)}%)</span>
+              <span>₦{vatAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
             </SummaryRow>
             <SummaryRow className="total">
               <span>Total</span>
-              <span>₦{total.toLocaleString()}</span>
+              <span>₦{total.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
             </SummaryRow>
 
             {/* Payment Type Selector */}

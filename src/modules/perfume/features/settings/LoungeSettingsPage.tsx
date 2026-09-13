@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { toast } from 'react-toastify';
-import { Building, Sms, Call, Clock, ShieldSecurity, Notification } from 'iconsax-react';
+import { Building, Sms, Call, Clock, ShieldSecurity, Notification, Receipt2 } from 'iconsax-react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store';
+import { useGetPerfumeVatConfigQuery, useUpdatePerfumeVatConfigMutation } from '../../../../redux/api/perfume-store/vat.api';
 
 const PageContainer = styled.div`
   display: flex;
@@ -179,6 +180,37 @@ const StoreSettingsPage: React.FC = () => {
 
   const [saving, setSaving] = useState(false);
 
+  const storeId = user?.perfumeStoreId || restaurant?.id || '';
+  const { data: vatConfig } = useGetPerfumeVatConfigQuery(storeId, { skip: !storeId });
+  const [updateVatConfig, { isLoading: isSavingVat }] = useUpdatePerfumeVatConfigMutation();
+  const [vatForm, setVatForm] = useState({ vatEnabled: false, vatRatePercent: '7.5' });
+
+  useEffect(() => {
+    if (vatConfig) {
+      setVatForm({
+        vatEnabled: vatConfig.vatEnabled,
+        vatRatePercent: String(vatConfig.vatRate * 100),
+      });
+    }
+  }, [vatConfig]);
+
+  const handleSaveVat = async () => {
+    const ratePercent = Number(vatForm.vatRatePercent);
+    if (Number.isNaN(ratePercent) || ratePercent < 0 || ratePercent > 100) {
+      toast.error('Enter a valid VAT rate between 0 and 100');
+      return;
+    }
+    try {
+      await updateVatConfig({
+        storeId,
+        data: { vatEnabled: vatForm.vatEnabled, vatRate: ratePercent / 100 },
+      }).unwrap();
+      toast.success('VAT settings saved');
+    } catch (err: any) {
+      toast.error(err?.data?.message || 'Failed to save VAT settings');
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
@@ -306,6 +338,42 @@ const StoreSettingsPage: React.FC = () => {
               onChange={handleChange}
             />
           </ToggleRow>
+        </SectionCard>
+
+        <SectionCard>
+          <SectionTitle>
+            <Receipt2 size="20" />
+            <span>Tax / VAT</span>
+          </SectionTitle>
+          <ToggleRow>
+            <div>
+              <span>Enable VAT on Sales</span>
+              <small>When on, VAT is added to every sale and shown on receipts</small>
+            </div>
+            <CheckboxInput
+              type="checkbox"
+              checked={vatForm.vatEnabled}
+              onChange={(e) => setVatForm((p) => ({ ...p, vatEnabled: e.target.checked }))}
+            />
+          </ToggleRow>
+          {vatForm.vatEnabled && (
+            <FormGroup style={{ maxWidth: 220 }}>
+              <label>VAT Rate (%)</label>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step="0.1"
+                value={vatForm.vatRatePercent}
+                onChange={(e) => setVatForm((p) => ({ ...p, vatRatePercent: e.target.value }))}
+              />
+            </FormGroup>
+          )}
+          <ButtonGroup style={{ marginTop: 0 }}>
+            <PrimaryButton type="button" onClick={handleSaveVat} disabled={isSavingVat}>
+              {isSavingVat ? 'Saving…' : 'Save VAT Settings'}
+            </PrimaryButton>
+          </ButtonGroup>
         </SectionCard>
 
         <ButtonGroup>

@@ -9,6 +9,7 @@ import { toast } from 'react-toastify';
 import { useGetPerfumeInventoryItemsQuery } from '../../../../redux/api/perfume-store/inventory.api';
 import { useCreatePerfumeOrderMutation } from '../../../../redux/api/perfume-store/orders.api';
 import { useGetBankDetailsQuery } from '../../../../redux/api/bank-details/bank-details.api';
+import { useGetPerfumeVatConfigQuery } from '../../../../redux/api/perfume-store/vat.api';
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -215,15 +216,20 @@ const CartPanel: React.FC<{
   restaurantId: string;
 }> = ({ cart, onRemove, onIncrease, onDecrease, onClear, total, isOpen, onClose, storeId, storeName, restaurantId }) => {
   const [createOrder, { isLoading }] = useCreatePerfumeOrderMutation();
+  const { data: vatConfig } = useGetPerfumeVatConfigQuery(storeId, { skip: !storeId });
   const [paymentMethod, setPaymentMethod] = useState<string>('CASH');
   const [receiptOrder, setReceiptOrder] = useState<any>(null);
+
+  const vatRate = vatConfig?.vatEnabled ? vatConfig.vatRate : 0;
+  const vatAmount = total * vatRate;
+  const grandTotal = total + vatAmount;
 
   const handleConfirmSale = async () => {
     if (!storeId) return;
     try {
       const payload: any = {
         storeId,
-        totalAmount: total,
+        totalAmount: grandTotal,
         paymentMethod,
         items: cart.map(({ item, qty }) => ({
           inventoryItemId: item.id,
@@ -333,10 +339,23 @@ const CartPanel: React.FC<{
             </div>
             
             <div className="w-full h-px border-t border-dashed border-gray-200" />
-            
+
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-400 font-semibold">Subtotal</span>
+                <span className="text-gray-600 font-semibold">{formatCurrency(total)}</span>
+              </div>
+              {vatRate > 0 && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-400 font-semibold">VAT ({(vatRate * 100).toFixed(1)}%)</span>
+                  <span className="text-gray-600 font-semibold">{formatCurrency(vatAmount)}</span>
+                </div>
+              )}
+            </div>
+
             <div className="flex justify-between items-end pb-1">
               <span className="text-gray-400 text-sm font-bold">Grand Total</span>
-              <span className="text-gray-900 font-bold text-2xl" style={{ color: BRAND_GREEN }}>{formatCurrency(total)}</span>
+              <span className="text-gray-900 font-bold text-2xl" style={{ color: BRAND_GREEN }}>{formatCurrency(grandTotal)}</span>
             </div>
             
             <button
@@ -449,6 +468,20 @@ const ReceiptModal: React.FC<{ order: any; storeName: string; restaurantId: stri
             <span className="text-sm text-gray-500">Payment</span>
             <span className="text-sm font-bold px-3 py-1 rounded-full" style={{ background: `${BRAND_GREEN}10`, color: BRAND_GREEN }}>{order.paymentMethod || 'CASH'}</span>
           </div>
+          {order.subtotal !== undefined && (
+            <div className="px-6 py-4 border-b border-dashed border-gray-200 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Subtotal</span>
+                <span className="font-semibold text-gray-700">{formatCurrency(order.subtotal)}</span>
+              </div>
+              {order.vatRate > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">VAT ({(order.vatRate * 100).toFixed(1)}%)</span>
+                  <span className="font-semibold text-gray-700">{formatCurrency(order.vatAmount)}</span>
+                </div>
+              )}
+            </div>
+          )}
           <div className="flex justify-between items-center px-6 py-5 border-b border-dashed border-gray-200">
             <span className="text-base font-bold text-gray-900">Total</span>
             <span className="text-2xl font-bold" style={{ color: BRAND_GREEN }}>{formatCurrency(order.totalAmount)}</span>

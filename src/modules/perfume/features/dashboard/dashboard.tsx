@@ -540,6 +540,7 @@ const StoreDashboard: React.FC = () => {
               <Th>Payment</Th>
               <Th>Time</Th>
               <Th>Amount</Th>
+              <Th>VAT</Th>
               <Th>Status</Th>
               {canDeleteOrders && <Th>Actions</Th>}
             </tr>
@@ -579,6 +580,11 @@ const StoreDashboard: React.FC = () => {
                 <Td style={{ fontWeight: 700, color: '#111827' }}>
                   {formatCurrency(tx.totalAmount)}
                 </Td>
+                <Td style={{ color: '#6B7280', fontSize: '13px' }}>
+                  {tx.vatAmount > 0
+                    ? `${formatCurrency(tx.vatAmount)} (${(tx.vatRate * 100).toFixed(1)}%)`
+                    : '—'}
+                </Td>
                 <Td>
                   <StatusPill completed={tx.status === 'COMPLETED'}>
                     {tx.status === 'COMPLETED' ? '● ' : '○ '}
@@ -612,7 +618,7 @@ const StoreDashboard: React.FC = () => {
             ))}
             {recentTransactions.length === 0 && !isOrdersLoading && (
               <tr>
-                <td colSpan={canDeleteOrders ? 7 : 6}>
+                <td colSpan={canDeleteOrders ? 8 : 7}>
                   <EmptyState>
                     <ShoppingCart size={32} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
                     <p style={{ fontWeight: 600, color: '#6B7280' }}>

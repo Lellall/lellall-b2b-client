@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Plus, X, AlertTriangle, Edit2 } from 'lucide-react';
+import { Search, Plus, X, AlertTriangle, Edit2, Trash2 } from 'lucide-react';
 import { Warning2, TickCircle } from 'iconsax-react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store';
@@ -7,12 +7,20 @@ import {
   useGetPerfumeInventoryItemsQuery,
   useAddPerfumeInventoryItemMutation,
   useRestockPerfumeInventoryItemMutation,
+  useUpdatePerfumeInventoryItemMutation,
+  useDeletePerfumeInventoryItemMutation,
 } from '../../../../redux/api/perfume-store/inventory.api';
 import { toast } from 'react-toastify';
+import ConfirmDialog from '@/components/modal/confirm-dialog';
 
 const BRAND_GREEN = '#05431E';
 
 const formatCurrency = (n: number) => '₦' + n.toLocaleString('en-NG');
+
+const CATEGORIES = [
+  'TURAREN WUTA', 'BODY MIST', 'PERFUME OIL', 'OIL TESTERS',
+  'WARDROBE/LINEN SPRAYS', 'KHUMRAHS', 'DIFFUSERS', 'CAR DIFFUSERS', 'CHARCOAL', 'Other',
+];
 
 // ─── STOCK INDICATOR ──────────────────────────────────────────────────────────
 
@@ -65,11 +73,6 @@ const AddItemModal: React.FC<{ storeId: string; onClose: () => void }> = ({ stor
       toast.error('Failed to add item.');
     }
   };
-
-  const CATEGORIES = [
-    'TURAREN WUTA', 'BODY MIST', 'PERFUME OIL', 'OIL TESTERS',
-    'WARDROBE/LINEN SPRAYS', 'KHUMRAHS', 'DIFFUSERS', 'CAR DIFFUSERS', 'CHARCOAL', 'Other',
-  ];
 
   return (
     <>
@@ -139,6 +142,89 @@ const AddItemModal: React.FC<{ storeId: string; onClose: () => void }> = ({ stor
               <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50">Cancel</button>
               <button type="submit" disabled={isLoading} className="flex-1 py-2.5 rounded-xl text-white text-sm font-bold hover:opacity-90 disabled:opacity-50" style={{ background: BRAND_GREEN }}>
                 {isLoading ? 'Adding…' : 'Add Item'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </>
+  );
+};
+
+// ─── EDIT ITEM MODAL ────────────────────────────────────────────────────────────
+
+const EditItemModal: React.FC<{ item: any; onClose: () => void }> = ({ item, onClose }) => {
+  const [form, setForm] = useState({
+    name: item.name || '',
+    brand: item.brand || '',
+    category: item.category || '',
+    cost: String(item.cost ?? ''),
+  });
+  const [updateItem, { isLoading }] = useUpdatePerfumeInventoryItemMutation();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name || !form.category || !form.cost) { toast.error('Name, category and price are required'); return; }
+
+    try {
+      await updateItem({
+        id: item.id,
+        data: {
+          name: form.name,
+          brand: form.brand,
+          category: form.category,
+          cost: Number(form.cost),
+        },
+      }).unwrap();
+      toast.success(`${form.name} updated!`);
+      onClose();
+    } catch {
+      toast.error('Failed to update item.');
+    }
+  };
+
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" onClick={onClose} />
+      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md z-[60] px-4">
+        <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 max-h-[90vh] overflow-y-auto">
+          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 sticky top-0 bg-white">
+            <div>
+              <h2 className="font-bold text-gray-900 text-lg">Edit Inventory Item</h2>
+              <p className="text-sm text-gray-400 mt-0.5">Update product details</p>
+            </div>
+            <button onClick={onClose} className="w-9 h-9 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-400"><X size={18} /></button>
+          </div>
+          <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Product Name *</label>
+              <input className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none"
+                value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Brand</label>
+                <input className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none"
+                  value={form.brand} onChange={e => setForm(p => ({ ...p, brand: e.target.value }))} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Category *</label>
+                <select className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none bg-white"
+                  value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))}>
+                  <option value="">Select category</option>
+                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Price (₦) *</label>
+              <input type="number" className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none"
+                value={form.cost} onChange={e => setForm(p => ({ ...p, cost: e.target.value }))} />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50">Cancel</button>
+              <button type="submit" disabled={isLoading} className="flex-1 py-2.5 rounded-xl text-white text-sm font-bold hover:opacity-90 disabled:opacity-50" style={{ background: BRAND_GREEN }}>
+                {isLoading ? 'Saving…' : 'Save Changes'}
               </button>
             </div>
           </form>
@@ -220,6 +306,20 @@ const BottleStoragePage: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState('All');
   const [showAdd, setShowAdd] = useState(false);
   const [restockItem, setRestockItem] = useState<any>(null);
+  const [editItem, setEditItem] = useState<any>(null);
+  const [deleteItem, setDeleteItem] = useState<any>(null);
+  const [deleteInventoryItem, { isLoading: isDeleting }] = useDeletePerfumeInventoryItemMutation();
+
+  const handleConfirmDelete = async () => {
+    if (!deleteItem) return;
+    try {
+      await deleteInventoryItem(deleteItem.id).unwrap();
+      toast.success(`${deleteItem.name} deleted`);
+      setDeleteItem(null);
+    } catch (err: any) {
+      toast.error(err?.data?.message || 'Failed to delete item');
+    }
+  };
 
   const categories = ['All', ...Array.from(new Set(items.map(i => i.category)))];
   const lowStockCount = items.filter(i => i.currentStock <= 5).length;
@@ -317,14 +417,30 @@ const BottleStoragePage: React.FC = () => {
                   <StockIndicator stock={item.currentStock} />
                 </td>
                 <td className="px-6 py-4">
-                  <button
-                    onClick={() => setRestockItem(item)}
-                    className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border transition-all hover:opacity-90"
-                    style={{ color: BRAND_GREEN, borderColor: `${BRAND_GREEN}30`, background: `${BRAND_GREEN}08` }}
-                  >
-                    <Edit2 size={12} />
-                    Restock
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setRestockItem(item)}
+                      className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border transition-all hover:opacity-90"
+                      style={{ color: BRAND_GREEN, borderColor: `${BRAND_GREEN}30`, background: `${BRAND_GREEN}08` }}
+                    >
+                      <Edit2 size={12} />
+                      Restock
+                    </button>
+                    <button
+                      onClick={() => setEditItem(item)}
+                      className="p-2 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                      title="Edit item"
+                    >
+                      <Edit2 size={14} />
+                    </button>
+                    <button
+                      onClick={() => setDeleteItem(item)}
+                      className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                      title="Delete item"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -334,6 +450,16 @@ const BottleStoragePage: React.FC = () => {
 
       {showAdd && <AddItemModal storeId={storeId} onClose={() => setShowAdd(false)} />}
       {restockItem && <RestockModal item={restockItem} onClose={() => setRestockItem(null)} />}
+      {editItem && <EditItemModal item={editItem} onClose={() => setEditItem(null)} />}
+      <ConfirmDialog
+        isOpen={!!deleteItem}
+        title="Delete Inventory Item"
+        message={`Delete "${deleteItem?.name}"? This cannot be undone.`}
+        isLoading={isDeleting}
+        confirmText="Yes, Delete"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteItem(null)}
+      />
     </div>
   );
 };
