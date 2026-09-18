@@ -35,6 +35,17 @@ export const ordersApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['LOUNGE_DASHBOARD'],
     }),
+    getPerfumeAnalytics: builder.query({
+      query: (params: { storeId: string; startDate?: string; endDate?: string }) => {
+        const { storeId, startDate, endDate } = params;
+        const searchParams = new URLSearchParams();
+        if (startDate) searchParams.set('startDate', startDate);
+        if (endDate) searchParams.set('endDate', endDate);
+        const qs = searchParams.toString();
+        return { url: `/perfume-store/${storeId}/analytics${qs ? `?${qs}` : ''}` };
+      },
+      providesTags: ['LOUNGE_DASHBOARD'],
+    }),
   }),
   overrideExisting: false,
 });
@@ -45,4 +56,5 @@ export const {
   useGetPerfumeReceiptQuery,
   useLazyGetPerfumeReceiptQuery,
   useDeletePerfumeOrderMutation,
+  useGetPerfumeAnalyticsQuery,
 } = ordersApi;

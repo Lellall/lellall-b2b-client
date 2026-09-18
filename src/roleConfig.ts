@@ -11,6 +11,7 @@ export interface NavItemConfig {
 export const navItemsByRole: Record<string, NavItemConfig[]> = {
   PRIVATE_LOUNGE_ADMIN: [
     { to: '/lounge/dashboard', icon: Home, text: 'Dashboard', end: true },
+    { to: '/lounge/revenue', icon: TrendUp, text: 'Analytics' },
     { to: '/lounge/applications', icon: DocumentText, text: 'Applications' },
     { to: '/lounge/members', icon: UserSearch, text: 'Members' },
     { to: '/lounge/staff', icon: UserSearch, text: 'Staff' },
@@ -33,6 +34,7 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
   ],
   PERFUME_STORE_ADMIN: [
     { to: '/perfume/dashboard', icon: Home, text: 'Dashboard', end: true },
+    { to: '/perfume/analytics', icon: TrendUp, text: 'Analytics' },
     { to: '/perfume/menu', icon: ShoppingCart, text: 'POS / Sell' },
     { to: '/perfume/staff', icon: UserSearch, text: 'Staff' },
     { to: '/perfume/vault', icon: ArchiveBox, text: 'Vault' },

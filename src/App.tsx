@@ -44,12 +44,14 @@ import LoungeMenuPage from './modules/private-lounge/features/menu/LoungeMenuPag
 import { LoungeStaffPage } from './modules/private-lounge/features/staff/LoungeStaffPage';
 import LoungeSettingsPage from './modules/private-lounge/features/settings/LoungeSettingsPage';
 import LoungeBillingPage from './modules/private-lounge/features/billing/LoungeBillingPage';
+import LoungeAnalyticsPage from './modules/private-lounge/features/analytics/AnalyticsPage';
 import PerfumeDashboard from './modules/perfume/features/dashboard/dashboard';
 import PerfumeVaultPage from './modules/perfume/features/bottles/BottleStoragePage';
 import { Members as PerfumeClients } from './modules/perfume/features/members/members';
 import PerfumeStaffPage from './modules/perfume/features/staff/LoungeStaffPage';
 import PerfumeSettingsPage from './modules/perfume/features/settings/LoungeSettingsPage';
 import PerfumeBillingPage from './modules/perfume/features/billing/LoungeBillingPage';
+import PerfumeAnalyticsPage from './modules/perfume/features/analytics/AnalyticsPage';
 import PerfumeMenuPage from './modules/perfume/features/menu/LoungeMenuPage';
 import SubscriptionExpired from './SubscriptionExpired';
 import Insights from './modules/restaurant/features/insights/insights';
@@ -205,7 +207,7 @@ const App = () => {
       <Route path="menu" element={<LoungeMenuPage />} />
       <Route path="reservations" element={<div>Lounge Reservations Placeholder</div>} />
       <Route path="partners" element={<div>Lounge Partners Placeholder</div>} />
-      <Route path="revenue" element={<div>Lounge Revenue Placeholder</div>} />
+      <Route path="revenue" element={<LoungeAnalyticsPage />} />
       <Route path="billing" element={<LoungeBillingPage />} />
       <Route path="settings" element={<LoungeSettingsPage />} />
       <Route
@@ -225,6 +227,7 @@ const App = () => {
   const perfumeRoutes = (
     <>
       <Route path="dashboard" element={<PerfumeDashboard />} />
+      <Route path="analytics" element={<PerfumeAnalyticsPage />} />
       <Route path="menu" element={<PerfumeMenuPage />} />
       <Route path="staff" element={<PerfumeStaffPage />} />
       <Route path="vault" element={<PerfumeVaultPage />} />
