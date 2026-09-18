@@ -4,13 +4,14 @@ import styled from 'styled-components';
 import { useSelector } from 'react-redux';
 import { format } from 'date-fns';
 import { selectAuth } from '@/redux/api/auth/auth.slice';
-import { ShoppingCart, Printer, Trash } from 'iconsax-react';
+import { ShoppingCart, Printer, Trash, ReceiptItem } from 'iconsax-react';
 import { toast } from 'react-toastify';
 import { useGetPerfumeDashboardStatsQuery } from '@/redux/api/perfume-store/dashboard.api';
 import { useGetPerfumeOrdersQuery, useDeletePerfumeOrderMutation } from '@/redux/api/perfume-store/orders.api';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import SalesCard from '@/components/ui/sales-card';
 import ConfirmDialog from '@/components/modal/confirm-dialog';
+import { ReceiptModal } from '@/modules/perfume/features/menu/LoungeMenuPage';
 
 // ─── BRAND CONSTANT ───────────────────────────────────────────────────────────
 const BRAND_GREEN = '#05431E';
@@ -271,6 +272,7 @@ const StoreDashboard: React.FC = () => {
   const storeId = user?.perfumeStoreId || restaurant?.id || '';
   const [deleteOrder, { isLoading: isDeletingOrder }] = useDeletePerfumeOrderMutation();
   const [orderPendingDelete, setOrderPendingDelete] = useState<string | null>(null);
+  const [viewOrder, setViewOrder] = useState<any>(null);
 
   const confirmDeleteOrder = async () => {
     if (!orderPendingDelete) return;
@@ -417,26 +419,28 @@ const StoreDashboard: React.FC = () => {
             height: 0px;
             overflow: hidden;
           }
-          .print-area {
+          .eod-print-area {
             display: block !important;
             visibility: visible;
             position: absolute;
-            left: 0;
+            left: 50%;
             top: 0;
-            width: 80mm !important;
-            margin: 0 !important;
+            transform: translateX(-50%);
+            width: 320px !important;
+            margin: 12mm 0 !important;
             padding: 10px !important;
             box-shadow: none !important;
+            border: 1px solid #111 !important;
             background: white !important;
             height: auto;
           }
-          .print-area * {
+          .eod-print-area * {
             visibility: visible;
           }
-          @page { margin: 0; size: auto; }
+          @page { margin: 10mm; size: A4; }
         }
       `}</style>
-      <div className="hidden print-area fixed left-0 top-0 w-[80mm] bg-white z-[9999] text-gray-900 font-sans">
+      <div className="hidden eod-print-area fixed left-0 top-0 w-[80mm] bg-white z-[9999] text-gray-900 font-sans">
         <div className="text-center pb-4 border-b border-dashed border-gray-400">
           <h2 className="text-xl font-bold uppercase">{restaurant?.name || user?.firstName + "'s Store"}</h2>
           <p className="text-xs uppercase font-semibold mt-1">
@@ -542,7 +546,7 @@ const StoreDashboard: React.FC = () => {
               <Th>Amount</Th>
               <Th>VAT</Th>
               <Th>Status</Th>
-              {canDeleteOrders && <Th>Actions</Th>}
+              <Th>Actions</Th>
             </tr>
           </thead>
           <tbody>
@@ -591,34 +595,53 @@ const StoreDashboard: React.FC = () => {
                     {tx.status}
                   </StatusPill>
                 </Td>
-                {canDeleteOrders && (
-                  <Td>
+                <Td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <button
-                      onClick={() => setOrderPendingDelete(tx.id)}
-                      disabled={isDeletingOrder}
-                      title="Delete order"
+                      onClick={() => setViewOrder(tx)}
+                      title="View / reprint receipt"
                       style={{
                         background: 'none',
                         border: 'none',
-                        cursor: isDeletingOrder ? 'not-allowed' : 'pointer',
-                        opacity: isDeletingOrder ? 0.5 : 1,
+                        cursor: 'pointer',
                         color: '#9CA3AF',
                         padding: '4px',
                         display: 'flex',
                         alignItems: 'center',
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.color = '#DC2626')}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = BRAND_GREEN)}
                       onMouseLeave={(e) => (e.currentTarget.style.color = '#9CA3AF')}
                     >
-                      <Trash size={16} />
+                      <ReceiptItem size={16} />
                     </button>
-                  </Td>
-                )}
+                    {canDeleteOrders && (
+                      <button
+                        onClick={() => setOrderPendingDelete(tx.id)}
+                        disabled={isDeletingOrder}
+                        title="Delete order"
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: isDeletingOrder ? 'not-allowed' : 'pointer',
+                          opacity: isDeletingOrder ? 0.5 : 1,
+                          color: '#9CA3AF',
+                          padding: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = '#DC2626')}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = '#9CA3AF')}
+                      >
+                        <Trash size={16} />
+                      </button>
+                    )}
+                  </div>
+                </Td>
               </tr>
             ))}
             {recentTransactions.length === 0 && !isOrdersLoading && (
               <tr>
-                <td colSpan={canDeleteOrders ? 8 : 7}>
+                <td colSpan={8}>
                   <EmptyState>
                     <ShoppingCart size={32} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
                     <p style={{ fontWeight: 600, color: '#6B7280' }}>
@@ -654,6 +677,16 @@ const StoreDashboard: React.FC = () => {
         onConfirm={confirmDeleteOrder}
         onCancel={() => setOrderPendingDelete(null)}
       />
+
+      {viewOrder && (
+        <ReceiptModal
+          order={viewOrder}
+          storeName={restaurant?.name || (user?.firstName ? `${user?.firstName}'s Store` : 'Perfume Store')}
+          restaurantId={restaurant?.id || ''}
+          storeId={storeId}
+          onClose={() => setViewOrder(null)}
+        />
+      )}
     </PageContainer>
   );
 };

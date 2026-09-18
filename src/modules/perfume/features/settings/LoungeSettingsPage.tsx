@@ -164,7 +164,7 @@ const PrimaryButton = styled.button`
 
 const StoreSettingsPage: React.FC = () => {
   const { user, restaurant } = useSelector((state: RootState) => state.auth);
-  const currentStoreName = restaurant?.name || user?.firstName ? `${user?.firstName}'s Store` : 'Store Settings';
+  const currentStoreName = restaurant?.name || (user?.firstName ? `${user?.firstName}'s Store` : 'Store Settings');
 
   const [formData, setFormData] = useState({
     storeName: currentStoreName,

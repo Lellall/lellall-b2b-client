@@ -13,10 +13,11 @@ interface CurrencyContextType {
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
 export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const { subdomain, isAuthenticated } = useSelector(selectAuth);
- 
+    const { subdomain, isAuthenticated, user } = useSelector(selectAuth);
+    const isNonRestaurantTenant = !!user?.privateLoungeId || !!user?.perfumeStoreId;
+
     const { data, isLoading } = useGetRestaurantCurrencyQuery(subdomain, {
-        skip: !isAuthenticated || !subdomain || subdomain === "admin" || subdomain === "www",
+        skip: !isAuthenticated || !subdomain || subdomain === "admin" || subdomain === "www" || isNonRestaurantTenant,
         refetchOnMountOrArgChange: true,
     });
 

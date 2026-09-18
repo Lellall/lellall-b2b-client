@@ -263,7 +263,7 @@ const CartPanel: React.FC<{
         <div className="flex items-center justify-between px-6 py-6 bg-white border-b border-gray-100 relative">
           <div className="absolute top-0 left-0 right-0 h-1" style={{ background: BRAND_GREEN }} />
           <div>
-            <h2 className="font-bold text-xl text-gray-900">Boutique Bag</h2>
+            <h2 className="font-bold text-xl text-gray-900">View Order</h2>
             <p className="text-gray-500 text-xs mt-1 uppercase tracking-widest">{itemCount} selection{itemCount !== 1 ? 's' : ''}</p>
           </div>
           <button onClick={onClose} className="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 transition-all">
@@ -389,7 +389,7 @@ const CartPanel: React.FC<{
 
 // ─── RECEIPT MODAL ────────────────────────────────────────────────────────────
 
-const ReceiptModal: React.FC<{ order: any; storeName: string; restaurantId: string; storeId?: string; onClose: () => void }> = ({ order, storeName, restaurantId, storeId, onClose }) => {
+export const ReceiptModal: React.FC<{ order: any; storeName: string; restaurantId: string; storeId?: string; onClose: () => void }> = ({ order, storeName, restaurantId, storeId, onClose }) => {
   const { data: bankData } = useGetBankDetailsQuery(restaurantId, { skip: !restaurantId });
   
   // Use hardcoded bank details for specific perfume store
@@ -413,27 +413,33 @@ const ReceiptModal: React.FC<{ order: any; storeName: string; restaurantId: stri
             height: 0px;
             overflow: hidden;
           }
-          .print-area {
+          .receipt-print-area {
             visibility: visible;
             position: absolute;
-            left: 0;
+            left: 50%;
             top: 0;
-            width: 80mm !important;
-            margin: 0 !important;
-            padding: 10px !important;
+            transform: translateX(-50%);
+            width: 320px !important;
+            margin: 12mm 0 !important;
+            padding: 0 !important;
             box-shadow: none !important;
+            border: 1px solid #111 !important;
+            border-radius: 0 !important;
             background: white !important;
             height: auto;
           }
-          .print-area * {
+          .receipt-print-area * {
             visibility: visible;
           }
-          @page { margin: 0; size: auto; }
+          .receipt-print-area .no-print {
+            display: none !important;
+          }
+          @page { margin: 10mm; size: A4; }
         }
       `}</style>
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]" onClick={onClose} />
       <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm z-[70] px-4">
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-2xl overflow-hidden print-area">
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-2xl overflow-hidden receipt-print-area">
           {/* Receipt Header */}
           <div className="text-center py-8 px-6 border-b border-dashed border-gray-200" style={{ background: `${BRAND_GREEN}08` }}>
             <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: BRAND_GREEN }}>
@@ -498,7 +504,7 @@ const ReceiptModal: React.FC<{ order: any; storeName: string; restaurantId: stri
           )}
 
           {/* Actions */}
-          <div className="p-6 space-y-3">
+          <div className="p-6 space-y-3 no-print">
             <button
               onClick={() => window.print()}
               className="w-full py-3 rounded-xl border-2 font-bold text-sm transition-all hover:opacity-90"
@@ -612,7 +618,7 @@ const PerfumeMenuPage: React.FC = () => {
           style={{ background: 'linear-gradient(to right, #05431E, #0E5D37)' }}
         >
           <ShoppingCart size={18} />
-          Boutique Bag ({totalCount})
+          View Order ({totalCount})
         </button>
       </div>
 
@@ -695,7 +701,7 @@ const PerfumeMenuPage: React.FC = () => {
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
         storeId={storeId}
-        storeName={restaurant?.name || user?.firstName ? `${user?.firstName}'s Store` : 'Perfume Store'}
+        storeName={restaurant?.name || (user?.firstName ? `${user?.firstName}'s Store` : 'Perfume Store')}
         restaurantId={restaurant?.id || ''}
       />
     </div>

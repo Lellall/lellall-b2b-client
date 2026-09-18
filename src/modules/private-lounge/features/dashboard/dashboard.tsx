@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { format } from 'date-fns';
 import { selectAuth } from '@/redux/api/auth/auth.slice';
 import { Crown, Profile2User, CalendarTick, CardCoin, Printer } from 'iconsax-react';
-import { useGetDashboardStatsQuery, useGetRecentActivityQuery } from '@/redux/api/private-lounge/dashboard.api';
+import { useGetDashboardStatsQuery, useGetRecentActivityQuery, useGetMenuSalesReportQuery } from '@/redux/api/private-lounge/dashboard.api';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import PremiumMetricCard from '../../components/PremiumMetricCard';
 import PremiumChart from '../../components/PremiumChart';
@@ -179,6 +179,12 @@ const LoungeDashboard: React.FC = () => {
   const printActivities = printActivityData?.data ?? [];
   const printTotal = printActivities.reduce((sum: number, a: any) => sum + (a.amount || 0), 0);
 
+  const { data: menuSales } = useGetMenuSalesReportQuery(
+    { loungeId: user?.privateLoungeId || '', startDate: dateParam, endDate: dateParam },
+    { skip: !user?.privateLoungeId }
+  );
+  const menuSaleItems = menuSales?.items ?? [];
+
   const handlePrevDay = () => {
     setActivityDate((d) => { const n = new Date(d); n.setDate(n.getDate() - 1); return n; });
     setActivityPage(1);
@@ -231,26 +237,28 @@ const LoungeDashboard: React.FC = () => {
             height: 0px;
             overflow: hidden;
           }
-          .print-area {
+          .eod-print-area {
             display: block !important;
             visibility: visible;
             position: absolute;
-            left: 0;
+            left: 50%;
             top: 0;
-            width: 80mm !important;
-            margin: 0 !important;
+            transform: translateX(-50%);
+            width: 320px !important;
+            margin: 12mm 0 !important;
             padding: 10px !important;
             box-shadow: none !important;
+            border: 1px solid #111 !important;
             background: white !important;
             height: auto;
           }
-          .print-area * {
+          .eod-print-area * {
             visibility: visible;
           }
-          @page { margin: 0; size: auto; }
+          @page { margin: 10mm; size: A4; }
         }
       `}</style>
-      <div className="hidden print-area fixed left-0 top-0 w-[80mm] bg-white z-[9999] text-gray-900 font-sans">
+      <div className="hidden eod-print-area fixed left-0 top-0 w-[80mm] bg-white z-[9999] text-gray-900 font-sans">
         <div className="text-center pb-4 border-b border-dashed border-gray-400">
           <h2 className="text-xl font-bold uppercase">{restaurant?.name || "Sanctum Airport Lounge"}</h2>
           <p className="text-xs uppercase font-semibold mt-1">
@@ -296,6 +304,26 @@ const LoungeDashboard: React.FC = () => {
               </span>
             </div>
           ))}
+        </div>
+        <div className="py-3 border-b border-dashed border-gray-400">
+          <p className="text-xs font-bold uppercase mb-2">Menu Sales ({menuSaleItems.length})</p>
+          {menuSaleItems.length === 0 && (
+            <p className="text-xs text-gray-400 text-center py-2">No menu sales on this date</p>
+          )}
+          {menuSaleItems.map((item: any) => (
+            <div key={item.itemId} className="flex justify-between items-start text-xs py-1">
+              <div className="text-gray-600">{item.name} × {item.quantity}</div>
+              <span className="font-semibold whitespace-nowrap">{formatCurrency(item.revenue)}</span>
+            </div>
+          ))}
+          {menuSaleItems.length > 0 && (
+            <div className="flex justify-between items-center text-xs pt-2 mt-1 border-t border-dashed border-gray-300">
+              <span className="text-gray-500">Walk-in / Member split</span>
+              <span className="font-semibold">
+                {formatCurrency(menuSales?.walkInRevenue || 0)} / {formatCurrency(menuSales?.memberRevenue || 0)}
+              </span>
+            </div>
+          )}
         </div>
         <div className="py-3 border-b border-dashed border-gray-400">
           <div className="flex justify-between items-center text-sm">

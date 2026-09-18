@@ -19,6 +19,23 @@ export const dashboardApi = baseApi.injectEndpoints({
       },
       providesTags: ['LOUNGE_DASHBOARD'],
     }),
+    getRevenueSummary: builder.query({
+      query: (loungeId: string) => ({
+        url: `/private-lounge/admin/revenue/${loungeId}`,
+      }),
+      providesTags: ['LOUNGE_DASHBOARD'],
+    }),
+    getMenuSalesReport: builder.query({
+      query: (params: { loungeId: string; startDate?: string; endDate?: string }) => {
+        const { loungeId, startDate, endDate } = params;
+        const searchParams = new URLSearchParams();
+        if (startDate) searchParams.set('startDate', startDate);
+        if (endDate) searchParams.set('endDate', endDate);
+        const qs = searchParams.toString();
+        return { url: `/private-lounge/admin/menu-sales/${loungeId}${qs ? `?${qs}` : ''}` };
+      },
+      providesTags: ['LOUNGE_DASHBOARD'],
+    }),
   }),
   overrideExisting: false,
 });
@@ -26,4 +43,6 @@ export const dashboardApi = baseApi.injectEndpoints({
 export const {
   useGetDashboardStatsQuery,
   useGetRecentActivityQuery,
+  useGetRevenueSummaryQuery,
+  useGetMenuSalesReportQuery,
 } = dashboardApi;
