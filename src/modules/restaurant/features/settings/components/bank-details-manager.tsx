@@ -279,7 +279,7 @@ const BankDetailsManager = ({ restaurantId }: BankDetailsManagerProps) => {
                   value={newBankForm.accountNumber}
                   onChange={handleNewBankFormChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="10-digit account number"
+                  placeholder="10, 13, or 15-digit account number"
                   required
                 />
               </div>
