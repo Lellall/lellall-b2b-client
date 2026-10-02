@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Plus, X, AlertTriangle, Edit2, Trash2 } from 'lucide-react';
+import { Search, Plus, X, AlertTriangle, Edit2, Trash2, Download } from 'lucide-react';
 import { Warning2, TickCircle } from 'iconsax-react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store';
@@ -45,7 +45,7 @@ const StockIndicator: React.FC<{ stock: number }> = ({ stock }) => {
 // ─── ADD ITEM MODAL ───────────────────────────────────────────────────────────
 
 const AddItemModal: React.FC<{ storeId: string; onClose: () => void }> = ({ storeId, onClose }) => {
-  const [form, setForm] = useState({ name: '', brand: '', category: '', cost: '', currentStock: '20', description: '', volume: '' });
+  const [form, setForm] = useState({ name: '', brand: '', category: '', cost: '', currentStock: '20', volume: '' });
   const [addItem, { isLoading }] = useAddPerfumeInventoryItemMutation();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -64,13 +64,12 @@ const AddItemModal: React.FC<{ storeId: string; onClose: () => void }> = ({ stor
           category: form.category,
           cost: Number(form.cost),
           currentStock: Number(form.currentStock) || 20,
-          description: form.description,
         },
       }).unwrap();
       toast.success(`${form.name} added to inventory!`);
       onClose();
-    } catch {
-      toast.error('Failed to add item.');
+    } catch (err: any) {
+      toast.error(err?.data?.message || 'Failed to add item.');
     }
   };
 
@@ -131,12 +130,6 @@ const AddItemModal: React.FC<{ storeId: string; onClose: () => void }> = ({ stor
                   placeholder="20"
                   value={form.currentStock} onChange={e => setForm(p => ({ ...p, currentStock: e.target.value }))} />
               </div>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Notes / Description</label>
-              <input className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none"
-                placeholder="Optional description"
-                value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
             </div>
             <div className="flex gap-3 pt-2">
               <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50">Cancel</button>
@@ -297,6 +290,7 @@ const RestockModal: React.FC<{ item: any; onClose: () => void }> = ({ item, onCl
 
 const BottleStoragePage: React.FC = () => {
   const user = useSelector((state: RootState) => state.auth.user);
+  const storeName = useSelector((state: RootState) => (state.auth as any).restaurant?.name) as string | undefined;
   const storeId = user?.perfumeStoreId || '';
 
   const { data: rawItems = [], isLoading } = useGetPerfumeInventoryItemsQuery(storeId, { skip: !storeId });
@@ -321,6 +315,33 @@ const BottleStoragePage: React.FC = () => {
     }
   };
 
+  // Exports the whole inventory (not just the current search/category view).
+  const handleExport = () => {
+    if (items.length === 0) { toast.info('There is no inventory to export yet'); return; }
+
+    // Text cells starting with = + - @ would be run as formulas by Excel/Sheets.
+    const cell = (v: unknown) => {
+      let s = String(v ?? '');
+      if (typeof v === 'string' && /^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+      return `"${s.replace(/"/g, '""')}"`;
+    };
+    const header = ['Product', 'Brand', 'Category', 'Price (NGN)', 'Stock', 'Stock Value (NGN)'];
+    const rows = items.map(i => [i.name, i.brand, i.category, i.cost, i.currentStock, i.cost * i.currentStock]);
+    const csv = '﻿' + [header, ...rows].map(r => r.map(cell).join(',')).join('\r\n');
+
+    const slug = (storeName || 'perfume-store').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const date = new Date().toISOString().slice(0, 10);
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${slug}-inventory-${date}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${items.length} products`);
+  };
+
   const categories = ['All', ...Array.from(new Set(items.map(i => i.category)))];
   const lowStockCount = items.filter(i => i.currentStock <= 5).length;
 
@@ -339,10 +360,16 @@ const BottleStoragePage: React.FC = () => {
           <h1 className="text-xl font-bold text-gray-900">Inventory</h1>
           <p className="text-xs text-gray-500 mt-1">{items.length} products · {lowStockCount} low stock</p>
         </div>
-        <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all hover:opacity-90 shadow-sm" style={{ background: BRAND_GREEN }}>
-          <Plus size={16} />
-          Add Product
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={handleExport} disabled={isLoading || items.length === 0} className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl font-bold text-sm border transition-all hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" style={{ color: BRAND_GREEN, borderColor: `${BRAND_GREEN}40` }}>
+            <Download size={16} />
+            Export (CSV)
+          </button>
+          <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all hover:opacity-90 shadow-sm" style={{ background: BRAND_GREEN }}>
+            <Plus size={16} />
+            Add Product
+          </button>
+        </div>
       </div>
 
       {/* Low stock banner */}
