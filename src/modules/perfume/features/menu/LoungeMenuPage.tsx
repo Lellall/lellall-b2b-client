@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { useReactToPrint } from 'react-to-print';
 import {
   ShoppingCart, X, Plus, Minus, Search,
   Star, Flame, Sparkles, ChevronRight,
@@ -391,6 +392,9 @@ const CartPanel: React.FC<{
 
 export const ReceiptModal: React.FC<{ order: any; storeName: string; restaurantId: string; storeId?: string; onClose: () => void }> = ({ order, storeName, restaurantId, storeId, onClose }) => {
   const { data: bankData } = useGetBankDetailsQuery(restaurantId, { skip: !restaurantId });
+  const contentRef = useRef<HTMLDivElement>(null);
+  // Same print pipeline as the restaurant receipts (react-to-print).
+  const reactToPrintFn = useReactToPrint({ contentRef });
 
   // Use hardcoded bank details for specific perfume store
   const hardcodedBankDetails = storeId === '140558b6-f4e6-410c-9397-96654921a52f'
@@ -399,118 +403,100 @@ export const ReceiptModal: React.FC<{ order: any; storeName: string; restaurantI
 
   const bankDetails = bankData?.bankDetails?.[0] || hardcodedBankDetails;
 
-  // Same 80mm thermal layout as the restaurant receipt.
-  const mono: React.CSSProperties = { fontFamily: "'Courier New', Courier, monospace", color: '#000' };
-  const dash: React.CSSProperties = { border: 'none', borderTop: '1px dashed #000', margin: '5px 0' };
-  const line: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', fontSize: 10, padding: '1px 0' };
-  const cell: React.CSSProperties = { padding: '2px 0', fontSize: 10, verticalAlign: 'top' };
-  const head: React.CSSProperties = { ...cell, fontWeight: 'bold', borderBottom: '1px solid #000' };
+  const money = (n: number) =>
+    '₦' + Number(n || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const paymentType = order.paymentMethod || 'CASH';
 
   return (
     <>
-      <style>{`
-        @media print {
-          body { visibility: hidden; background: white; margin: 0; padding: 0; }
-          #root { height: 0px; overflow: hidden; }
-          .receipt-print-area {
-            visibility: visible;
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 80mm !important;
-            max-width: 80mm !important;
-            margin: 0 !important;
-            padding: 6px !important;
-            box-shadow: none !important;
-            border: none !important;
-            border-radius: 0 !important;
-            background: white !important;
-            height: auto;
-          }
-          .receipt-print-area * { visibility: visible; }
-          .receipt-print-area .no-print { display: none !important; }
-          @page { size: 80mm auto; margin: 4mm; }
-        }
-      `}</style>
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]" onClick={onClose} />
       <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm z-[70] px-4">
         <div className="bg-white rounded-lg shadow-2xl overflow-hidden">
-          <div className="max-h-[75vh] overflow-y-auto p-4 flex justify-center">
-            <div className="receipt-print-area bg-white" style={{ ...mono, width: '80mm', maxWidth: '100%', fontSize: 11, padding: 6 }}>
-              <div style={{ textAlign: 'center', marginBottom: 6 }}>
-                <div style={{ fontSize: 15, fontWeight: 'bold' }}>{storeName}</div>
-                <div style={{ fontSize: 11, letterSpacing: 1, marginTop: 2 }}>ORDER RECEIPT</div>
-              </div>
-
-              <hr style={dash} />
-
-              <div style={{ fontSize: 10, lineHeight: 1.6, marginBottom: 4 }}>
-                <div><strong style={{ display: 'inline-block', minWidth: 55 }}>Order:</strong> {(order.id || '').substring(0, 8).toUpperCase()}</div>
-                <div><strong style={{ display: 'inline-block', minWidth: 55 }}>Date:</strong> {new Date(order.createdAt || Date.now()).toLocaleString()}</div>
-                {order.client && (
-                  <div><strong style={{ display: 'inline-block', minWidth: 55 }}>Client:</strong> {order.client.firstName} {order.client.lastName}</div>
-                )}
-                <div><strong style={{ display: 'inline-block', minWidth: 55 }}>Payment:</strong> {order.paymentMethod || 'CASH'}</div>
-              </div>
-
-              <hr style={dash} />
-
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr>
-                    <th style={{ ...head, textAlign: 'left', width: '42%' }}>Item</th>
-                    <th style={{ ...head, textAlign: 'right' }}>Qty</th>
-                    <th style={{ ...head, textAlign: 'right' }}>Price</th>
-                    <th style={{ ...head, textAlign: 'right' }}>Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(order.items || []).map((li: any) => (
-                    <tr key={li.id}>
-                      <td style={{ ...cell, wordBreak: 'break-word' }}>{li.inventoryItem?.name || 'Item'}</td>
-                      <td style={{ ...cell, textAlign: 'right' }}>{li.quantity}</td>
-                      <td style={{ ...cell, textAlign: 'right' }}>{formatCurrency(li.unitPrice)}</td>
-                      <td style={{ ...cell, textAlign: 'right' }}>{formatCurrency(li.totalPrice)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              <hr style={dash} />
-
-              <div style={{ marginTop: 4 }}>
-                {order.subtotal !== undefined && (
-                  <div style={line}><span>Subtotal</span><span>{formatCurrency(order.subtotal)}</span></div>
-                )}
-                {order.vatRate > 0 && (
-                  <div style={line}><span>VAT ({(order.vatRate * 100).toFixed(1)}%)</span><span>{formatCurrency(order.vatAmount)}</span></div>
-                )}
-                <div style={{ ...line, fontSize: 13, fontWeight: 'bold', borderTop: '1px solid #000', marginTop: 4, paddingTop: 4 }}>
-                  <span>TOTAL</span><span>{formatCurrency(order.totalAmount)}</span>
+          <div className="max-h-[75vh] overflow-y-auto">
+            {/* Same layout as the 355 Steakhouse (restaurant) receipt */}
+            <div ref={contentRef}>
+              <div className="w-full p-3 bg-white font-sans text-xs leading-tight relative">
+                <div className="relative z-10">
+                  <div className="text-center mb-4">
+                    <div className="inline-block">
+                      <h1 className="text-[30px] font-extrabold tracking-widest leading-tight" style={{ fontFamily: 'Arial, sans-serif', color: '#000000' }}>
+                        {storeName}
+                      </h1>
+                    </div>
+                  </div>
+                  <div className="mb-2 text-right">
+                    {bankDetails && (
+                      <>
+                        <p className="font-semibold">Bank Details</p>
+                        <p>Bank Name: {bankDetails.bankName}</p>
+                        <p>Account Number: {bankDetails.accountNumber}</p>
+                        {bankDetails.accountName && <p>Account Name: {bankDetails.accountName}</p>}
+                      </>
+                    )}
+                    <p>Payment Type: {paymentType}</p>
+                  </div>
+                  <hr className="border-gray-300 my-1" />
+                  <div className="mb-2">
+                    <p>
+                      <span className="font-semibold">Date:</span>{' '}
+                      {new Date(order.createdAt || Date.now()).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Order:</span> {(order.id || '').substring(0, 8).toUpperCase()}
+                    </p>
+                    {order.client && (
+                      <p>
+                        <span className="font-semibold">Client:</span> {order.client.firstName} {order.client.lastName}
+                      </p>
+                    )}
+                  </div>
+                  <hr className="border-gray-300 my-1" />
+                  <table className="w-full border-collapse mb-2 text-xs">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        <th className="p-1 text-left">Item</th>
+                        <th className="p-1 text-left">Qty</th>
+                        <th className="p-1 text-left">Price</th>
+                        <th className="p-1 text-left">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(order.items || []).map((li: any) => (
+                        <tr key={li.id} className="border-b border-gray-200">
+                          <td className="p-1">{li.inventoryItem?.name || 'Item'}</td>
+                          <td className="p-1">{li.quantity}</td>
+                          <td className="p-1">{money(li.unitPrice)}</td>
+                          <td className="p-1">{money(li.totalPrice)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <hr className="border-gray-300 my-1" />
+                  <div className="text-left">
+                    {order.subtotal !== undefined && (
+                      <p>
+                        <span className="font-semibold">Subtotal:</span> {money(order.subtotal)}
+                      </p>
+                    )}
+                    {order.vatRate > 0 && (
+                      <p>
+                        <span className="font-semibold">VAT ({(order.vatRate * 100).toFixed(2)}%):</span> {money(order.vatAmount)}
+                      </p>
+                    )}
+                    <p className="font-semibold">
+                      <span className="font-semibold">Total:</span> {money(order.totalAmount)}
+                    </p>
+                    <p className="mt-1">Thank you!</p>
+                  </div>
                 </div>
-              </div>
-
-              {bankDetails && (
-                <div style={{ fontSize: 10, lineHeight: 1.6, marginTop: 8 }}>
-                  <hr style={dash} />
-                  <div style={{ fontWeight: 'bold' }}>Bank Details</div>
-                  <div>Bank Name: {bankDetails.bankName}</div>
-                  <div>Account Number: {bankDetails.accountNumber}</div>
-                  {bankDetails.accountName && <div>Account Name: {bankDetails.accountName}</div>}
-                </div>
-              )}
-
-              <div style={{ textAlign: 'center', marginTop: 10, fontSize: 10 }}>
-                <hr style={dash} />
-                <p>Thank you!</p>
               </div>
             </div>
           </div>
 
           {/* Actions */}
-          <div className="p-4 space-y-3 border-t border-gray-100 no-print">
+          <div className="p-4 space-y-3 border-t border-gray-100">
             <button
-              onClick={() => window.print()}
+              onClick={() => reactToPrintFn()}
               className="w-full py-3 rounded-xl border-2 font-bold text-sm transition-all hover:opacity-90"
               style={{ borderColor: BRAND_GREEN, color: BRAND_GREEN }}
             >
