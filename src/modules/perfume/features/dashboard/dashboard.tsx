@@ -393,7 +393,13 @@ const StoreDashboard: React.FC = () => {
         </div>
         <div className="flex gap-3">
           <POSButton 
-            onClick={() => window.print()}
+            onClick={() => {
+              // Scope the end-of-day print rules to this print only, so they do
+              // not leak into receipt printing (react-to-print copies page styles).
+              document.body.classList.add('printing-eod');
+              window.addEventListener('afterprint', () => document.body.classList.remove('printing-eod'), { once: true });
+              window.print();
+            }}
             style={{ background: 'transparent', border: `2px solid ${BRAND_GREEN}`, color: BRAND_GREEN }}
           >
             <Printer size={16} />
@@ -409,17 +415,17 @@ const StoreDashboard: React.FC = () => {
       {/* ── EOD PRINT AREA (Hidden on screen, visible on print) ── */}
       <style>{`
         @media print {
-          body {
+          body.printing-eod {
             visibility: hidden;
             background: white;
             margin: 0;
             padding: 0;
           }
-          #root {
+          body.printing-eod #root {
             height: 0px;
             overflow: hidden;
           }
-          .eod-print-area {
+          body.printing-eod .eod-print-area {
             display: block !important;
             visibility: visible;
             position: absolute;
@@ -434,7 +440,7 @@ const StoreDashboard: React.FC = () => {
             background: white !important;
             height: auto;
           }
-          .eod-print-area * {
+          body.printing-eod .eod-print-area * {
             visibility: visible;
           }
           @page { margin: 10mm; size: A4; }

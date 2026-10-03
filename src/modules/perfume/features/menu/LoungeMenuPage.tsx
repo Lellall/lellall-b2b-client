@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
+import ReceiptPDF from '../../../restaurant/features/menu/ReceiptPDF';
 import {
   ShoppingCart, X, Plus, Minus, Search,
   Star, Flame, Sparkles, ChevronRight,
@@ -392,109 +393,82 @@ const CartPanel: React.FC<{
 
 export const ReceiptModal: React.FC<{ order: any; storeName: string; restaurantId: string; storeId?: string; onClose: () => void }> = ({ order, storeName, restaurantId, storeId, onClose }) => {
   const { data: bankData } = useGetBankDetailsQuery(restaurantId, { skip: !restaurantId });
+  const { user, subdomain } = useSelector((state: RootState) => state.auth);
   const contentRef = useRef<HTMLDivElement>(null);
-  // Same print pipeline as the restaurant receipts (react-to-print).
+  // Exactly how the restaurant orders list prints: ReceiptPDF + react-to-print.
   const reactToPrintFn = useReactToPrint({ contentRef });
 
   // Use hardcoded bank details for specific perfume store
   const hardcodedBankDetails = storeId === '140558b6-f4e6-410c-9397-96654921a52f'
-    ? { bankName: 'TAJ BANK', accountNumber: '0002897287', accountName: 'RAKIYA SULEIMAN SAJE' }
+    ? { id: 'samsaj-taj', bankName: 'TAJ BANK', accountNumber: '0002897287', accountName: 'RAKIYA SULEIMAN SAJE', restaurantId: '', createdAt: '', updatedAt: '' }
     : null;
 
-  const bankDetails = bankData?.bankDetails?.[0] || hardcodedBankDetails;
+  const bankDetails = bankData?.bankDetails?.length ? bankData.bankDetails : hardcodedBankDetails;
 
-  const money = (n: number) =>
-    '₦' + Number(n || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const paymentType = order.paymentMethod || 'CASH';
+  // Perfume order -> the shape ReceiptPDF expects.
+  const vatRate = order.vatRate || 0;
+  const vatAmount = order.vatAmount || 0;
+  const receiptOrder = {
+    createdAt: order.createdAt || new Date().toISOString(),
+    waiter: { firstName: user?.firstName, lastName: user?.lastName },
+    status: order.status || 'COMPLETED',
+    orderItems: (order.items || []).map((li: any) => ({
+      id: li.id,
+      quantity: li.quantity,
+      menuItem: { name: li.inventoryItem?.name || 'Item', price: li.unitPrice },
+    })),
+    subtotal: order.subtotal ?? (order.totalAmount - vatAmount),
+    discountPercentage: 0,
+    discountAmount: 0,
+    appliedTaxes: vatRate > 0 ? [{ name: 'VAT', rate: vatRate, amount: vatAmount }] : [],
+    vatTax: vatAmount,
+    serviceFee: 0,
+    total: order.totalAmount,
+    paymentType: order.paymentMethod || 'CASH',
+  };
 
   return (
     <>
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]" onClick={onClose} />
       <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm z-[70] px-4">
-        <div className="bg-white rounded-lg shadow-2xl overflow-hidden">
-          <div className="max-h-[75vh] overflow-y-auto">
-            {/* Same layout as the 355 Steakhouse (restaurant) receipt */}
-            <div ref={contentRef}>
-              <div className="w-full p-3 bg-white font-sans text-xs leading-tight relative">
-                <div className="relative z-10">
-                  <div className="text-center mb-4">
-                    <div className="inline-block">
-                      <h1 className="text-[30px] font-extrabold tracking-widest leading-tight" style={{ fontFamily: 'Arial, sans-serif', color: '#000000' }}>
-                        {storeName}
-                      </h1>
-                    </div>
-                  </div>
-                  <div className="mb-2 text-right">
-                    {bankDetails && (
-                      <>
-                        <p className="font-semibold">Bank Details</p>
-                        <p>Bank Name: {bankDetails.bankName}</p>
-                        <p>Account Number: {bankDetails.accountNumber}</p>
-                        {bankDetails.accountName && <p>Account Name: {bankDetails.accountName}</p>}
-                      </>
-                    )}
-                    <p>Payment Type: {paymentType}</p>
-                  </div>
-                  <hr className="border-gray-300 my-1" />
-                  <div className="mb-2">
-                    <p>
-                      <span className="font-semibold">Date:</span>{' '}
-                      {new Date(order.createdAt || Date.now()).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Order:</span> {(order.id || '').substring(0, 8).toUpperCase()}
-                    </p>
-                    {order.client && (
-                      <p>
-                        <span className="font-semibold">Client:</span> {order.client.firstName} {order.client.lastName}
-                      </p>
-                    )}
-                  </div>
-                  <hr className="border-gray-300 my-1" />
-                  <table className="w-full border-collapse mb-2 text-xs">
-                    <thead>
-                      <tr className="bg-gray-100">
-                        <th className="p-1 text-left">Item</th>
-                        <th className="p-1 text-left">Qty</th>
-                        <th className="p-1 text-left">Price</th>
-                        <th className="p-1 text-left">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(order.items || []).map((li: any) => (
-                        <tr key={li.id} className="border-b border-gray-200">
-                          <td className="p-1">{li.inventoryItem?.name || 'Item'}</td>
-                          <td className="p-1">{li.quantity}</td>
-                          <td className="p-1">{money(li.unitPrice)}</td>
-                          <td className="p-1">{money(li.totalPrice)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <hr className="border-gray-300 my-1" />
-                  <div className="text-left">
-                    {order.subtotal !== undefined && (
-                      <p>
-                        <span className="font-semibold">Subtotal:</span> {money(order.subtotal)}
-                      </p>
-                    )}
-                    {order.vatRate > 0 && (
-                      <p>
-                        <span className="font-semibold">VAT ({(order.vatRate * 100).toFixed(2)}%):</span> {money(order.vatAmount)}
-                      </p>
-                    )}
-                    <p className="font-semibold">
-                      <span className="font-semibold">Total:</span> {money(order.totalAmount)}
-                    </p>
-                    <p className="mt-1">Thank you!</p>
-                  </div>
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-2xl overflow-hidden">
+          {/* On-screen summary */}
+          <div className="text-center py-6 px-6 border-b border-dashed border-gray-200" style={{ background: `${BRAND_GREEN}08` }}>
+            <h2 className="text-xl font-bold text-gray-900 mb-1">{storeName}</h2>
+            <p className="text-sm font-semibold text-gray-600 mb-1">Sale Complete</p>
+            <p className="text-xs uppercase tracking-widest text-gray-400">Receipt #{(order.id || '').substring(0, 8).toUpperCase()}</p>
+            <p className="text-xs text-gray-400 mt-1">{new Date(order.createdAt || Date.now()).toLocaleString()}</p>
+          </div>
+          <div className="max-h-[35vh] overflow-y-auto px-6 py-4 space-y-3 border-b border-dashed border-gray-200">
+            {(order.items || []).map((li: any) => (
+              <div key={li.id} className="flex justify-between text-sm">
+                <div className="flex-1 min-w-0 pr-4">
+                  <p className="font-semibold text-gray-900 truncate">{li.inventoryItem?.name || 'Item'}</p>
+                  <p className="text-gray-400 text-xs">{li.quantity} × {formatCurrency(li.unitPrice)}</p>
                 </div>
+                <p className="font-semibold text-gray-900 shrink-0">{formatCurrency(li.totalPrice)}</p>
               </div>
-            </div>
+            ))}
+          </div>
+          <div className="flex justify-between items-center px-6 py-4">
+            <span className="text-base font-bold text-gray-900">Total</span>
+            <span className="text-2xl font-bold" style={{ color: BRAND_GREEN }}>{formatCurrency(order.totalAmount)}</span>
           </div>
 
-          {/* Actions */}
-          <div className="p-4 space-y-3 border-t border-gray-100">
+          {/* The restaurant receipt component. Its own small Print link is hidden;
+              the button below calls the same print function. */}
+          <div ref={contentRef} className="[&_button]:hidden">
+            <ReceiptPDF
+              orderData={receiptOrder}
+              reactToPrintFn={reactToPrintFn}
+              bankDetails={bankDetails}
+              subdomain={subdomain || ''}
+              orderId={order.id}
+              title={storeName}
+            />
+          </div>
+
+          <div className="p-6 pt-2 space-y-3">
             <button
               onClick={() => reactToPrintFn()}
               className="w-full py-3 rounded-xl border-2 font-bold text-sm transition-all hover:opacity-90"

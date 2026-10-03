@@ -43,12 +43,14 @@ interface OrderData {
   changeAmount?: number | null;
 }
 
-const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain, orderId }: {
+const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain, orderId, title }: {
   orderData: OrderData;
   reactToPrintFn: () => void;
   bankDetails: BankDetail[] | BankDetail | null;
   subdomain: string;
   orderId?: string;
+  /** Overrides the heading (defaults to the subdomain). Used by the perfume store. */
+  title?: string;
 }) => {
   const componentRef = useRef<HTMLDivElement>(null);
   const [fetchReceiptHtml] = useLazyFetchReceiptHtmlQuery();
@@ -119,7 +121,7 @@ const Receipt = ({ orderData, reactToPrintFn, bankDetails, subdomain, orderId }:
             <div className="text-center mb-4">
               <div className="inline-block">
                 <h1 className="text-[30px] font-extrabold tracking-widest leading-tight" style={{ fontFamily: 'Arial, sans-serif', color: '#000000' }}>
-                  {subdomain} {subdomain === '355' ? 'Steakhouse' : ''}
+                  {title ?? `${subdomain} ${subdomain === '355' ? 'Steakhouse' : ''}`}
                 </h1>
               </div>
             </div>
