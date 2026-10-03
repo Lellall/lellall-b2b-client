@@ -12,7 +12,7 @@ import ConfirmDialog from '@/components/modal/confirm-dialog';
 
 export const StoreStaffPage: React.FC = () => {
   const { user } = useSelector(selectAuth);
-  const storeId = user?.privateStoreId || '';
+  const storeId = user?.perfumeStoreId || '';
 
   const { data: staffList = [], isLoading, refetch } = useGetStoreStaffQuery(storeId, {
     skip: !storeId,
@@ -35,7 +35,7 @@ export const StoreStaffPage: React.FC = () => {
   const handleCreateStaff = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!storeId) {
-      toast.error('No private store assigned to this user.');
+      toast.error('No perfume store assigned to this user.');
       return;
     }
     try {

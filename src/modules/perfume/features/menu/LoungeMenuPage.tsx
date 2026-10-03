@@ -391,7 +391,7 @@ const CartPanel: React.FC<{
 
 export const ReceiptModal: React.FC<{ order: any; storeName: string; restaurantId: string; storeId?: string; onClose: () => void }> = ({ order, storeName, restaurantId, storeId, onClose }) => {
   const { data: bankData } = useGetBankDetailsQuery(restaurantId, { skip: !restaurantId });
-  
+
   // Use hardcoded bank details for specific perfume store
   const hardcodedBankDetails = storeId === '140558b6-f4e6-410c-9397-96654921a52f'
     ? { bankName: 'TAJ BANK', accountNumber: '0002897287', accountName: 'RAKIYA SULEIMAN SAJE' }
@@ -399,112 +399,116 @@ export const ReceiptModal: React.FC<{ order: any; storeName: string; restaurantI
 
   const bankDetails = bankData?.bankDetails?.[0] || hardcodedBankDetails;
 
+  // Same 80mm thermal layout as the restaurant receipt.
+  const mono: React.CSSProperties = { fontFamily: "'Courier New', Courier, monospace", color: '#000' };
+  const dash: React.CSSProperties = { border: 'none', borderTop: '1px dashed #000', margin: '5px 0' };
+  const line: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', fontSize: 10, padding: '1px 0' };
+  const cell: React.CSSProperties = { padding: '2px 0', fontSize: 10, verticalAlign: 'top' };
+  const head: React.CSSProperties = { ...cell, fontWeight: 'bold', borderBottom: '1px solid #000' };
+
   return (
     <>
       <style>{`
         @media print {
-          body {
-            visibility: hidden;
-            background: white;
-            margin: 0;
-            padding: 0;
-          }
-          #root {
-            height: 0px;
-            overflow: hidden;
-          }
+          body { visibility: hidden; background: white; margin: 0; padding: 0; }
+          #root { height: 0px; overflow: hidden; }
           .receipt-print-area {
             visibility: visible;
             position: absolute;
-            left: 50%;
+            left: 0;
             top: 0;
-            transform: translateX(-50%);
-            width: 320px !important;
-            margin: 12mm 0 !important;
-            padding: 0 !important;
+            width: 80mm !important;
+            max-width: 80mm !important;
+            margin: 0 !important;
+            padding: 6px !important;
             box-shadow: none !important;
-            border: 1px solid #111 !important;
+            border: none !important;
             border-radius: 0 !important;
             background: white !important;
             height: auto;
           }
-          .receipt-print-area * {
-            visibility: visible;
-          }
-          .receipt-print-area .no-print {
-            display: none !important;
-          }
-          @page { margin: 10mm; size: A4; }
+          .receipt-print-area * { visibility: visible; }
+          .receipt-print-area .no-print { display: none !important; }
+          @page { size: 80mm auto; margin: 4mm; }
         }
       `}</style>
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]" onClick={onClose} />
       <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm z-[70] px-4">
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-2xl overflow-hidden receipt-print-area">
-          {/* Receipt Header */}
-          <div className="text-center py-8 px-6 border-b border-dashed border-gray-200" style={{ background: `${BRAND_GREEN}08` }}>
-            <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: BRAND_GREEN }}>
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'white' }}>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-1">{storeName}</h2>
-            <p className="text-sm font-semibold text-gray-600 mb-2">Sale Complete</p>
-            <p className="text-xs uppercase tracking-widest text-gray-400">Receipt #{(order.id || '').substring(0, 8).toUpperCase()}</p>
-            {order.client && (
-              <p className="text-sm text-gray-600 mt-2">{order.client.firstName} {order.client.lastName}</p>
-            )}
-            <p className="text-xs text-gray-400 mt-1">{new Date(order.createdAt || Date.now()).toLocaleString()}</p>
-          </div>
+        <div className="bg-white rounded-lg shadow-2xl overflow-hidden">
+          <div className="max-h-[75vh] overflow-y-auto p-4 flex justify-center">
+            <div className="receipt-print-area bg-white" style={{ ...mono, width: '80mm', maxWidth: '100%', fontSize: 11, padding: 6 }}>
+              <div style={{ textAlign: 'center', marginBottom: 6 }}>
+                <div style={{ fontSize: 15, fontWeight: 'bold' }}>{storeName}</div>
+                <div style={{ fontSize: 11, letterSpacing: 1, marginTop: 2 }}>ORDER RECEIPT</div>
+              </div>
 
-          {/* Line Items */}
-          <div className="px-6 py-5 space-y-3 border-b border-dashed border-gray-200">
-            {(order.items || []).map((li: any) => (
-              <div key={li.id} className="flex justify-between text-sm">
-                <div className="flex-1 min-w-0 pr-4">
-                  <p className="font-semibold text-gray-900 truncate">{li.inventoryItem?.name || 'Item'}</p>
-                  <p className="text-gray-400 text-xs">{li.quantity} × {formatCurrency(li.unitPrice)}</p>
+              <hr style={dash} />
+
+              <div style={{ fontSize: 10, lineHeight: 1.6, marginBottom: 4 }}>
+                <div><strong style={{ display: 'inline-block', minWidth: 55 }}>Order:</strong> {(order.id || '').substring(0, 8).toUpperCase()}</div>
+                <div><strong style={{ display: 'inline-block', minWidth: 55 }}>Date:</strong> {new Date(order.createdAt || Date.now()).toLocaleString()}</div>
+                {order.client && (
+                  <div><strong style={{ display: 'inline-block', minWidth: 55 }}>Client:</strong> {order.client.firstName} {order.client.lastName}</div>
+                )}
+                <div><strong style={{ display: 'inline-block', minWidth: 55 }}>Payment:</strong> {order.paymentMethod || 'CASH'}</div>
+              </div>
+
+              <hr style={dash} />
+
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={{ ...head, textAlign: 'left', width: '42%' }}>Item</th>
+                    <th style={{ ...head, textAlign: 'right' }}>Qty</th>
+                    <th style={{ ...head, textAlign: 'right' }}>Price</th>
+                    <th style={{ ...head, textAlign: 'right' }}>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(order.items || []).map((li: any) => (
+                    <tr key={li.id}>
+                      <td style={{ ...cell, wordBreak: 'break-word' }}>{li.inventoryItem?.name || 'Item'}</td>
+                      <td style={{ ...cell, textAlign: 'right' }}>{li.quantity}</td>
+                      <td style={{ ...cell, textAlign: 'right' }}>{formatCurrency(li.unitPrice)}</td>
+                      <td style={{ ...cell, textAlign: 'right' }}>{formatCurrency(li.totalPrice)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <hr style={dash} />
+
+              <div style={{ marginTop: 4 }}>
+                {order.subtotal !== undefined && (
+                  <div style={line}><span>Subtotal</span><span>{formatCurrency(order.subtotal)}</span></div>
+                )}
+                {order.vatRate > 0 && (
+                  <div style={line}><span>VAT ({(order.vatRate * 100).toFixed(1)}%)</span><span>{formatCurrency(order.vatAmount)}</span></div>
+                )}
+                <div style={{ ...line, fontSize: 13, fontWeight: 'bold', borderTop: '1px solid #000', marginTop: 4, paddingTop: 4 }}>
+                  <span>TOTAL</span><span>{formatCurrency(order.totalAmount)}</span>
                 </div>
-                <p className="font-semibold text-gray-900 shrink-0">{formatCurrency(li.totalPrice)}</p>
               </div>
-            ))}
-          </div>
 
-          {/* Payment + Total */}
-          <div className="flex justify-between items-center px-6 py-4 border-b border-dashed border-gray-200">
-            <span className="text-sm text-gray-500">Payment</span>
-            <span className="text-sm font-bold px-3 py-1 rounded-full" style={{ background: `${BRAND_GREEN}10`, color: BRAND_GREEN }}>{order.paymentMethod || 'CASH'}</span>
-          </div>
-          {order.subtotal !== undefined && (
-            <div className="px-6 py-4 border-b border-dashed border-gray-200 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Subtotal</span>
-                <span className="font-semibold text-gray-700">{formatCurrency(order.subtotal)}</span>
-              </div>
-              {order.vatRate > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">VAT ({(order.vatRate * 100).toFixed(1)}%)</span>
-                  <span className="font-semibold text-gray-700">{formatCurrency(order.vatAmount)}</span>
+              {bankDetails && (
+                <div style={{ fontSize: 10, lineHeight: 1.6, marginTop: 8 }}>
+                  <hr style={dash} />
+                  <div style={{ fontWeight: 'bold' }}>Bank Details</div>
+                  <div>Bank Name: {bankDetails.bankName}</div>
+                  <div>Account Number: {bankDetails.accountNumber}</div>
+                  {bankDetails.accountName && <div>Account Name: {bankDetails.accountName}</div>}
                 </div>
               )}
+
+              <div style={{ textAlign: 'center', marginTop: 10, fontSize: 10 }}>
+                <hr style={dash} />
+                <p>Thank you!</p>
+              </div>
             </div>
-          )}
-          <div className="flex justify-between items-center px-6 py-5 border-b border-dashed border-gray-200">
-            <span className="text-base font-bold text-gray-900">Total</span>
-            <span className="text-2xl font-bold" style={{ color: BRAND_GREEN }}>{formatCurrency(order.totalAmount)}</span>
           </div>
 
-          {/* Account Details */}
-          {bankDetails && (
-            <div className="px-6 py-4 border-b border-dashed border-gray-200 text-center">
-               <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">Bank Transfer Details</p>
-               <p className="text-sm font-semibold text-gray-900">Account: {bankDetails.accountNumber}</p>
-               <p className="text-xs text-gray-500">Bank: {bankDetails.bankName}</p>
-               {bankDetails.accountName && <p className="text-[10px] text-gray-400 mt-1 uppercase">{bankDetails.accountName}</p>}
-            </div>
-          )}
-
           {/* Actions */}
-          <div className="p-6 space-y-3 no-print">
+          <div className="p-4 space-y-3 border-t border-gray-100 no-print">
             <button
               onClick={() => window.print()}
               className="w-full py-3 rounded-xl border-2 font-bold text-sm transition-all hover:opacity-90"
