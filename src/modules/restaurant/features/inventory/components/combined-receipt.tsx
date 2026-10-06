@@ -98,6 +98,8 @@ const CombinedReceipt = forwardRef<CombinedReceiptHandle, CombinedReceiptProps>(
     const combinedVatTax = sortedOrders.reduce((sum, order) => sum + order.vatTax, 0);
     const combinedServiceFee = sortedOrders.reduce((sum, order) => sum + order.serviceFee, 0);
     const combinedTotal = sortedOrders.reduce((sum, order) => sum + order.total, 0);
+    // 355-labone adds its taxes on top: the server's total is authoritative.
+    const hasMultipleTaxes = subdomain === '355-labone';
     const combinedDiscountPercentage = combinedSubtotal > 0 
       ? (combinedDiscountAmount / combinedSubtotal) * 100 
       : 0;
@@ -237,7 +239,7 @@ const CombinedReceipt = forwardRef<CombinedReceiptHandle, CombinedReceiptProps>(
                 </p>
               )}
               <p className="font-semibold">
-                <span className="font-semibold">Total:</span> {formatCurrency((combinedSubtotal - combinedDiscountAmount + combinedVatTax + combinedServiceFee).toFixed(2))}
+                <span className="font-semibold">Total:</span> {formatCurrency((hasMultipleTaxes ? combinedTotal : combinedSubtotal - combinedDiscountAmount + combinedVatTax + combinedServiceFee).toFixed(2))}
               </p>
               {subdomain === "355" ? (
                 <div className="text-right" style={{ marginTop: '-10px' }}>
