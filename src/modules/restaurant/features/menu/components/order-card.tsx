@@ -20,6 +20,8 @@ interface OrderCardProps {
   subtotal: string;
   discountAmount?: string; // New: Optional discount amount
   vatTax: string;
+  /** One line per tax when taxes are added on top (e.g. VAT, Consumption Tax) */
+  taxLines?: { name: string; rate: number; amount: string }[];
   serviceFee?: string; // Optional, as it may not apply (e.g., subdomain "355")
   total: string;
   status: string;
@@ -47,6 +49,7 @@ const OrderCard = ({
   subtotal,
   discountAmount,
   vatTax,
+  taxLines,
   serviceFee,
   total,
   status,
@@ -170,7 +173,14 @@ const OrderCard = ({
               <span className="text-[10px] sm:text-sm font-semibold">{discountAmount}</span>
             </div>
           )}
-          {subdomain === "355" && (
+          {taxLines && taxLines.length > 0 ? (
+            taxLines.map((t) => (
+              <div key={t.name} className="flex items-center gap-4 sm:gap-6">
+                <span className="text-[10px] sm:text-sm font-medium">{t.name} ({Number((t.rate * 100).toFixed(2))}%)</span>
+                <span className="text-[10px] sm:text-sm font-semibold">{t.amount}</span>
+              </div>
+            ))
+          ) : subdomain === "355" && (
             <div className="flex items-center gap-4 sm:gap-6">
               <span className="text-[10px] sm:text-sm font-medium">VAT</span>
               <span className="text-[10px] sm:text-sm font-semibold">{vatTax}</span>

@@ -350,9 +350,10 @@ const CardItem: React.FC<CardItemProps> = ({
           <div className="flex justify-between mt-1 font-semibold">
             <span>Total</span>
             <span>{formatCurrency((
-              // 355-labone adds its taxes on top: the server's total is the single
-              // source of truth, so the card, payment box and receipt agree.
-              subdomain === '355-labone'
+              // When taxes are added on top (355-labone, or Consumption Tax turned on) the
+              // server's total is the single source of truth, so the card, payment box
+              // and receipt agree.
+              (subdomain === '355-labone' || (order as any).taxesAddedToTotal)
                 ? order.total
                 : (order.subtotal - (order.discountAmount ?? 0))
                   + (order.appliedTaxes && order.appliedTaxes.length > 0

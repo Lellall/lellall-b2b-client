@@ -34,6 +34,7 @@ const Settings = () => {
   const [vatConfig, setVatConfig] = useState<VatConfig>({
     vatEnabled: false,
     vatRate: 0.00,
+    consumptionTax: { enabled: false, rate: 0 },
   });
 
   // Service fee configuration state
@@ -173,6 +174,23 @@ const Settings = () => {
     }));
   };
 
+  const handleConsumptionEnabledChange = (enabled: boolean) => {
+    setVatConfig(prev => ({
+      ...prev,
+      consumptionTax: { enabled, rate: prev.consumptionTax?.rate ?? 0 },
+    }));
+  };
+
+  const handleConsumptionRateChange = (percent: number) => {
+    setVatConfig(prev => ({
+      ...prev,
+      consumptionTax: {
+        enabled: prev.consumptionTax?.enabled ?? false,
+        rate: Number.isFinite(percent) ? percent / 100 : 0,
+      },
+    }));
+  };
+
   // Handle VAT configuration submission
   const handleVatSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -182,9 +200,18 @@ const Settings = () => {
         return;
       }
 
+      if (vatConfig.consumptionTax?.enabled && !(vatConfig.consumptionTax.rate > 0)) {
+        toast.error("Enter a Consumption Tax rate above 0%, or turn it off.");
+        return;
+      }
+
       await updateVatConfig({
         subdomain,
-        data: vatConfig,
+        data: {
+          vatEnabled: vatConfig.vatEnabled,
+          vatRate: vatConfig.vatRate,
+          consumptionTax: vatConfig.consumptionTax ?? { enabled: false, rate: 0 },
+        },
       }).unwrap();
 
       toast.success("VAT configuration updated successfully!");
@@ -502,6 +529,48 @@ const Settings = () => {
                       </div>
                     )}
 
+                    {/* Consumption Tax */}
+                    <div className="p-4 border border-gray-200 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="pr-4">
+                          <label className="text-sm font-medium text-gray-700">
+                            Enable Consumption Tax
+                          </label>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Adds a Consumption Tax line to order cards and receipts. While it is on, VAT and the
+                            Consumption Tax are both added on top of the item prices, and orders already
+                            completed are not changed.
+                          </p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                          <input
+                            type="checkbox"
+                            className="sr-only peer"
+                            checked={vatConfig.consumptionTax?.enabled ?? false}
+                            onChange={(e) => handleConsumptionEnabledChange(e.target.checked)}
+                          />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                        </label>
+                      </div>
+                      {vatConfig.consumptionTax?.enabled && (
+                        <div className="mt-4">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Consumption Tax Rate (%)
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            max="100"
+                            value={Number(((vatConfig.consumptionTax?.rate ?? 0) * 100).toFixed(4))}
+                            onChange={(e) => handleConsumptionRateChange(parseFloat(e.target.value))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Enter rate (e.g., 5 for 5%)"
+                          />
+                        </div>
+                      )}
+                    </div>
+
                     {/* Preview */}
                     <div className="p-4 bg-gray-50 rounded-lg">
                       <h4 className="text-sm font-medium text-gray-700 mb-2">Preview</h4>
@@ -509,6 +578,15 @@ const Settings = () => {
                         <p>VAT Status: <span className="font-medium">{vatConfig.vatEnabled ? 'Enabled' : 'Disabled'}</span></p>
                         {vatConfig.vatEnabled && (
                           <p>VAT Rate: <span className="font-medium">{(vatConfig.vatRate * 100).toFixed(2)}%</span></p>
+                        )}
+                        <p>Consumption Tax: <span className="font-medium">{vatConfig.consumptionTax?.enabled ? `${((vatConfig.consumptionTax.rate ?? 0) * 100).toFixed(2)}%` : 'Disabled'}</span></p>
+                        {vatConfig.consumptionTax?.enabled && (
+                          <p className="mt-2 text-xs text-gray-500">
+                            Example: an order of 10,000 adds{' '}
+                            {vatConfig.vatEnabled ? `${(10000 * vatConfig.vatRate).toLocaleString()} VAT and ` : ''}
+                            {(10000 * (vatConfig.consumptionTax.rate ?? 0)).toLocaleString()} Consumption Tax, total{' '}
+                            {(10000 * (1 + (vatConfig.vatEnabled ? vatConfig.vatRate : 0) + (vatConfig.consumptionTax.rate ?? 0))).toLocaleString()}.
+                          </p>
                         )}
                       </div>
                     </div>

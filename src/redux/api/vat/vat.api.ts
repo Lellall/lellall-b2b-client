@@ -2,14 +2,32 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { RootState } from '@/redux/store';
 import { configUrl } from '@/utils/config';
 
+export interface ConsumptionTaxConfig {
+  enabled: boolean;
+  /** 0.05 = 5% */
+  rate: number;
+}
+
 export interface VatConfig {
   vatEnabled: boolean;
   vatRate: number;
+  consumptionTax?: ConsumptionTaxConfig;
+}
+
+export interface TaxLine {
+  name: string;
+  rate: number;
+  isActive: boolean;
 }
 
 export interface VatConfigResponse {
   vatEnabled: boolean;
   vatRate: number;
+  consumptionTax?: ConsumptionTaxConfig;
+  /** Active tax list (VAT + Consumption Tax, or a hand-set list) */
+  taxes?: TaxLine[];
+  /** true when taxes are added on top of the item price */
+  taxesAddedOnTop?: boolean;
 }
 
 export const vatApi = createApi({

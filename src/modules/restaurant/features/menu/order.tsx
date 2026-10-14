@@ -205,8 +205,16 @@ const Orders = () => {
     
     let computedVatTax = 0;
     let computedTotal = discountedSubtotal;
+    let taxLines: { name: string; rate: number; amount: number }[] = [];
 
-    if (subdomain === "355" && (vatConfig?.vatEnabled ?? true)) {
+    if (vatConfig?.taxesAddedOnTop) {
+      // Taxes are added on top (e.g. VAT + Consumption Tax): same sums as the server.
+      taxLines = (vatConfig.taxes ?? [])
+        .filter((t: any) => t.isActive && t.rate > 0)
+        .map((t: any) => ({ name: t.name, rate: t.rate, amount: Number((discountedSubtotal * t.rate).toFixed(2)) }));
+      computedVatTax = taxLines.reduce((sum, t) => sum + t.amount, 0);
+      computedTotal = discountedSubtotal + computedVatTax;
+    } else if (subdomain === "355" && (vatConfig?.vatEnabled ?? true)) {
       const vatRate = vatConfig?.vatRate || vatConfig?.rate || 0.075;
       computedVatTax = discountedSubtotal * vatRate;
       computedTotal = discountedSubtotal + computedVatTax;
@@ -219,6 +227,7 @@ const Orders = () => {
       vatTax: Number(computedVatTax.toFixed(2)),
       serviceFee: 0,
       total: Number(computedTotal.toFixed(2)),
+      taxLines,
     };
   };
 
@@ -255,7 +264,7 @@ const Orders = () => {
 
     try {
       const response = await createOrders({ subdomain, data: orderData }).unwrap();
-      const { subtotal, discountAmount, discountedSubtotal, vatTax, serviceFee, total } = calculateTotal();
+      const { subtotal, discountAmount, discountedSubtotal, vatTax, serviceFee, total, taxLines } = calculateTotal();
       setCreatedOrders((prev) => [
         ...prev,
         {
@@ -269,6 +278,8 @@ const Orders = () => {
           vatTax,
           serviceFee,
           total,
+          taxLines,
+          taxesAddedToTotal: taxLines.length > 0,
           status: "PENDING",
           specialNote,
           paymentType: membershipMember?.covered ? "MEMBERSHIP" : null,
@@ -459,7 +470,7 @@ const Orders = () => {
     );
   }
 
-  const { subtotal, discountAmount, discountedSubtotal, vatTax, serviceFee, total } = calculateTotal();
+  const { subtotal, discountAmount, discountedSubtotal, vatTax, serviceFee, total, taxLines } = calculateTotal();
 
   return (
     <div className="min-h-screen p-4 bg-gray-100 pb-24 sm:pb-6">
@@ -697,7 +708,13 @@ const Orders = () => {
                     <p className="text-xs sm:text-sm">{formatCurrency(discountAmount.toLocaleString())}</p>
                   </div>
                 )}
-                {subdomain === "355" && vatTax > 0 && (
+                {taxLines.map((t) => (
+                  <div key={t.name} className="flex justify-between mt-2">
+                    <p className="text-xs sm:text-sm">{t.name} ({Number((t.rate * 100).toFixed(2))}%)</p>
+                    <p className="text-xs sm:text-sm">{formatCurrency(t.amount.toLocaleString())}</p>
+                  </div>
+                ))}
+                {taxLines.length === 0 && subdomain === "355" && vatTax > 0 && (
                   <div className="flex justify-between mt-2">
                     <p className="text-xs sm:text-sm">VAT ({Number(((vatConfig?.vatRate || vatConfig?.rate || 0.075) * 100).toFixed(1))}%)</p>
                     <p className="text-xs sm:text-sm">{formatCurrency(vatTax.toLocaleString())}</p>
@@ -768,8 +785,13 @@ const Orders = () => {
                     subtotal={formatCurrency(createdOrder.subtotal.toLocaleString())}
                     discountAmount={createdOrder.discountAmount ? formatCurrency(createdOrder.discountAmount.toLocaleString()) : undefined}
                     vatTax={formatCurrency(createdOrder.vatTax.toLocaleString())}
+                    taxLines={(createdOrder.taxLines ?? []).map((t: any) => ({
+                      name: t.name,
+                      rate: t.rate,
+                      amount: formatCurrency(t.amount.toLocaleString()),
+                    }))}
                     serviceFee={formatCurrency(createdOrder.serviceFee.toLocaleString())}
-                    total={formatCurrency((subdomain === "355" ? createdOrder.subtotal - (createdOrder.discountAmount ?? 0) + (createdOrder.appliedTaxes && createdOrder.appliedTaxes.length > 0 ? createdOrder.appliedTaxes.reduce((sum: any, tax: any) => sum + tax.amount, 0) : createdOrder.vatTax) : createdOrder.total).toLocaleString())}
+                    total={formatCurrency((createdOrder.taxesAddedToTotal ? createdOrder.total : subdomain === "355" ? createdOrder.subtotal - (createdOrder.discountAmount ?? 0) + (createdOrder.appliedTaxes && createdOrder.appliedTaxes.length > 0 ? createdOrder.appliedTaxes.reduce((sum: any, tax: any) => sum + tax.amount, 0) : createdOrder.vatTax) : createdOrder.total).toLocaleString())}
                     status={createdOrder.status}
                     subdomain={subdomain}
                     id={createdOrder.id}

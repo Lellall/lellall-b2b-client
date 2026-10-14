@@ -98,8 +98,8 @@ const CombinedReceipt = forwardRef<CombinedReceiptHandle, CombinedReceiptProps>(
     const combinedVatTax = sortedOrders.reduce((sum, order) => sum + order.vatTax, 0);
     const combinedServiceFee = sortedOrders.reduce((sum, order) => sum + order.serviceFee, 0);
     const combinedTotal = sortedOrders.reduce((sum, order) => sum + order.total, 0);
-    // 355-labone adds its taxes on top: the server's total is authoritative.
-    const hasMultipleTaxes = subdomain === '355-labone';
+    // Taxes added on top (355-labone, or Consumption Tax on): the server's total is authoritative.
+    const hasMultipleTaxes = subdomain === '355-labone' || sortedOrders.some((order: any) => order.taxesAddedToTotal);
     const combinedDiscountPercentage = combinedSubtotal > 0 
       ? (combinedDiscountAmount / combinedSubtotal) * 100 
       : 0;
