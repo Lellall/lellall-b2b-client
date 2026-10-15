@@ -247,9 +247,9 @@ const Settings = () => {
       }).unwrap();
 
       toast.success("Service fee configuration updated successfully!");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Service fee update failed:", error);
-      toast.error("Failed to update service fee configuration");
+      toast.error(error?.data?.message || "Failed to update service fee configuration");
     }
   };
 
