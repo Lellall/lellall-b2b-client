@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import subs from '@/assets/subs.svg';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import LellallSwitch from '@/components/ui/switch.component';
 import PricingCard from './components/pricing-card';
 import { ColorRing } from 'react-loader-spinner';
@@ -176,7 +176,11 @@ const Subscriptions = () => {
     }
   };
 
+  // A second click before the first request finishes would open a second payment.
+  const paymentInFlight = useRef(false);
+
   const handleInitiatePayment = async (planId: string, planPrice: number) => {
+    if (paymentInFlight.current) return;
     console.log(user, 'user')
     
     // Get restaurant ID from either ownedRestaurants (ADMIN) or restaurantId (MANAGER)
@@ -203,6 +207,7 @@ const Subscriptions = () => {
         : { reference: reference }),
     };
 
+    paymentInFlight.current = true;
     try {
       console.log('Initiating payment with DTO:', paymentDto);
       const response = await initiatePayment({
@@ -214,11 +219,15 @@ const Subscriptions = () => {
       console.log('Payment initiation response:', response);
       toast.success('Redirecting to payment...');
       if (response.paymentLink) {
-        window.location.href = response.paymentLink;
+        window.location.href = response.paymentLink; // keep the guard on while the browser leaves
+        return;
       }
-    } catch (error) {
+      paymentInFlight.current = false;
+    } catch (error: any) {
       console.error('Payment initiation failed:', error);
-      toast.error('Failed to initiate payment. Please try again.');
+      paymentInFlight.current = false;
+      // e.g. "You already have an active subscription ... No new payment was taken."
+      toast.error(error?.data?.message || 'Failed to initiate payment. Please try again.', { autoClose: 10000 });
     }
   };
 

@@ -189,13 +189,11 @@ const VerifyPaymentPage: React.FC = () => {
         raw: Object.fromEntries(searchParams.entries()),
       });
 
+      // Flutterwave returns always carry ?provider=flutterwave (we set it in the redirect URL).
+      // Paystack sends BOTH trxref and reference, so a bare return is Paystack.
       let inferredProvider: "paystack" | "flutterwave" | null = provider;
-      if (!inferredProvider) {
-        if (trxref) {
-          inferredProvider = "flutterwave";
-        } else if (reference) {
-          inferredProvider = "paystack";
-        }
+      if (!inferredProvider && (trxref || reference)) {
+        inferredProvider = "paystack";
       }
 
       if (!inferredProvider || !["paystack", "flutterwave"].includes(inferredProvider)) {
@@ -254,9 +252,10 @@ const VerifyPaymentPage: React.FC = () => {
         setTimeout(() => navigate("/"), 3000);
       } catch (error: any) {
         console.error("Verification failed:", error);
-        toast.error(error?.data?.message ||
-          `Failed to verify payment with ${inferredProvider}. Please try again or contact support.`,
-          { position: "top-right", toastId: "verify-error" }
+        toast.error(
+          `${error?.data?.message || `We could not confirm your payment with ${inferredProvider} yet.`} ` +
+            "If you were charged, please do NOT pay again. Contact support and we will confirm it.",
+          { position: "top-right", toastId: "verify-error", autoClose: 12000 }
         );
         setTimeout(() => navigate("/subscriptions"), 4000);
       }
