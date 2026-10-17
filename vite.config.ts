@@ -14,11 +14,7 @@ export default defineConfig({
     }),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: [
-        "favicon.ico",
-        "apple-touch-icon.png",
-        "assets/**/*.{png,jpg,jpeg,svg,ico}",
-      ],
+      includeAssets: ["favicon.ico", "apple-touch-icon.png"],
       manifest: {
         name: "Lellall-eProc",
         short_name: "eProc",
@@ -48,6 +44,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,jpg,jpeg,svg,webmanifest}"],
+        // Do not make every device download the loose images in public/assets
+        // (several are unused); they load on demand and are cached by the browser.
+        globIgnores: ["assets/**"],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MiB to accommodate larger JS bundles (2.1 MB file needs at least 3 MB)
         runtimeCaching: [
           {
@@ -90,6 +89,9 @@ export default defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    // Hashed bundles live in /static (cached for a year, see public/_headers);
+    // /assets keeps the plain files from public/, which can change without a new hash.
+    assetsDir: "static",
     rollupOptions: {
       output: {
         manualChunks: {
