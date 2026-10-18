@@ -39,3 +39,11 @@ dist-ssr
 
 # Local Netlify folder
 .netlify
+
+# Secrets: never commit these. A committed .env exposed a live Netlify token in a public repo.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+prod-deploy-key*
