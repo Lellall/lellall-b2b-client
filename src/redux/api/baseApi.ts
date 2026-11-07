@@ -24,9 +24,12 @@ const baseQuery = async ({ url, method = "GET", body, params, formData, response
     return { data: result.data };
   } catch (axiosError: any) {
     console.error("API Error:", axiosError);
-    toast.error(axiosError?.message || 'Failed to add menu item');
 
     const errorMessage = axiosError.response?.data?.message || axiosError.response?.data?.error || "Unknown error occurred";
+    // Show the server's own explanation when there is one, not "Request failed with status code 400".
+    // The id stops the same message appearing twice when a page shows it as well.
+    const shown = Array.isArray(errorMessage) ? errorMessage.join(', ') : String(errorMessage);
+    toast.error(axiosError.response?.data?.message ? shown : axiosError?.message || shown, { toastId: shown });
     return { error: { status: axiosError.response?.status, message: errorMessage } };
   }
 };

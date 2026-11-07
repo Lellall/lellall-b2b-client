@@ -57,24 +57,24 @@ export const ApplicationDrawer: React.FC<ApplicationDrawerProps> = ({
           {/* Status Banner */}
           <div className={`mb-6 rounded-xl p-4 flex items-center justify-between border ${
             application.status === 'PENDING' ? 'bg-amber-50 border-amber-200' :
-            application.status === 'APPROVED' ? 'bg-green-50 border-green-200' :
+            (application.status === 'APPROVED' || application.status === 'ACTIVE') ? 'bg-green-50 border-green-200' :
             'bg-red-50 border-red-200'
           }`}>
             <div>
               <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${
                 application.status === 'PENDING' ? 'text-amber-800' :
-                application.status === 'APPROVED' ? 'text-green-800' :
+                (application.status === 'APPROVED' || application.status === 'ACTIVE') ? 'text-green-800' :
                 'text-red-800'
               }`}>
                 Current Status
               </p>
               <p className={`text-sm font-semibold flex items-center gap-2 ${
                 application.status === 'PENDING' ? 'text-amber-900' :
-                application.status === 'APPROVED' ? 'text-green-900' :
+                (application.status === 'APPROVED' || application.status === 'ACTIVE') ? 'text-green-900' :
                 'text-red-900'
               }`}>
                 {application.status === 'PENDING' && <span className="relative flex h-3 w-3"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span></span>}
-                {application.status === 'APPROVED' && <TickCircle size="18" variant="Bold" />}
+                {(application.status === 'APPROVED' || application.status === 'ACTIVE') && <TickCircle size="18" variant="Bold" />}
                 {application.status === 'REJECTED' && <CloseCircle size="18" variant="Bold" />}
                 {application.status}
               </p>
@@ -157,7 +157,7 @@ export const ApplicationDrawer: React.FC<ApplicationDrawerProps> = ({
           </div>
 
           {/* BLACK members get one-time pass codes to download; other tiers list their guests */}
-          {application.status === 'APPROVED' && <DesignatedMembersPanel membershipId={application.id} />}
+          {(application.status === 'APPROVED' || application.status === 'ACTIVE') && <DesignatedMembersPanel membershipId={application.id} />}
           {tier === 'BLACK' ? (
             <GuestPassesPanel application={application} />
           ) : (
@@ -209,6 +209,13 @@ export const ApplicationDrawer: React.FC<ApplicationDrawerProps> = ({
                 {isApproving ? 'Approving…' : 'Approve & Add Member'}
               </button>
             </div>
+          </div>
+        )}
+        {application.status === 'ACTIVE' && (
+          <div className="p-6 bg-white border-t border-gray-200 shrink-0">
+            <p className="text-xs text-gray-500 text-center">
+              This membership is active. Add their designated members above, or manage them any time from the Members page.
+            </p>
           </div>
         )}
         {application.status === 'APPROVED' && (

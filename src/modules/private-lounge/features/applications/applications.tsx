@@ -51,6 +51,12 @@ const TierBadge = ({ tier }: { tier: string }) => {
 };
 
 // ─── APPLICATIONS LIST ────────────────────────────────────────────────────────
+// The server's explanation arrives as err.message. The page used to read other fields and so always fell back to the generic text.
+const errorText = (err: any, fallback: string): string => {
+  const message = err?.message || err?.data?.message || err?.error?.message;
+  return Array.isArray(message) ? message.join(', ') : message || fallback;
+};
+
 export const Applications: React.FC = () => {
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
@@ -99,7 +105,7 @@ export const Applications: React.FC = () => {
       toast.success('Application approved successfully!');
       setSelectedApp((prev: any) => prev ? { ...prev, status: 'APPROVED' } : null);
     } catch (err: any) {
-      toast.error(err?.data?.message || err?.error?.message || 'Failed to approve application');
+      { const text = errorText(err, 'Failed to approve application'); toast.error(text, { toastId: text }); }
     }
   };
 
@@ -109,17 +115,20 @@ export const Applications: React.FC = () => {
       toast.success('Application declined successfully.');
       setSelectedApp(null);
     } catch (err: any) {
-      toast.error(err?.data?.message || err?.error?.message || 'Failed to decline application');
+      { const text = errorText(err, 'Failed to decline application'); toast.error(text, { toastId: text }); }
     }
   };
 
   const handleConfirmPayment = async (id: string) => {
     try {
-      await confirmPayment(id).unwrap();
-      toast.success('Payment confirmed! Member activated.');
-      setSelectedApp(null);
+      const activated: any = await confirmPayment(id).unwrap();
+      toast.success('Payment confirmed! Member activated. You can now add their designated members below.');
+      // Stay on this member so their designated members and guest passes can be set up straight away
+      setSelectedApp((prev: any) =>
+        prev ? { ...prev, status: 'ACTIVE', membershipNumber: activated?.membershipNumber ?? prev.membershipNumber } : null,
+      );
     } catch (err: any) {
-      toast.error(err?.data?.message || err?.error?.message || 'Failed to confirm payment');
+      { const text = errorText(err, 'Failed to confirm payment'); toast.error(text, { toastId: text }); }
     }
   };
 
@@ -136,7 +145,7 @@ export const Applications: React.FC = () => {
       toast.success('Application deleted successfully.');
       setAppToDelete(null);
     } catch (err: any) {
-      toast.error(err?.data?.message || err?.error?.message || 'Failed to delete application');
+      { const text = errorText(err, 'Failed to delete application'); toast.error(text, { toastId: text }); }
     } finally {
       setIsDeleting(false);
     }
@@ -263,13 +272,16 @@ export const Applications: React.FC = () => {
                 {new Date(app.createdAt || app.submittedAt || new Date()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
               </span>
               <div className="flex items-center gap-1">
-                  <button 
-                    onClick={(e) => handleDeleteClick(app.id, e)}
-                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Delete Application"
-                  >
-                    <Trash2 size="18" />
-                  </button>
+                  {/* Only pending or declined applications can be deleted. An active member is removed from the Members page. */}
+                  {(app.status === 'PENDING' || app.status === 'DECLINED') && (
+                    <button 
+                      onClick={(e) => handleDeleteClick(app.id, e)}
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete Application"
+                    >
+                      <Trash2 size="18" />
+                    </button>
+                  )}
                 <button 
                   onClick={() => setSelectedApp(app)}
                   className="p-2 text-gray-400 hover:text-[#05431E] hover:bg-[#05431E]/10 rounded-lg transition-colors"
