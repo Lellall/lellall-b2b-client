@@ -303,7 +303,8 @@ const LoungeLayout: React.FC = () => {
 
   const userRole = (user?.role || '').toUpperCase();
   const isHostess = userRole === 'HOSTESS' || userRole === 'HOST';
-  const roleKey = isHostess ? 'PRIVATE_LOUNGE_HOSTESS' : 'PRIVATE_LOUNGE_ADMIN';
+  const isAccountant = userRole === 'ACCOUNTANT';
+  const roleKey = isAccountant ? 'PRIVATE_LOUNGE_ACCOUNTANT' : isHostess ? 'PRIVATE_LOUNGE_HOSTESS' : 'PRIVATE_LOUNGE_ADMIN';
   const navItems = navItemsByRole[roleKey] || navItemsByRole['PRIVATE_LOUNGE_ADMIN'] || [];
 
   return (

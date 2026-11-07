@@ -1,6 +1,8 @@
 import React from 'react';
 import { ShieldTick, Profile2User, TickCircle, CloseCircle } from 'iconsax-react';
 import { X, Mail, Phone, User as UserIcon, Briefcase } from 'lucide-react';
+import { GuestPassesPanel } from './guest-passes-panel';
+import { DesignatedMembersPanel } from '../../designated-members/designated-members-panel';
 
 interface ApplicationDrawerProps {
   application: any | null;
@@ -26,6 +28,8 @@ export const ApplicationDrawer: React.FC<ApplicationDrawerProps> = ({
   isConfirmingPayment = false,
 }) => {
   if (!isOpen || !application) return null;
+
+  const tier = application.requestedTier ?? application.tier;
 
   return (
     <>
@@ -131,11 +135,11 @@ export const ApplicationDrawer: React.FC<ApplicationDrawerProps> = ({
               <p className="text-xs text-gray-400 mb-2">Requested Tier</p>
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-100 bg-gray-50">
                 <ShieldTick size="18" className={
-                  application.requestedTier === 'BLACK' ? 'text-gray-900' :
-                  application.requestedTier === 'GOLD' ? 'text-amber-500' : 'text-gray-400'
+                  tier === 'BLACK' ? 'text-gray-900' :
+                  tier === 'GOLD' ? 'text-amber-500' : 'text-gray-400'
                 } variant="Bulk" />
                 <span className="text-sm font-bold tracking-widest text-gray-900">
-                  {application.requestedTier} TIER
+                  {tier} TIER
                 </span>
               </div>
             </div>
@@ -152,7 +156,11 @@ export const ApplicationDrawer: React.FC<ApplicationDrawerProps> = ({
             </div>
           </div>
 
-          {/* Entourage */}
+          {/* BLACK members get one-time pass codes to download; other tiers list their guests */}
+          {application.status === 'APPROVED' && <DesignatedMembersPanel membershipId={application.id} />}
+          {tier === 'BLACK' ? (
+            <GuestPassesPanel application={application} />
+          ) : (
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
             <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 border-b border-gray-50 pb-2 flex items-center gap-2">
               <Profile2User size="14" /> Approved Guests (Entourage)
@@ -176,6 +184,7 @@ export const ApplicationDrawer: React.FC<ApplicationDrawerProps> = ({
               <p className="text-sm text-gray-500 italic">No guests listed on application.</p>
             )}
           </div>
+          )}
         </div>
 
         {/* Action Footer */}

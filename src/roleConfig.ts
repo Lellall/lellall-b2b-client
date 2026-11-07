@@ -1,4 +1,4 @@
-import { Home, UserSearch, Car, MessageQuestion, Setting, Element2, ArchiveBox, Calendar2, MoneyChange, TrendUp, DocumentText, ShoppingCart } from 'iconsax-react';
+import { Home, UserSearch, TickCircle, Receipt21, Car, MessageQuestion, Setting, Element2, ArchiveBox, Calendar2, MoneyChange, TrendUp, DocumentText, ShoppingCart } from 'iconsax-react';
 import { MessageSquare } from 'lucide-react';
 
 export interface NavItemConfig {
@@ -13,6 +13,8 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
     { to: '/lounge/dashboard', icon: Home, text: 'Dashboard', end: true },
     { to: '/lounge/revenue', icon: TrendUp, text: 'Analytics' },
     { to: '/lounge/applications', icon: DocumentText, text: 'Applications' },
+    { to: '/lounge/check-in', icon: TickCircle, text: 'Check-in' },
+    { to: '/lounge/tabs', icon: Receipt21, text: 'Active Tabs' },
     { to: '/lounge/members', icon: UserSearch, text: 'Members' },
     { to: '/lounge/staff', icon: UserSearch, text: 'Staff' },
     { to: '/lounge/deleted-members', icon: UserSearch, text: 'Deleted Members' },
@@ -23,14 +25,25 @@ export const navItemsByRole: Record<string, NavItemConfig[]> = {
     { to: '/lounge/settings', icon: Setting, text: 'Settings' },
   ],
   PRIVATE_LOUNGE_HOSTESS: [
+    { to: '/lounge/check-in', icon: TickCircle, text: 'Check-in' },
+    { to: '/lounge/tabs', icon: Receipt21, text: 'Active Tabs' },
     { to: '/lounge/members', icon: UserSearch, text: 'Members' },
     { to: '/lounge/walk-ins', icon: ArchiveBox, text: 'Walk-ins' },
     { to: '/lounge/menu', icon: Element2, text: 'Menu' },
   ],
   PRIVATE_LOUNGE_HOST: [
+    { to: '/lounge/check-in', icon: TickCircle, text: 'Check-in' },
+    { to: '/lounge/tabs', icon: Receipt21, text: 'Active Tabs' },
     { to: '/lounge/members', icon: UserSearch, text: 'Members' },
     { to: '/lounge/walk-ins', icon: ArchiveBox, text: 'Walk-ins' },
     { to: '/lounge/menu', icon: Element2, text: 'Menu' },
+  ],
+  PRIVATE_LOUNGE_ACCOUNTANT: [
+    { to: '/lounge/dashboard', icon: Home, text: 'Dashboard', end: true },
+    { to: '/lounge/revenue', icon: TrendUp, text: 'Analytics' },
+    { to: '/lounge/members', icon: UserSearch, text: 'Members' },
+    { to: '/lounge/tabs', icon: Receipt21, text: 'Active Tabs' },
+    { to: '/lounge/walk-ins', icon: ArchiveBox, text: 'Walk-ins' },
   ],
   PERFUME_STORE_ADMIN: [
     { to: '/perfume/dashboard', icon: Home, text: 'Dashboard', end: true },

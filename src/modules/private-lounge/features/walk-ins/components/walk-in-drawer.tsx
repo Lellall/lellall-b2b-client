@@ -13,6 +13,10 @@ interface WalkInDrawerProps {
   onDeleteWalkIn?: (id: string) => void;
   onUpdateOrderItem?: (orderId: string, itemId: string, quantity: number) => void;
   onRemoveOrderItem?: (orderId: string, itemId: string) => void;
+  // Front-of-house staff can see orders but not change them after they are placed
+  canEditOrders?: boolean;
+  // The accountant can look but not settle or close anything
+  readOnly?: boolean;
 }
 
 export const WalkInDrawer: React.FC<WalkInDrawerProps> = ({
@@ -25,6 +29,8 @@ export const WalkInDrawer: React.FC<WalkInDrawerProps> = ({
   onDeleteWalkIn,
   onUpdateOrderItem,
   onRemoveOrderItem,
+  canEditOrders = true,
+  readOnly = false,
 }) => {
   if (!isOpen || !walkIn) return null;
 
@@ -141,31 +147,37 @@ export const WalkInDrawer: React.FC<WalkInDrawerProps> = ({
                       {order.items?.map((item: any, iIdx: number) => (
                         <div key={item.id || iIdx} className="flex justify-between items-center text-sm font-medium text-gray-900 bg-gray-50 p-2 rounded mb-1">
                           <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => onUpdateOrderItem?.(order.id, item.id, item.quantity - 1)}
-                              className="w-6 h-6 flex items-center justify-center rounded-md bg-white border border-gray-200 text-gray-500 hover:text-[#05431E] hover:border-[#05431E] transition-colors"
-                              title="Reduce quantity"
-                            >
-                              <Minus size={12} />
-                            </button>
+                            {canEditOrders && (
+                              <button
+                                onClick={() => onUpdateOrderItem?.(order.id, item.id, item.quantity - 1)}
+                                className="w-6 h-6 flex items-center justify-center rounded-md bg-white border border-gray-200 text-gray-500 hover:text-[#05431E] hover:border-[#05431E] transition-colors"
+                                title="Reduce quantity"
+                              >
+                                <Minus size={12} />
+                              </button>
+                            )}
                             <span>{item.quantity}x {item.inventoryItem?.name || 'Item'}</span>
-                            <button
-                              onClick={() => onUpdateOrderItem?.(order.id, item.id, item.quantity + 1)}
-                              className="w-6 h-6 flex items-center justify-center rounded-md bg-white border border-gray-200 text-gray-500 hover:text-[#05431E] hover:border-[#05431E] transition-colors"
-                              title="Increase quantity"
-                            >
-                              <Plus size={12} />
-                            </button>
+                            {canEditOrders && (
+                              <button
+                                onClick={() => onUpdateOrderItem?.(order.id, item.id, item.quantity + 1)}
+                                className="w-6 h-6 flex items-center justify-center rounded-md bg-white border border-gray-200 text-gray-500 hover:text-[#05431E] hover:border-[#05431E] transition-colors"
+                                title="Increase quantity"
+                              >
+                                <Plus size={12} />
+                              </button>
+                            )}
                           </div>
                           <div className="flex items-center gap-3">
                             <span>₦{(item.totalPrice || 0).toLocaleString()}</span>
-                            <button
-                              onClick={() => onRemoveOrderItem?.(order.id, item.id)}
-                              className="text-gray-400 hover:text-red-500 transition-colors"
-                              title="Remove item"
-                            >
-                              <Trash2 size={14} />
-                            </button>
+                            {canEditOrders && (
+                              <button
+                                onClick={() => onRemoveOrderItem?.(order.id, item.id)}
+                                className="text-gray-400 hover:text-red-500 transition-colors"
+                                title="Remove item"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -201,7 +213,7 @@ export const WalkInDrawer: React.FC<WalkInDrawerProps> = ({
 
         {/* Action Footer */}
         <div className="p-6 bg-white border-t border-gray-200 shrink-0 space-y-3">
-          {walkIn.status === 'CHECKED_IN' && (
+          {!readOnly && walkIn.status === 'CHECKED_IN' && (
             <button
               onClick={() => {
                 onConfirmPayment?.(walkIn.id, '', 'POS_TERMINAL');

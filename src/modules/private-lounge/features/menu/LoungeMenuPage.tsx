@@ -4,13 +4,13 @@ import {
   Wine, Utensils, ShoppingCart, X, Plus, Minus, Search,
   Droplets, Star, Flame, ChevronRight,
 } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store';
 import { toast } from 'react-toastify';
 import { useGetInventoryItemsQuery } from '../../../../redux/api/private-lounge/inventory.api';
 import { useCreateOrderMutation } from '../../../../redux/api/private-lounge/orders.api';
-import { useGetTodaysWalkInsQuery } from '../../../../redux/api/private-lounge/walk-ins.api';
-import { useGetAllMembersQuery } from '../../../../redux/api/private-lounge/members.api';
+import { ActiveTab, tabKey, useGetActiveTabsQuery } from '../../../../redux/api/private-lounge/tabs.api';
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -372,18 +372,13 @@ const OrderPanel: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   activeLoungeId: string;
-}> = ({ order, onRemove, onClear, total, isOpen, onClose, activeLoungeId }) => {
+  customer: ActiveTab | null;
+  onOrderPlaced: () => void;
+}> = ({ order, onRemove, onClear, total, isOpen, onClose, activeLoungeId, customer, onOrderPlaced }) => {
   const [createOrder, { isLoading }] = useCreateOrderMutation();
-  const { data: walkInsData } = useGetTodaysWalkInsQuery({ loungeId: activeLoungeId }, { skip: !activeLoungeId });
-  const walkIns = walkInsData?.walkIns || [];
-  const { data: members = [] } = useGetAllMembersQuery(activeLoungeId, { skip: !activeLoungeId });
-  const [selectedCustomer, setSelectedCustomer] = useState<string>(''); // format "walkIn:id" or "member:id" or "anonymous"
-
-  const activeWalkIns = walkIns.filter((w: any) => w.status === 'CHECKED_IN');
-  const checkedInMembers = members.filter((m: any) => m.visits && m.visits.length > 0);
 
   const handleConfirmOrder = async () => {
-    if (!activeLoungeId) return;
+    if (!activeLoungeId || !customer) return;
     try {
       const orderData: any = {
         items: order.map(o => ({ 
@@ -393,16 +388,17 @@ const OrderPanel: React.FC<{
           totalPrice: o.item.price * o.qty
         }))
       };
-      if (selectedCustomer.startsWith('walkIn:')) {
-        orderData.walkInId = selectedCustomer.split(':')[1];
-      } else if (selectedCustomer.startsWith('member:')) {
-        orderData.membershipId = selectedCustomer.split(':')[1];
+      if (customer.customer.type === 'walkIn') {
+        orderData.walkInId = customer.customer.id;
+      } else {
+        orderData.membershipId = customer.customer.id;
       }
 
       await createOrder({ loungeId: activeLoungeId, ...orderData }).unwrap();
-      toast.success('Order placed successfully!');
+      toast.success(`Order added to ${customer.name}'s tab`);
       onClear();
       onClose();
+      onOrderPlaced();
     } catch (error) {
       toast.error('Failed to place order');
     }
@@ -452,29 +448,22 @@ const OrderPanel: React.FC<{
 
       {order.length > 0 && (
         <div className="p-6 border-t border-gray-100 space-y-4">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Assign Order To</label>
-            <select 
-              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#05431E]/20"
-              value={selectedCustomer}
-              onChange={e => setSelectedCustomer(e.target.value)}
-            >
-              <option value="" disabled>-- Select Customer --</option>
-              {activeWalkIns.length > 0 && <optgroup label="Walk-Ins">
-                {activeWalkIns.map(w => <option key={w.id} value={`walkIn:${w.id}`}>Walk-In: {w.guestName}</option>)}
-              </optgroup>}
-              {checkedInMembers.length > 0 && <optgroup label="Checked-In Members">
-                {checkedInMembers.map((m: any) => <option key={m.id} value={`member:${m.id}`}>Member: {m.fullName}</option>)}
-              </optgroup>}
-            </select>
-          </div>
+          {customer && (
+            <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3">
+              <p className="text-xs font-semibold text-green-800 uppercase tracking-wider">Adding to the tab of</p>
+              <p className="text-base font-bold text-gray-900">{customer.name}</p>
+              <p className="text-xs text-gray-500">
+                {customer.orderCount} {customer.orderCount === 1 ? 'order' : 'orders'} so far · {formatCurrency(customer.orderTotal)}
+              </p>
+            </div>
+          )}
           <div className="flex justify-between items-center">
             <span className="text-gray-500 text-base">Total</span>
             <span className="text-gray-900 font-bold text-2xl">{formatCurrency(total)}</span>
           </div>
           {/* Large CTA for tablet */}
           <button 
-            disabled={isLoading || !selectedCustomer}
+            disabled={isLoading || !customer}
             onClick={handleConfirmOrder}
             className="w-full py-4 rounded-2xl bg-[#05431E] hover:bg-[#042f15] active:scale-[0.98] text-white font-bold text-base transition-all shadow-sm"
           >
@@ -529,10 +518,90 @@ const BottlePourModal: React.FC<{
   );
 };
 
+// ─── CUSTOMER BAR ─────────────────────────────────────────────────────────────
+
+// Whoever is checked in has an open tab. Pick them here, then add items to their tab.
+const CustomerBar: React.FC<{
+  tabs: ActiveTab[];
+  selectedKey: string | null;
+  onSelect: (key: string | null) => void;
+  isLoading: boolean;
+}> = ({ tabs, selectedKey, onSelect, isLoading }) => (
+  <div className="mb-6 bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
+    <div className="flex items-center justify-between mb-3">
+      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Who is this order for?</p>
+      <Link to="/lounge/tabs" className="text-xs font-semibold text-[#05431E] hover:underline">
+        See all open tabs
+      </Link>
+    </div>
+
+    {isLoading ? (
+      <p className="text-sm text-gray-400">Loading checked-in guests…</p>
+    ) : tabs.length === 0 ? (
+      <p className="text-sm text-gray-500">
+        Nobody is checked in yet.{' '}
+        <Link to="/lounge/check-in" className="font-semibold text-[#05431E] hover:underline">
+          Check someone in
+        </Link>{' '}
+        to start an order.
+      </p>
+    ) : (
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {tabs.map((tab) => {
+          const key = tabKey(tab);
+          const selected = key === selectedKey;
+          return (
+            <button
+              key={key}
+              onClick={() => onSelect(selected ? null : key)}
+              className={`shrink-0 text-left px-4 py-2.5 rounded-xl border transition-all min-h-[52px] ${
+                selected
+                  ? 'bg-[#05431E] border-[#05431E] text-white shadow-sm'
+                  : 'bg-white border-gray-200 text-gray-800 hover:border-[#05431E]/40'
+              }`}
+            >
+              <span className="flex items-center gap-2 text-sm font-bold">
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    tab.status === 'WAITING' ? 'bg-amber-400' : selected ? 'bg-green-300' : 'bg-green-500'
+                  }`}
+                />
+                {tab.name}
+              </span>
+              <span className={`block text-xs mt-0.5 ${selected ? 'text-white/70' : 'text-gray-400'}`}>
+                {tab.status === 'WAITING' ? 'Waiting for first order' : `${formatCurrency(tab.orderTotal)} · ${tab.orderCount} ${tab.orderCount === 1 ? 'order' : 'orders'}`}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    )}
+
+    {tabs.length > 0 && !selectedKey && (
+      <p className="text-xs text-amber-700 mt-3">Pick a person above, then add items to their tab.</p>
+    )}
+  </div>
+);
+
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 
 const LoungeMenuPage: React.FC = () => {
   const user = useSelector((state: RootState) => state.auth.user);
+
+  // The person whose tab the items are added to; the Active Tabs page can open this page with one already picked
+  const [searchParams] = useSearchParams();
+  const [selectedKey, setSelectedKey] = useState<string | null>(searchParams.get('tab'));
+  const { data: tabsData, isLoading: isLoadingTabs } = useGetActiveTabsQuery(user?.privateLoungeId || '', {
+    skip: !user?.privateLoungeId,
+    pollingInterval: 15000,
+  });
+  const openTabs = tabsData?.tabs ?? [];
+  const selectedTab = openTabs.find((tab) => tabKey(tab) === selectedKey) ?? null;
+
+  // Someone who has been checked out can no longer be picked
+  useEffect(() => {
+    if (selectedKey && tabsData && !selectedTab) setSelectedKey(null);
+  }, [selectedKey, tabsData, selectedTab]);
 
   const [activeTab, setActiveTab] = useState<'food' | 'drinks' | 'bottle-pour'>('food');
   const [activeCategory, setActiveCategory] = useState<string>('All');
@@ -577,6 +646,10 @@ const LoungeMenuPage: React.FC = () => {
   const getQty = (id: string) => orderItems.find(o => o.item.id === id)?.qty || 0;
 
   const handleAdd = (item: MenuItem) => {
+    if (!selectedTab) {
+      toast.info('Pick who this order is for first');
+      return;
+    }
     setOrderItems(prev => {
       const ex = prev.find(o => o.item.id === item.id);
       return ex ? prev.map(o => o.item.id === item.id ? { ...o, qty: o.qty + 1 } : o) : [...prev, { item, qty: 1 }];
@@ -623,6 +696,8 @@ const LoungeMenuPage: React.FC = () => {
           )}
         </button>
       </div>
+
+      <CustomerBar tabs={openTabs} selectedKey={selectedKey} onSelect={setSelectedKey} isLoading={isLoadingTabs} />
 
       {/* ── Main Tabs — full width, large touch targets for tablet ──────── */}
       <div className="flex gap-2 bg-gray-100 rounded-3xl p-2 mb-10 w-full">
@@ -756,6 +831,8 @@ const LoungeMenuPage: React.FC = () => {
         isOpen={isOrderOpen}
         onClose={() => setIsOrderOpen(false)}
         activeLoungeId={user?.privateLoungeId}
+        customer={selectedTab}
+        onOrderPlaced={() => setSelectedKey(null)}
       />
 
       {/* ── Bottle Pour Modal ────────────────────────────────────────────── */}

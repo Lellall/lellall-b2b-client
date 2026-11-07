@@ -4,6 +4,7 @@ import { Search, Filter, Plus, ChevronRight, Crown, Shield, Wine } from 'lucide-
 import { MemberDrawer } from './components/member-drawer';
 import { useGetAllMembersQuery } from '../../../../redux/api/private-lounge/members.api';
 import { useSelector } from 'react-redux';
+import { useLoungeRole } from '../../hooks/use-lounge-role';
 import { RootState } from '../../../../redux/store';
 
 // ─── STATUS BADGE ─────────────────────────────────────────────────────────────
@@ -96,6 +97,7 @@ const StatCard = ({ label, value, icon, accent }: { label: string; value: number
 // ─── MEMBERS PAGE ─────────────────────────────────────────────────────────────
 export const Members: React.FC = () => {
   const user = useSelector((state: RootState) => state.auth.user);
+  const { canManage } = useLoungeRole();
   
   const { data: response, isLoading } = useGetAllMembersQuery(user?.privateLoungeId || '', {
     skip: !user?.privateLoungeId
@@ -139,13 +141,15 @@ export const Members: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Members Directory</h1>
           <p className="text-sm text-gray-500 mt-1">Manage VIP members, preferences & bottle storage</p>
         </div>
-        <button
-          onClick={() => alert('Invite flow: Direct applicants to your Lounge Application Portal.')}
-          className="bg-[#05431E] hover:bg-[#042f15] text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 shadow-sm hover:shadow-md active:scale-[0.98]"
-        >
-          <Plus className="w-4 h-4" />
-          Invite Member
-        </button>
+        {canManage && (
+          <button
+            onClick={() => alert('Invite flow: Direct applicants to your Lounge Application Portal.')}
+            className="bg-[#05431E] hover:bg-[#042f15] text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 shadow-sm hover:shadow-md active:scale-[0.98]"
+          >
+            <Plus className="w-4 h-4" />
+            Invite Member
+          </button>
+        )}
       </div>
 
       {/* ─── STAT CARDS ──────────────────────────────────── */}

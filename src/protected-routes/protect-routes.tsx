@@ -18,6 +18,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
   const isLoungeUser = !!user?.privateLoungeId;
   const isLoungeAdmin = (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') && isLoungeUser;
   const isLoungeHostess = (userRole === 'HOST' || userRole === 'HOSTESS' || userRole === 'WAITER' || userRole === 'MANAGER') && isLoungeUser;
+  const isLoungeAccountant = userRole === 'ACCOUNTANT' && isLoungeUser;
   const isPerfumeUser = !!user?.perfumeStoreId;
   const isPerfumeAdmin = (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') && isPerfumeUser;
   const isPerfumeHostess = (userRole === 'HOST' || userRole === 'HOSTESS' || userRole === 'WAITER' || userRole === 'MANAGER') && isPerfumeUser;
@@ -25,6 +26,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
     ? 'PRIVATE_LOUNGE_ADMIN'
     : isLoungeHostess
     ? 'PRIVATE_LOUNGE_HOSTESS'
+    : isLoungeAccountant
+    ? 'PRIVATE_LOUNGE_ACCOUNTANT'
     : isPerfumeAdmin
     ? 'PERFUME_STORE_ADMIN'
     : isPerfumeHostess
@@ -57,7 +60,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
   const currentSubscription = isSuperAdmin
     ? null
     : user?.ownedRestaurant?.subscription || user?.restaurant?.subscription || subscription;
-  let daysLeft = isSuperAdmin || isLoungeAdmin || isLoungeHostess || isPerfumeAdmin || isPerfumeHostess ? Infinity : calculateDaysLeft(currentSubscription);
+  let daysLeft = isSuperAdmin || isLoungeAdmin || isLoungeHostess || isLoungeAccountant || isPerfumeAdmin || isPerfumeHostess ? Infinity : calculateDaysLeft(currentSubscription);
   let planName = isSuperAdmin ? 'Super Admin' : currentSubscription?.plan?.name;
 
   // Temporary 30-day override for no5ive (overcharge compensation — expires 2026-04-04)

@@ -159,6 +159,8 @@ export const LoungeStaffPage: React.FC = () => {
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase border ${
                           s.role === 'HOSTESS' || s.role === 'HOST'
                             ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : s.role === 'ACCOUNTANT'
+                            ? 'bg-purple-50 text-purple-700 border-purple-200'
                             : 'bg-blue-50 text-blue-700 border-blue-200'
                         }`}
                       >
@@ -280,6 +282,7 @@ export const LoungeStaffPage: React.FC = () => {
                       <option value="HOSTESS">HOSTESS</option>
                       <option value="HOST">HOST</option>
                       <option value="MANAGER">MANAGER</option>
+                      <option value="ACCOUNTANT">ACCOUNTANT</option>
                     </select>
                   </div>
                   <div>

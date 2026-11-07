@@ -50,6 +50,19 @@ export const applicationsApi = baseApi.injectEndpoints({
         url: `/private-lounge/membership/verify/${code}`,
       }),
     }),
+    getGuestPasses: builder.query({
+      query: (membershipId: string) => ({
+        url: `/private-lounge/admin/members/${membershipId}/passes`,
+      }),
+      providesTags: (_result, _error, membershipId) => [{ type: 'LOUNGE_PASSES', id: membershipId }],
+    }),
+    issueGuestPasses: builder.mutation({
+      query: (membershipId: string) => ({
+        url: `/private-lounge/admin/members/${membershipId}/passes/issue`,
+        method: 'POST',
+      }),
+      invalidatesTags: (_result, _error, membershipId) => [{ type: 'LOUNGE_PASSES', id: membershipId }],
+    }),
     registerGuest: builder.mutation({
       query: (data: { membershipCode: string; name: string; email: string; phone: string; position?: string }) => ({
         url: `/private-lounge/membership/guest`,
@@ -71,4 +84,6 @@ export const {
   useDeleteApplicationMutation,
   useVerifyMembershipQuery,
   useRegisterGuestMutation,
+  useGetGuestPassesQuery,
+  useIssueGuestPassesMutation,
 } = applicationsApi;

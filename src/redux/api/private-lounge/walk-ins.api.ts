@@ -14,7 +14,7 @@ export const walkInsApi = baseApi.injectEndpoints({
         method: 'POST',
         body: { guestName, guestPhone, guestEmail, adultCount, childrenCount, notes, method },
       }),
-      invalidatesTags: ['WalkIns'],
+      invalidatesTags: ['WalkIns', 'LOUNGE_TABS'],
     }),
     confirmWalkInPayment: builder.mutation({
       query: ({ id, paymentReference, method }: { id: string; paymentReference?: string; method: string }) => ({
@@ -22,7 +22,7 @@ export const walkInsApi = baseApi.injectEndpoints({
         method: 'PATCH',
         body: { paymentReference, method },
       }),
-      invalidatesTags: ['WalkIns'],
+      invalidatesTags: ['WalkIns', 'LOUNGE_TABS'],
     }),
     logDishSelection: builder.mutation({
       query: ({ id, dishName, notes }: { id: string; dishName: string; notes?: string }) => ({
@@ -30,21 +30,21 @@ export const walkInsApi = baseApi.injectEndpoints({
         method: 'POST',
         body: { dishName, notes },
       }),
-      invalidatesTags: ['WalkIns'],
+      invalidatesTags: ['WalkIns', 'LOUNGE_TABS'],
     }),
     checkOutWalkIn: builder.mutation({
       query: (id: string) => ({
         url: `/private-lounge/admin/walkin/${id}/checkout`,
         method: 'PATCH',
       }),
-      invalidatesTags: ['WalkIns'],
+      invalidatesTags: ['WalkIns', 'LOUNGE_TABS'],
     }),
     deleteWalkIn: builder.mutation({
       query: (id: string) => ({
         url: `/private-lounge/admin/walkin/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['WalkIns'],
+      invalidatesTags: ['WalkIns', 'LOUNGE_TABS'],
     }),
     updateOrderItemQuantity: builder.mutation({
       query: ({ orderId, itemId, quantity }: { orderId: string; itemId: string; quantity: number }) => ({
@@ -52,14 +52,14 @@ export const walkInsApi = baseApi.injectEndpoints({
         method: 'PATCH',
         body: { quantity },
       }),
-      invalidatesTags: ['WalkIns'],
+      invalidatesTags: ['WalkIns', 'LOUNGE_TABS'],
     }),
     removeOrderItem: builder.mutation({
       query: ({ orderId, itemId }: { orderId: string; itemId: string }) => ({
         url: `/private-lounge/admin/order/${orderId}/item/${itemId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['WalkIns'],
+      invalidatesTags: ['WalkIns', 'LOUNGE_TABS'],
     }),
   }),
   overrideExisting: false,

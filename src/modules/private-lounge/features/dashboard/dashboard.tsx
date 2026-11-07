@@ -132,9 +132,9 @@ const MetricGrid = styled.div`
   }
 `;
 
-const MiddleSection = styled.div`
+const MiddleSection = styled.div<{ $wide?: boolean }>`
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: ${({ $wide }) => ($wide ? '1fr' : '2fr 1fr')};
   gap: 24px;
   margin-top: 8px;
 
@@ -370,9 +370,10 @@ const LoungeDashboard: React.FC = () => {
       </MetricGrid>
 
       {/* MIDDLE ROW: Charts & Actions */}
-      <MiddleSection>
+      {/* Quick actions approve members, check guests in and retrieve bottles: not for the accountant, who only reads */}
+      <MiddleSection $wide={userRole === 'ACCOUNTANT'}>
         <PremiumChart trends={statsData?.revenueTrends || []} />
-        <QuickActions pendingCount={statsData?.pendingApplications?.total || 0} />
+        {userRole !== 'ACCOUNTANT' && <QuickActions pendingCount={statsData?.pendingApplications?.total || 0} />}
       </MiddleSection>
 
       {/* BOTTOM ROW: Recent Activity */}

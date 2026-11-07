@@ -5,7 +5,10 @@ import { BottleSlider } from './bottle-slider';
 import { AddBottleModal } from './add-bottle-modal';
 import { EditMemberModal } from './edit-member-modal';
 import { useGetMemberBottlesQuery, useLogBottlePourMutation } from '../../../../../redux/api/private-lounge/bottles.api';
-import { useSuspendMemberMutation, useDeleteMemberMutation, useCheckInMemberMutation, useCheckOutMemberMutation, useRequestCheckInPinMutation, useReactivateMemberMutation, useRenewMembershipMutation } from '../../../../../redux/api/private-lounge/members.api';
+import { MemberCloseTabModal } from '../../tabs/member-close-tab-modal';
+import { useLoungeRole } from '../../../hooks/use-lounge-role';
+import { DesignatedMembersPanel } from '../../designated-members/designated-members-panel';
+import { useSuspendMemberMutation, useDeleteMemberMutation, useCheckInMemberMutation, useRequestCheckInPinMutation, useReactivateMemberMutation, useRenewMembershipMutation } from '../../../../../redux/api/private-lounge/members.api';
 import { toast } from 'react-toastify';
 import { PinInput } from './pin-input'; // We'll create a simple input or just use a standard input in the modal
 
@@ -18,6 +21,7 @@ interface MemberDrawerProps {
 export const MemberDrawer: React.FC<MemberDrawerProps> = ({ member, isOpen, onClose }) => {
   const [pouringBottleId, setPouringBottleId] = useState<string | null>(null);
   const [pourAmounts, setPourAmounts] = useState<Record<string, number>>({});
+  const { canManage, canOperate } = useLoungeRole();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddBottleModalOpen, setIsAddBottleModalOpen] = useState(false);
@@ -29,10 +33,10 @@ export const MemberDrawer: React.FC<MemberDrawerProps> = ({ member, isOpen, onCl
 
   const [checkIn, { isLoading: isCheckingIn }] = useCheckInMemberMutation();
   const [requestPin] = useRequestCheckInPinMutation();
-  const [checkOut, { isLoading: isCheckingOut }] = useCheckOutMemberMutation();
 
   const { data: bottlesResponse, isLoading: isLoadingBottles } = useGetMemberBottlesQuery(member?.id || '', {
-    skip: !member?.id
+    // Only management sees a member's locker; asking anyone else would only be refused
+    skip: !member?.id || !canManage
   });
   
   const rawBottles = Array.isArray(bottlesResponse) ? bottlesResponse : [];
@@ -106,18 +110,6 @@ export const MemberDrawer: React.FC<MemberDrawerProps> = ({ member, isOpen, onCl
     }
   };
 
-  const handleCheckOut = async () => {
-    if (!member.visits || member.visits.length === 0) return;
-    try {
-      await checkOut(member.visits[0].id).unwrap();
-      setIsCloseTabConfirmOpen(false);
-      setSuccessMessage('Tab has been closed successfully!');
-      setIsSuccessModalOpen(true);
-    } catch (err) {
-      toast.error('Failed to close tab');
-    }
-  };
-
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to soft-delete this member? They will be moved to the Deleted Members page.')) return;
     try {
@@ -169,7 +161,7 @@ export const MemberDrawer: React.FC<MemberDrawerProps> = ({ member, isOpen, onCl
           <h2 className="text-xl font-bold text-gray-900">Member Dossier</h2>
           <div className="flex items-center gap-2">
             <div className="relative">
-              {member.status !== 'DELETED' && (
+              {canManage && member.status !== 'DELETED' && (
                 <button
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   className="p-2 bg-gray-50 hover:bg-gray-100 rounded-full transition-colors text-gray-500"
@@ -244,7 +236,13 @@ export const MemberDrawer: React.FC<MemberDrawerProps> = ({ member, isOpen, onCl
               </div>
               
               {/* ACTIONS: Reactivate / Renew / Check-In */}
-              {member.status === 'DELETED' ? (
+              {!canManage && (member.status === 'DELETED' || member.status === 'EXPIRED') ? (
+                canOperate ? (
+                  <div className="w-full mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
+                    This membership is {String(member.status).toLowerCase()}. Ask a manager to sort it out before checking them in.
+                  </div>
+                ) : null
+              ) : member.status === 'DELETED' ? (
                 <button 
                   onClick={handleReactivate}
                   className="w-full mb-6 relative overflow-hidden group bg-gradient-to-r from-gray-700 via-gray-800 to-gray-900 rounded-2xl transition-all duration-500 shadow-xl hover:shadow-2xl hover:-translate-y-1 py-4 flex items-center justify-center gap-2 text-white font-bold"
@@ -274,15 +272,17 @@ export const MemberDrawer: React.FC<MemberDrawerProps> = ({ member, isOpen, onCl
                        </div>
                        <p className="text-sm text-green-50/90 font-medium">Arrived at <span className="font-bold text-white">{new Date(member.visits[0].checkInTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span></p>
                      </div>
-                     <button 
-                       onClick={() => setIsCloseTabConfirmOpen(true)}
-                       className="px-5 py-2.5 bg-white text-[#05431E] hover:bg-gray-50 text-sm font-bold rounded-xl transition-all active:scale-95 shadow-md flex items-center gap-2"
-                     >
-                       <X size="16" /> Close Tab
-                     </button>
+                     {canOperate && (
+                       <button 
+                         onClick={() => setIsCloseTabConfirmOpen(true)}
+                         className="px-5 py-2.5 bg-white text-[#05431E] hover:bg-gray-50 text-sm font-bold rounded-xl transition-all active:scale-95 shadow-md flex items-center gap-2"
+                       >
+                         <X size="16" /> Close Tab
+                       </button>
+                     )}
                    </div>
                 </div>
-              ) : (
+              ) : !canOperate ? null : (
                 <button 
                   onClick={() => {
                     setIsPinModalOpen(true);
@@ -362,8 +362,13 @@ export const MemberDrawer: React.FC<MemberDrawerProps> = ({ member, isOpen, onCl
                </div>
             </div>
 
-            {/* Approved Guests */}
-            {member.guests && member.guests.length > 0 && (
+            {/* Designated members: managers add and upload them here */}
+            {canManage && !member.isGuest && member.status === 'ACTIVE' && (
+              <DesignatedMembersPanel membershipId={member.id} />
+            )}
+
+            {/* Approved Guests (read-only, for everyone who cannot manage them) */}
+            {!(canManage && !member.isGuest && member.status === 'ACTIVE') && member.guests && member.guests.length > 0 && (
               <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
                  <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                    <Profile2User size="14" /> Approved Guests/Entourage
@@ -371,7 +376,7 @@ export const MemberDrawer: React.FC<MemberDrawerProps> = ({ member, isOpen, onCl
                  <div className="space-y-4">
                    {member.guests.map((user: any, idx: number) => (
                      <div key={idx} className="flex justify-between items-center pb-4 border-b border-border/40 last:border-0 last:pb-0">
-                       <span className="font-medium text-foreground">{user.name}</span>
+                       <span className="font-medium text-foreground">{user.fullName || user.name}</span>
                        <span className="text-sm text-muted-foreground">{user.occupation || 'Guest'}</span>
                      </div>
                    ))}
@@ -402,7 +407,8 @@ export const MemberDrawer: React.FC<MemberDrawerProps> = ({ member, isOpen, onCl
             </div>
           </div>
 
-          {/* Bottle Storage */}
+          {/* Bottle Storage: management only */}
+          {canManage && (
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-lg font-bold text-gray-900 flex items-center gap-2">
@@ -487,6 +493,7 @@ export const MemberDrawer: React.FC<MemberDrawerProps> = ({ member, isOpen, onCl
               </div>
             )}
           </div>
+          )}
           
         </div>
 
@@ -593,41 +600,17 @@ export const MemberDrawer: React.FC<MemberDrawerProps> = ({ member, isOpen, onCl
         </div>
       )}
 
-      {/* Close Tab Confirmation Modal */}
-      {isCloseTabConfirmOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl transform transition-all">
-            <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-[#F9FAFB]">
-              <h3 className="text-lg font-bold text-gray-900">Close Active Tab</h3>
-              <button onClick={() => setIsCloseTabConfirmOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
-                <X size="20" />
-              </button>
-            </div>
-            <div className="p-6 text-center">
-              <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Ban size="32" />
-              </div>
-              <p className="text-gray-700 mb-8 font-medium">
-                Are you sure you want to close the active tab for <strong className="text-gray-900">{member.fullName}</strong>?
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setIsCloseTabConfirmOpen(false)}
-                  className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleCheckOut}
-                  disabled={isCheckingOut}
-                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors disabled:opacity-50"
-                >
-                  {isCheckingOut ? 'Closing...' : 'Confirm Close'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Close Tab: the member confirms with a code emailed to them */}
+      {isCloseTabConfirmOpen && member.visits && member.visits.length > 0 && (
+        <MemberCloseTabModal
+          visitId={member.visits[0].id}
+          name={member.fullName}
+          onClose={() => setIsCloseTabConfirmOpen(false)}
+          onClosed={() => {
+            setSuccessMessage('Tab has been closed and the receipt emailed.');
+            setIsSuccessModalOpen(true);
+          }}
+        />
       )}
 
       {/* Success Modal */}

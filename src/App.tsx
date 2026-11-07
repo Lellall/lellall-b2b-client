@@ -38,6 +38,8 @@ import BottleStoragePage from './modules/private-lounge/features/bottles/BottleS
 import { Members } from './modules/private-lounge/features/members/members';
 import { DeletedMembers } from './modules/private-lounge/features/deleted-members/deleted-members';
 import { WalkIns } from './modules/private-lounge/features/walk-ins/walk-ins';
+import { CheckIn } from './modules/private-lounge/features/check-in/check-in';
+import { ActiveTabs } from './modules/private-lounge/features/tabs/active-tabs';
 import { Applications } from './modules/private-lounge/features/applications/applications';
 import { NewApplication } from './modules/private-lounge/features/applications/new-application';
 import LoungeMenuPage from './modules/private-lounge/features/menu/LoungeMenuPage';
@@ -202,6 +204,8 @@ const App = () => {
       <Route path="members" element={<Members />} />
       <Route path="staff" element={<LoungeStaffPage />} />
       <Route path="deleted-members" element={<DeletedMembers />} />
+      <Route path="check-in" element={<CheckIn />} />
+      <Route path="tabs" element={<ActiveTabs />} />
       <Route path="walk-ins" element={<WalkIns />} />
       <Route path="bottles" element={<BottleStoragePage />} />
       <Route path="menu" element={<LoungeMenuPage />} />
@@ -214,7 +218,7 @@ const App = () => {
         index
         element={
           user?.role === 'HOSTESS' || user?.role === 'HOST' ? (
-            <Navigate to="members" replace />
+            <Navigate to="check-in" replace />
           ) : (
             <Navigate to="dashboard" replace />
           )
@@ -298,7 +302,7 @@ const App = () => {
                       path="/"
                       element={
                         user?.role === 'HOSTESS' || user?.role === 'HOST' ? (
-                          <Navigate to="/lounge/members" replace />
+                          <Navigate to="/lounge/check-in" replace />
                         ) : (
                           <Navigate to="/lounge/dashboard" replace />
                         )

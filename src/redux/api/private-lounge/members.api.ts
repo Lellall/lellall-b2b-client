@@ -26,35 +26,35 @@ export const membersApi = baseApi.injectEndpoints({
         method: 'PATCH',
         body: data,
       }),
-      invalidatesTags: ['LOUNGE_MEMBERS'],
+      invalidatesTags: ['LOUNGE_MEMBERS', 'LOUNGE_TABS'],
     }),
     suspendMember: builder.mutation({
       query: (id: string) => ({
         url: `/private-lounge/admin/members/${id}/suspend`,
         method: 'PATCH',
       }),
-      invalidatesTags: ['LOUNGE_MEMBERS'],
+      invalidatesTags: ['LOUNGE_MEMBERS', 'LOUNGE_TABS'],
     }),
     deleteMember: builder.mutation({
       query: (id: string) => ({
         url: `/private-lounge/admin/members/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['LOUNGE_MEMBERS'],
+      invalidatesTags: ['LOUNGE_MEMBERS', 'LOUNGE_TABS'],
     }),
     reactivateMember: builder.mutation({
       query: (id: string) => ({
         url: `/private-lounge/admin/members/${id}/reactivate`,
         method: 'PATCH',
       }),
-      invalidatesTags: ['LOUNGE_MEMBERS'],
+      invalidatesTags: ['LOUNGE_MEMBERS', 'LOUNGE_TABS'],
     }),
     renewMembership: builder.mutation({
       query: (id: string) => ({
         url: `/private-lounge/admin/members/${id}/renew`,
         method: 'PATCH',
       }),
-      invalidatesTags: ['LOUNGE_MEMBERS'],
+      invalidatesTags: ['LOUNGE_MEMBERS', 'LOUNGE_TABS'],
     }),
     checkInMember: builder.mutation({
       query: ({ membershipId, pin }: { membershipId: string; pin: string }) => ({
@@ -62,14 +62,14 @@ export const membersApi = baseApi.injectEndpoints({
         method: 'POST',
         body: { pin },
       }),
-      invalidatesTags: ['LOUNGE_MEMBERS'],
+      invalidatesTags: ['LOUNGE_MEMBERS', 'LOUNGE_TABS'],
     }),
     checkOutMember: builder.mutation({
       query: (visitId: string) => ({
         url: `/private-lounge/admin/members/visits/${visitId}/check-out`,
         method: 'POST',
       }),
-      invalidatesTags: ['LOUNGE_MEMBERS'],
+      invalidatesTags: ['LOUNGE_MEMBERS', 'LOUNGE_TABS'],
     }),
     requestCheckInPin: builder.mutation({
       query: (membershipId: string) => ({

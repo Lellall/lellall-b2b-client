@@ -1,3 +1,4 @@
+import { useLoungeRole } from '../../hooks/use-lounge-role';
 import React, { useState, useMemo } from 'react';
 import { Search, Filter, Plus, Eye, Trash2 } from 'lucide-react';
 import { DocumentText, TickCircle, CloseCircle, Clock, Profile2User } from 'iconsax-react';
@@ -74,6 +75,7 @@ export const WalkIns: React.FC = () => {
   const [checkoutWalkIn] = useCheckOutWalkInMutation();
   const [confirmPayment] = useConfirmWalkInPaymentMutation();
   const [logDish] = useLogDishSelectionMutation();
+  const { canManage, canOperate } = useLoungeRole();
   const [deleteWalkIn, { isLoading: isDeletingWalkIn }] = useDeleteWalkInMutation();
   const [updateOrderItem] = useUpdateOrderItemQuantityMutation();
   const [removeOrderItem] = useRemoveOrderItemMutation();
@@ -189,13 +191,15 @@ export const WalkIns: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Walk-In Guests</h1>
           <p className="text-sm text-gray-500 mt-1">Manage today's lounge walk-ins and guest passes</p>
         </div>
-        <button
-          onClick={() => setIsNewModalOpen(true)}
-          className="flex items-center gap-2 bg-[#05431E] hover:bg-[#042f15] text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-sm hover:shadow-md"
-        >
-          <Plus size="18" />
-          Check-in Guest
-        </button>
+        {canOperate && (
+          <button
+            onClick={() => setIsNewModalOpen(true)}
+            className="flex items-center gap-2 bg-[#05431E] hover:bg-[#042f15] text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-sm hover:shadow-md"
+          >
+            <Plus size="18" />
+            Check-in Guest
+          </button>
+        )}
       </div>
 
       {/* ─── METRICS CARDS ─────────────────────────────────────── */}
@@ -326,13 +330,15 @@ export const WalkIns: React.FC = () => {
               >
                 <Eye size="18" />
               </button>
-              <button
-                onClick={() => setWalkInPendingDelete({ id: w.id, name: w.fullName })}
-                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                title="Delete Walk-in"
-              >
-                <Trash2 size={18} />
-              </button>
+              {canManage && (
+                <button
+                  onClick={() => setWalkInPendingDelete({ id: w.id, name: w.fullName })}
+                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Delete Walk-in"
+                >
+                  <Trash2 size={18} />
+                </button>
+              )}
             </div>
           </div>
         ))}
@@ -380,10 +386,12 @@ export const WalkIns: React.FC = () => {
             toast.error(error?.data?.message || 'Failed to log dish');
           }
         }}
-        onDeleteWalkIn={(id) => {
+        canEditOrders={canManage}
+        readOnly={!canOperate}
+        onDeleteWalkIn={canManage ? (id) => {
           const target = walkins.find((w) => w.id === id);
           setWalkInPendingDelete({ id, name: target?.fullName || 'this guest' });
-        }}
+        } : undefined}
         onUpdateOrderItem={async (orderId, itemId, quantity) => {
           try {
             const result = await updateOrderItem({ orderId, itemId, quantity }).unwrap();
