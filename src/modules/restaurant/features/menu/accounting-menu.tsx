@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Calendar, Search, Download, Filter, TrendingUp, BarChart3, CreditCard, FileText, Users, Package, X, Info } from 'lucide-react';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { ColorRing } from 'react-loader-spinner';
@@ -24,6 +24,24 @@ const AccountingMenu: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'sales' | 'category' | 'item' | 'payment' | 'selected-items' | 'staff'>('sales');
   const [startDate, setStartDate] = useState<string>(format(subDays(new Date(), 7), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
+  // If the end date has not been changed by hand, move it to the new day when midnight passes, so the page
+  // never needs its filter edited to show today's sales.
+  const followedEndRef = useRef<string>(format(new Date(), 'yyyy-MM-dd'));
+  useEffect(() => {
+    const check = () => {
+      const today = format(new Date(), 'yyyy-MM-dd');
+      if (endDate === followedEndRef.current && today !== endDate) {
+        followedEndRef.current = today;
+        setEndDate(today);
+      }
+    };
+    const timer = setInterval(check, 30000);
+    window.addEventListener('focus', check);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('focus', check);
+    };
+  }, [endDate]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedPaymentTypes, setSelectedPaymentTypes] = useState<string[]>([]);
   const [itemLimit, setItemLimit] = useState<number | undefined>(undefined);

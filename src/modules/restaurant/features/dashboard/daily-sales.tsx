@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Receipt as Btn } from 'iconsax-react';
 import { useGetDailySalesRevenueQuery, useGetDailySoldItemsQuery, useLazyDownloadDailySoldItemsCsvQuery, useGetPaymentTypeSummaryQuery } from '@/redux/api/order/order.api';
@@ -52,6 +52,9 @@ const datePickerStyles = `
   }
 `;
 
+const localDateString = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
 const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => {
   const componentRef = useRef<HTMLDivElement>(null);
   const [bgColor, setBgColor] = useState('#ffffff'); // Default white background
@@ -78,11 +81,33 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
   // Format dates as YYYY-MM-DD without any modifications
   const formattedStartDate = selectedStartDate && !isNaN(selectedStartDate.getTime())
     ? `${selectedStartDate.getFullYear()}-${String(selectedStartDate.getMonth() + 1).padStart(2, '0')}-${String(selectedStartDate.getDate()).padStart(2, '0')}`
-    : new Date().toISOString().split('T')[0];
+    : localDateString(new Date());
 
   const formattedEndDate = selectedEndDate && !isNaN(selectedEndDate.getTime())
     ? `${selectedEndDate.getFullYear()}-${String(selectedEndDate.getMonth() + 1).padStart(2, '0')}-${String(selectedEndDate.getDate()).padStart(2, '0')}`
     : undefined;
+
+  const todayString = localDateString(new Date());
+  const viewingToday = formattedStartDate === todayString;
+
+  // If nobody has picked another date, move to the new day as soon as it starts (even with the page left open),
+  // so sales after midnight show up straight away instead of the screen staying on yesterday.
+  const followedDateRef = useRef<string>(localDateString(new Date()));
+  useEffect(() => {
+    const check = () => {
+      const today = localDateString(new Date());
+      if (formattedStartDate === followedDateRef.current && today !== formattedStartDate) {
+        followedDateRef.current = today;
+        setSelectedStartDate(new Date());
+      }
+    };
+    const timer = setInterval(check, 30000);
+    window.addEventListener('focus', check);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('focus', check);
+    };
+  }, [formattedStartDate]);
 
   // Query for daily sold items
   const { data: soldItemsData, isLoading: isItemsLoading, error: itemsError } = useGetDailySoldItemsQuery(
@@ -94,6 +119,8 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
       endTime: queryEndTime,
     },
     {
+      // While looking at today, fetch again every minute so new sales appear without a refresh
+      pollingInterval: viewingToday ? 60000 : 0,
       skip:
         !formattedStartDate ||
         (queryStartTime && !queryEndTime) ||
@@ -113,6 +140,8 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
       endTime: queryEndTime,
     },
     {
+      // While looking at today, fetch again every minute so new sales appear without a refresh
+      pollingInterval: viewingToday ? 60000 : 0,
       skip:
         !formattedStartDate ||
         (queryStartTime && !queryEndTime) ||
@@ -174,6 +203,8 @@ const DailySalesDashboard: React.FC<{ subdomain: string }> = ({ subdomain }) => 
       endTime: queryEndTime,
     },
     {
+      // While looking at today, fetch again every minute so new sales appear without a refresh
+      pollingInterval: viewingToday ? 60000 : 0,
       skip:
         !formattedStartDate ||
         (queryStartTime && !queryEndTime) ||
