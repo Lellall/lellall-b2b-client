@@ -6,6 +6,7 @@ import { selectAuth } from '@/redux/api/auth/auth.slice';
 import { isRouteAllowed, getNavItemsByRole } from '@/roleConfig';
 import LostScreen from '@/lost-screen';
 import { getSubdomainFromUrl } from '@/utils/config';
+import { useLiveSubscription } from '@/hooks/use-live-subscription';
 
 interface ProtectedRouteProps {
   isAdminRoute: boolean;
@@ -13,6 +14,7 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
   const { isAuthenticated, user, subscription } = useSelector(selectAuth);
+  const live = useLiveSubscription();
   const location = useLocation();
   const userRole = (user?.role || 'WAITER').toUpperCase();
   const isLoungeUser = !!user?.privateLoungeId;
@@ -59,6 +61,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ isAdminRoute }) => {
 
   const currentSubscription = isSuperAdmin
     ? null
+    : live.loaded
+    ? live.subscription
     : user?.ownedRestaurant?.subscription || user?.restaurant?.subscription || subscription;
   let daysLeft = isSuperAdmin || isLoungeAdmin || isLoungeHostess || isLoungeAccountant || isPerfumeAdmin || isPerfumeHostess ? Infinity : calculateDaysLeft(currentSubscription);
   let planName = isSuperAdmin ? 'Super Admin' : currentSubscription?.plan?.name;

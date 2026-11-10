@@ -12,6 +12,7 @@ import {
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
 import { selectAuth } from '@/redux/api/auth/auth.slice';
+import { useLiveSubscription } from '@/hooks/use-live-subscription';
 
 export const Cover = styled.div`
   background-image: url(${subs});
@@ -111,7 +112,9 @@ const Subscriptions = () => {
   const [isChecked, setChecked] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<'flutterwave' | 'paystack' | null>(null);
   const { data: plans, isLoading, error } = useGetAllSubscriptionPlansQuery();
-  const { subscription, user } = useSelector(selectAuth);
+  const { subscription: storedSubscription, user } = useSelector(selectAuth);
+  const live = useLiveSubscription();
+  const subscription = live.loaded ? live.subscription : storedSubscription;
   const [initiatePayment, { isLoading: isPaymentLoading }] = useInitiateSubscriptionPaymentMutation();
   const { subdomain } = useSelector(selectAuth);
 

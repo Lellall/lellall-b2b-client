@@ -29,7 +29,11 @@ const baseQuery = async ({ url, method = "GET", body, params, formData, response
     // Show the server's own explanation when there is one, not "Request failed with status code 400".
     // The id stops the same message appearing twice when a page shows it as well.
     const shown = Array.isArray(errorMessage) ? errorMessage.join(', ') : String(errorMessage);
-    toast.error(axiosError.response?.data?.message ? shown : axiosError?.message || shown, { toastId: shown });
+    // The background check of the live subscription runs every couple of minutes; if the server cannot answer it,
+    // stay quiet and keep using the subscription the app already has, rather than pop an error on every screen.
+    if (!String(url).startsWith('/subscription-plans/current/')) {
+      toast.error(axiosError.response?.data?.message ? shown : axiosError?.message || shown, { toastId: shown });
+    }
     return { error: { status: axiosError.response?.status, message: errorMessage } };
   }
 };
@@ -38,7 +42,7 @@ export const baseApi = createApi({
   baseQuery,
   reducerPath: "api",
   endpoints: () => ({}),
-  tagTypes: ["PRODUCTS", "ORDERS", "SHOPS", "TRANSACTION", "TEMPLATE", "INVENTORY", "MENU", "SUBSCRIPTION_PLAN", "SUPPLY_REQUEST", "VENDORS", "VatConfig", "ServiceFeeConfig", "BRANCHES", "BANK_DETAILS", "ATTENDANCE", "DEPARTMENT", "LEAVE", "ACCOUNTING", "PAYROLL", "VENDOR_INVOICES", "PAID_INVOICES", "WHATSAPP_MESSAGES", "CURRENCY", "LOUNGE_MEMBERS", "LOUNGE_WALKINS", "LOUNGE_BOTTLES", "LOUNGE_APPLICATIONS", "LOUNGE_INVENTORY", "LOUNGE_DASHBOARD", "LOUNGE_PASSES", "LOUNGE_TABS", "LOUNGE_DESIGNATED", "PERFUME_CLIENTS"],
+  tagTypes: ["PRODUCTS", "ORDERS", "SHOPS", "TRANSACTION", "TEMPLATE", "INVENTORY", "MENU", "SUBSCRIPTION_PLAN", "CURRENT_SUBSCRIPTION", "SUPPLY_REQUEST", "VENDORS", "VatConfig", "ServiceFeeConfig", "BRANCHES", "BANK_DETAILS", "ATTENDANCE", "DEPARTMENT", "LEAVE", "ACCOUNTING", "PAYROLL", "VENDOR_INVOICES", "PAID_INVOICES", "WHATSAPP_MESSAGES", "CURRENCY", "LOUNGE_MEMBERS", "LOUNGE_WALKINS", "LOUNGE_BOTTLES", "LOUNGE_APPLICATIONS", "LOUNGE_INVENTORY", "LOUNGE_DASHBOARD", "LOUNGE_PASSES", "LOUNGE_TABS", "LOUNGE_DESIGNATED", "PERFUME_CLIENTS"],
 });
 
 export default baseApi;

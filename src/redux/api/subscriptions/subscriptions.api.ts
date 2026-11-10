@@ -239,10 +239,22 @@ export const subscriptionApi = baseApi.injectEndpoints({
         },
       }),
 
+        // The subscription a restaurant is on right now (login only gives a copy that can be weeks old).
+        // Quiet on purpose: if it fails the app keeps using the copy it already has.
+        getCurrentSubscription: builder.query<{ subscription: any | null }, string>({
+            query: (subdomain) => ({
+                url: `/subscription-plans/current/${encodeURIComponent(subdomain)}`,
+                method: "GET",
+                credentials: "include",
+            }),
+            providesTags: ["CURRENT_SUBSCRIPTION"],
+        }),
+
         verifyPayment: builder.mutation<
             VerifyPaymentResponse,
             { reference: string; provider: "paystack" | "flutterwave" }
         >({
+            invalidatesTags: ["CURRENT_SUBSCRIPTION"],
             query: ({ reference, provider }) => ({
                 url: `/subscription-plans/verify/${reference}?provider=${provider}`,
                 method: "POST",
@@ -274,6 +286,7 @@ export const {
     useGetSubscriptionPlanByIdQuery,
     useInitiateSubscriptionPaymentMutation,
     useVerifyPaymentMutation,
+    useGetCurrentSubscriptionQuery,
 } = subscriptionApi;
 
 export default subscriptionApi;

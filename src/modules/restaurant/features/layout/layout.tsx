@@ -13,6 +13,7 @@ import { persistor } from '@/redux/store';
 import { RootState, AppDispatch } from '@/redux/store';
 import { getNavItemsByRole, NavItemConfig } from '@/roleConfig';
 import { getSubdomainFromUrl } from '@/utils/config';
+import { useLiveSubscription } from '@/hooks/use-live-subscription';
 
 interface UserData {
   id: string;
@@ -282,6 +283,7 @@ const Layout: React.FC<LayoutProps> = ({ subdomainData }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, user, subscription } = useSelector(selectAuth);
+  const live = useLiveSubscription();
 
   useEffect(() => {
     console.log('Redux user:', user);
@@ -338,7 +340,9 @@ const Layout: React.FC<LayoutProps> = ({ subdomainData }) => {
   }
 
   const userRole = user.role || 'WAITER';
-  const currentSubscription = user?.ownedRestaurant?.subscription || user?.restaurant?.subscription || subscription;
+  const currentSubscription = live.loaded
+    ? live.subscription
+    : user?.ownedRestaurant?.subscription || user?.restaurant?.subscription || subscription;
   let daysLeft = calculateDaysLeft(currentSubscription);
 
   // Determine status based on endDate, not the subscription status field
