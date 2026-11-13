@@ -1,6 +1,6 @@
 import { useLoungeRole } from '../../hooks/use-lounge-role';
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Plus, Eye, Trash2 } from 'lucide-react';
+import { Search, Filter, Plus, Eye, Trash2, RotateCcw } from 'lucide-react';
 import { DocumentText, TickCircle, CloseCircle, Clock, Profile2User } from 'iconsax-react';
 import { WalkInDrawer } from './components/walk-in-drawer';
 import { NewWalkInModal } from './components/new-walk-in-modal';
@@ -11,6 +11,7 @@ import {
   useLogDishSelectionMutation,
   useCreateWalkInMutation,
   useDeleteWalkInMutation,
+  useReopenWalkInMutation,
   useUpdateOrderItemQuantityMutation,
   useRemoveOrderItemMutation,
 } from '../../../../redux/api/private-lounge/walk-ins.api';
@@ -75,8 +76,10 @@ export const WalkIns: React.FC = () => {
   const [checkoutWalkIn] = useCheckOutWalkInMutation();
   const [confirmPayment] = useConfirmWalkInPaymentMutation();
   const [logDish] = useLogDishSelectionMutation();
-  const { canManage, canOperate } = useLoungeRole();
+  const { canManage, canOperate, canReopen } = useLoungeRole();
   const [deleteWalkIn, { isLoading: isDeletingWalkIn }] = useDeleteWalkInMutation();
+  const [reopenWalkIn, { isLoading: isReopening }] = useReopenWalkInMutation();
+  const [walkInPendingReopen, setWalkInPendingReopen] = useState<{ id: string; name: string } | null>(null);
   const [updateOrderItem] = useUpdateOrderItemQuantityMutation();
   const [removeOrderItem] = useRemoveOrderItemMutation();
   const [walkInPendingDelete, setWalkInPendingDelete] = useState<{ id: string; name: string } | null>(null);
@@ -136,6 +139,17 @@ export const WalkIns: React.FC = () => {
       } catch (error: any) {
         toast.error(error?.data?.message || 'Failed to checkout');
       }
+    }
+  };
+
+  const confirmReopenWalkIn = async () => {
+    if (!walkInPendingReopen) return;
+    try {
+      await reopenWalkIn({ id: walkInPendingReopen.id, reason: 'Guest came back (reopened from the Walk-ins page)' }).unwrap();
+      toast.success(`${walkInPendingReopen.name}'s tab is open again. The entry fee is not charged twice.`);
+      setWalkInPendingReopen(null);
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Could not reopen this tab');
     }
   };
 
@@ -330,6 +344,15 @@ export const WalkIns: React.FC = () => {
               >
                 <Eye size="18" />
               </button>
+              {canReopen && w.status === 'COMPLETED' && (
+                <button
+                  onClick={() => setWalkInPendingReopen({ id: w.id, name: w.fullName })}
+                  className="p-2 text-gray-400 hover:text-[#05431E] hover:bg-[#05431E]/10 rounded-lg transition-colors"
+                  title="Reopen tab (guest came back)"
+                >
+                  <RotateCcw size={18} />
+                </button>
+              )}
               {canManage && (
                 <button
                   onClick={() => setWalkInPendingDelete({ id: w.id, name: w.fullName })}
@@ -415,6 +438,17 @@ export const WalkIns: React.FC = () => {
         isOpen={isNewModalOpen}
         onClose={() => setIsNewModalOpen(false)}
         onSubmit={handleAddNew}
+      />
+
+      <ConfirmDialog
+        isOpen={!!walkInPendingReopen}
+        title="Reopen tab"
+        message={`Reopen ${walkInPendingReopen?.name}'s tab? Use this when a guest comes back, for example after a delayed flight. Their entry fee is not charged again. This only works within 24 hours of the tab closing.`}
+        confirmText="Reopen tab"
+        danger={false}
+        isLoading={isReopening}
+        onConfirm={confirmReopenWalkIn}
+        onCancel={() => setWalkInPendingReopen(null)}
       />
 
       <ConfirmDialog

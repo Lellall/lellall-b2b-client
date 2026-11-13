@@ -39,6 +39,15 @@ export const walkInsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['WalkIns', 'LOUNGE_TABS'],
     }),
+    // Admin only: reopen a closed tab for a guest who comes back (a delayed flight). The entry fee already paid is not charged again.
+    reopenWalkIn: builder.mutation({
+      query: ({ id, reason }: { id: string; reason?: string }) => ({
+        url: `/private-lounge/admin/walkin/${id}/reopen`,
+        method: 'PATCH',
+        body: { reason },
+      }),
+      invalidatesTags: ['WalkIns', 'LOUNGE_TABS'],
+    }),
     deleteWalkIn: builder.mutation({
       query: (id: string) => ({
         url: `/private-lounge/admin/walkin/${id}`,
@@ -72,6 +81,7 @@ export const {
   useLogDishSelectionMutation,
   useCheckOutWalkInMutation,
   useDeleteWalkInMutation,
+  useReopenWalkInMutation,
   useUpdateOrderItemQuantityMutation,
   useRemoveOrderItemMutation,
 } = walkInsApi;

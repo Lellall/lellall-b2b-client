@@ -9,6 +9,7 @@ export const useLoungeRole = () => {
   const role = (useSelector((state: RootState) => state.auth.user)?.role || '').toUpperCase();
   const isFrontOfHouse = role === 'HOST' || role === 'HOSTESS';
   const isAccountant = role === 'ACCOUNTANT';
+  const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN';
   return {
     isFrontOfHouse,
     isAccountant,
@@ -16,5 +17,7 @@ export const useLoungeRole = () => {
     canOperate: !isAccountant,
     // Change members, stock and settings
     canManage: !isFrontOfHouse && !isAccountant,
+    // Reopen a closed walk-in tab (waives the entry fee, so admins only)
+    canReopen: isAdmin,
   };
 };
